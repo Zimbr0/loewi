@@ -10,6 +10,13 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Loewi">
 <title>Loewi</title>
+<script>
+/* Ganz früh, noch vor dem ersten Zeichnen: gemerkte Wahl setzen. */
+try{ var w = localStorage.getItem("loewi.thema");
+  if(w === "hell") document.documentElement.setAttribute("data-theme", "light");
+  else if(w === "dunkel") document.documentElement.setAttribute("data-theme", "dark");
+}catch(e){}
+</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -21,27 +28,44 @@
   --good:#5F7F55; --good-soft:#E4EBDC;
   --bad:#A05248;  --bad-soft:#F0E3DF;
   --warn:#A8823F; --warn-soft:#F1E8D6;
+  /* Schrift auf farbigem Grund – hell wie dunkel jeweils der Gegenpol */
+  --onaccent:#FBF8F3;
+  --scrim:rgba(40,36,30,.45);
   --shadow:0 1px 2px rgba(56,52,45,.05), 0 10px 24px rgba(56,52,45,.06);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#1D1A16; --card:#262119; --surface:#221E18; --zebra:#231F19;
-    --ink:#ECE5D8; --muted:#9C9384; --line:#39322A;
-    --accent:#7FA6A2; --accent-dk:#9BC0BB; --soft:#2A322F;
-    --good:#88A87A; --good-soft:#2A3223;
-    --bad:#C4796D;  --bad-soft:#382622;
-    --warn:#C3A05C; --warn-soft:#332C1E;
-    --shadow:0 1px 2px rgba(0,0,0,.35), 0 10px 24px rgba(0,0,0,.3);
+    /* Dunkles Design: fast neutrale Grautöne mit einem Hauch Wärme.
+       Die Flächen werden nach oben hin heller – Grund, Karte, bedienbares
+       Element –, statt mit Schlagschatten zu arbeiten, die im Dunkeln
+       ohnehin niemand sieht. Linien sind bewusst deutlich, sonst zerfällt
+       die Ordnung. */
+    --bg:#141210; --card:#1E1B18; --surface:#2A2622; --zebra:#191614;
+    --ink:#F2ECE3; --muted:#ABA294; --line:#39332C;
+    --accent:#6FA8A2; --accent-dk:#A8CFC9; --soft:#22302E;
+    --good:#84AE72; --good-soft:#1F2A1A;
+    --bad:#DB8A7B;  --bad-soft:#33201C;
+    --warn:#DDB268; --warn-soft:#332818;
+    --onaccent:#10201E;
+    --scrim:rgba(0,0,0,.62);
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 28px rgba(0,0,0,.45);
   }
 }
 :root[data-theme="dark"]{
-  --bg:#1D1A16; --card:#262119; --surface:#221E18; --zebra:#231F19;
-  --ink:#ECE5D8; --muted:#9C9384; --line:#39322A;
-  --accent:#7FA6A2; --accent-dk:#9BC0BB; --soft:#2A322F;
-  --good:#88A87A; --good-soft:#2A3223;
-  --bad:#C4796D;  --bad-soft:#382622;
-  --warn:#C3A05C; --warn-soft:#332C1E;
-  --shadow:0 1px 2px rgba(0,0,0,.35), 0 10px 24px rgba(0,0,0,.3);
+    /* Dunkles Design: fast neutrale Grautöne mit einem Hauch Wärme.
+       Die Flächen werden nach oben hin heller – Grund, Karte, bedienbares
+       Element –, statt mit Schlagschatten zu arbeiten, die im Dunkeln
+       ohnehin niemand sieht. Linien sind bewusst deutlich, sonst zerfällt
+       die Ordnung. */
+    --bg:#141210; --card:#1E1B18; --surface:#2A2622; --zebra:#191614;
+    --ink:#F2ECE3; --muted:#ABA294; --line:#39332C;
+    --accent:#6FA8A2; --accent-dk:#A8CFC9; --soft:#22302E;
+    --good:#84AE72; --good-soft:#1F2A1A;
+    --bad:#DB8A7B;  --bad-soft:#33201C;
+    --warn:#DDB268; --warn-soft:#332818;
+    --onaccent:#10201E;
+    --scrim:rgba(0,0,0,.62);
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 28px rgba(0,0,0,.45);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
@@ -54,13 +78,67 @@ button,input,select,textarea{font:inherit;color:inherit}
 header{position:sticky;top:0;z-index:20;background:var(--bg);
   border-bottom:1px solid var(--line);padding:10px 16px 8px;
   padding-top:calc(10px + env(safe-area-inset-top))}
-.hdr-row{display:flex;align-items:center;gap:10px;justify-content:space-between}
-.hdr-title{font-size:19px;font-weight:700}
-.hdr-sub{font-size:12px;color:var(--muted);margin-top:1px}
-.pill{background:var(--soft);color:var(--accent-dk);border-radius:999px;
+.hdr-row{display:flex;align-items:center;gap:8px}
+.hdr-txt{flex:1;min-width:0}
+.hdr-title{font-size:19px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hdr-sub{font-size:12px;color:var(--muted);margin-top:1px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill{flex:0 0 auto;background:var(--soft);color:var(--accent-dk);border-radius:999px;
   padding:5px 12px;font-size:13px;font-weight:650;border:0}
 
+/* Sonne und Mond liegen übereinander; beim Umschalten dreht die eine heraus,
+   die andere herein – eine Bewegung, kein Blinken. */
+.themebtn{flex:0 0 auto;position:relative;width:38px;height:38px;border-radius:11px;
+  border:1px solid var(--line);background:var(--card);color:var(--muted);
+  cursor:pointer;padding:0;overflow:hidden}
+.themebtn:active{transform:scale(.94)}
+.themebtn svg{position:absolute;top:50%;left:50%;transition:
+  transform .32s cubic-bezier(.4,0,.2,1), opacity .22s ease}
+.themebtn .ic-sonne{transform:translate(-50%,-50%) rotate(0deg);opacity:1}
+.themebtn .ic-mond{transform:translate(-50%,20px) rotate(-70deg);opacity:0}
+:root[data-theme="dark"] .themebtn{color:var(--accent-dk);border-color:var(--line)}
+:root[data-theme="dark"] .themebtn .ic-sonne{transform:translate(-50%,-160%) rotate(70deg);opacity:0}
+:root[data-theme="dark"] .themebtn .ic-mond{transform:translate(-50%,-50%) rotate(0deg);opacity:1}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .themebtn{color:var(--accent-dk)}
+  :root:not([data-theme="light"]) .themebtn .ic-sonne{transform:translate(-50%,-160%) rotate(70deg);opacity:0}
+  :root:not([data-theme="light"]) .themebtn .ic-mond{transform:translate(-50%,-50%) rotate(0deg);opacity:1}
+}
+
 main{padding:14px 16px 8px;max-width:760px;margin:0 auto}
+
+/* Im Dunkeln trägt nicht der Schatten, sondern die Helligkeitsstufe.
+   Ein schwacher Lichtsaum an der Oberkante gibt den Karten Halt. */
+:root[data-theme="dark"] .card,
+:root[data-theme="dark"] .newbox{box-shadow:0 1px 0 rgba(255,255,255,.035) inset,
+  0 2px 10px rgba(0,0,0,.35)}
+:root[data-theme="dark"] header,
+:root[data-theme="dark"] nav{background:var(--bg)}
+:root[data-theme="dark"] input[type=text],:root[data-theme="dark"] input[type=date],
+:root[data-theme="dark"] input[type=number],:root[data-theme="dark"] input[type=time],
+:root[data-theme="dark"] select,:root[data-theme="dark"] textarea{background:var(--bg)}
+:root[data-theme="dark"] ::placeholder{color:#7A7266}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .card,
+  :root:not([data-theme="light"]) .newbox{box-shadow:0 1px 0 rgba(255,255,255,.035) inset,
+    0 2px 10px rgba(0,0,0,.35)}
+  :root:not([data-theme="light"]) input[type=text],
+  :root:not([data-theme="light"]) input[type=date],
+  :root:not([data-theme="light"]) input[type=number],
+  :root:not([data-theme="light"]) input[type=time],
+  :root:not([data-theme="light"]) select,
+  :root:not([data-theme="light"]) textarea{background:var(--bg)}
+  :root:not([data-theme="light"]) ::placeholder{color:#7A7266}
+}
+/* Die Uhrzeit-Felder des Zeitrasters zeigen im Dunkeln sonst ein weisses Symbol */
+:root[data-theme="dark"] input[type=time]::-webkit-calendar-picker-indicator,
+:root[data-theme="dark"] input[type=date]::-webkit-calendar-picker-indicator{
+  filter:invert(.85) sepia(.1)}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) input[type=time]::-webkit-calendar-picker-indicator,
+  :root:not([data-theme="light"]) input[type=date]::-webkit-calendar-picker-indicator{
+    filter:invert(.85) sepia(.1)}
+}
 .view{display:none}.view.on{display:block}
 
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
@@ -105,7 +183,7 @@ textarea{resize:vertical;min-height:52px}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 .act{flex:1;min-width:140px;min-height:48px;border-radius:12px;border:1px solid var(--line);
   background:var(--bg);font-weight:650;cursor:pointer;padding:0 14px}
-.act.primary{background:var(--good);border-color:var(--good);color:#FBF8F3}
+.act.primary{background:var(--good);border-color:var(--good);color:var(--onaccent)}
 .act.neutral{background:var(--surface);border-color:var(--line);color:var(--ink)}
 .act.ghost{color:var(--muted)}
 .act.danger{color:var(--bad);border-color:var(--line);background:var(--bad-soft)}
@@ -113,7 +191,7 @@ textarea{resize:vertical;min-height:52px}
 
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);
-  text-align:center;padding:6px 3px;border-bottom:1px solid var(--ink)}
+  text-align:center;padding:6px 3px;border-bottom:1.5px solid var(--muted)}
 th:nth-child(1),td:nth-child(1){text-align:left}
 td{padding:8px 2px;text-align:center;border-bottom:1px solid var(--line)}
 td.strong{font-weight:700;color:var(--accent-dk)}
@@ -142,6 +220,14 @@ nav button#navAuswahl.offen{color:var(--accent-dk)}
 .toast .undo{border:0;background:0;color:var(--bg);font:inherit;font-weight:800;cursor:pointer;
   padding:2px 0;flex:0 0 auto;text-decoration:underline;text-underline-offset:3px}
 .toast.show{opacity:.95}
+:root[data-theme="dark"] .toast{background:#332E28;color:var(--ink);
+  border:1px solid #453E36}
+:root[data-theme="dark"] .toast .undo{color:var(--accent-dk)}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .toast{background:#332E28;color:var(--ink);
+    border:1px solid #453E36}
+  :root:not([data-theme="light"]) .toast .undo{color:var(--accent-dk)}
+}
 .rowline{display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:11px 0;border-bottom:1px solid var(--line)}
 .rowline:last-child{border-bottom:0}
@@ -201,6 +287,18 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
   border-radius:9px;font-size:14px;font-weight:650;color:var(--muted);cursor:pointer;
   transition:color .2s ease}
 .segrow button.on{color:var(--ink)}
+/* Im Dunkeln muss die Rinne tiefer liegen als die Karte und die laufende
+   Pille höher – sonst sieht der gewählte Eintrag aus wie der abgewählte. */
+:root[data-theme="dark"] .segrow{background:#100E0C;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}
+:root[data-theme="dark"] .segrow .pille{background:var(--surface);
+  box-shadow:0 1px 2px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.05) inset}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .segrow{background:#100E0C;
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}
+  :root:not([data-theme="light"]) .segrow .pille{background:var(--surface);
+    box-shadow:0 1px 2px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.05) inset}
+}
 .trow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
 .trow:last-child{border-bottom:0}
 .trow .tnum{flex:0 0 46px;text-align:center;line-height:1.05}
@@ -211,7 +309,7 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 .tbtn{flex:1;min-width:0;min-height:42px;border:1px solid var(--line);background:var(--bg);
   border-radius:9px;font-size:15px;font-weight:700;color:var(--ink);cursor:pointer;padding:0}
 .tbtn:active{transform:scale(.95)}
-.tbtn.on{color:#FBF8F3;border-color:transparent}
+.tbtn.on{color:var(--onaccent);border-color:transparent}
 .tbtn.on.gut{background:var(--good)}
 .tbtn.on.mittel{background:var(--warn)}
 .tbtn.on.schwach{background:var(--bad)}
@@ -252,7 +350,7 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 .tagchip b{display:block;font-size:13px;font-weight:700;color:var(--ink)}
 .tagchip span{display:block;font-size:10.5px;color:var(--muted);margin-top:2px}
 .tagchip.on{background:var(--accent);border-color:var(--accent)}
-.tagchip.on b,.tagchip.on span{color:#FBF8F3}
+.tagchip.on b,.tagchip.on span{color:var(--onaccent)}
 .tagchip.heute{border-color:var(--accent)}
 .stundenkarte{display:flex;align-items:stretch;gap:12px;padding:12px 14px;cursor:pointer}
 .stundenkarte .zeit{flex:0 0 58px;text-align:center;border-right:1px solid var(--line);
@@ -288,11 +386,40 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 .zelle.heute:not(.leer){box-shadow:inset 0 0 0 1px var(--accent)}
 .raster td.heute{background:var(--surface)}
 .raster td.heute:first-child{border-radius:8px 0 0 8px}
-.rasterzeile{display:flex;align-items:center;gap:8px;padding:6px 0;
-  border-bottom:1px solid var(--line)}
+/* Zeitraster: eine Tafel mit fester Spaltenordnung. Die Stundenzahl steht
+   als Marke links, dann Beginn – Ende, rechts die Dauer als stille Auskunft. */
+.rasterkopf{display:flex;align-items:center;gap:10px;padding:0 0 8px;
+  font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted)}
+.rasterkopf .kn{flex:0 0 34px}
+.rasterkopf .kz{flex:1;text-align:center}
+.rasterkopf .kd{flex:0 0 52px;text-align:right}
+.rastertafel{border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  background:var(--bg)}
+.rasterzeile{display:flex;align-items:center;gap:10px;padding:7px 10px;
+  border-bottom:1px solid var(--line);background:var(--card)}
+.rasterzeile:nth-child(even){background:var(--zebra)}
 .rasterzeile:last-child{border-bottom:0}
-.rasterzeile .nr{flex:0 0 62px;font-size:13px;font-weight:650}
-.rasterzeile input{flex:1;min-width:0;text-align:center}
+.rasterzeile .nr{flex:0 0 34px;height:28px;border-radius:8px;background:var(--soft);
+  color:var(--accent-dk);font-size:13px;font-weight:700;
+  display:flex;align-items:center;justify-content:center}
+.rasterzeile .zeiten{flex:1;min-width:0;display:flex;align-items:center;gap:6px}
+.rasterzeile .bis{flex:0 0 auto;color:var(--muted);font-size:13px}
+.rasterzeile .uhr{flex:1;min-width:0;width:100%;text-align:center;
+  padding:8px 4px;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;
+  letter-spacing:.02em;border-radius:9px;background:var(--bg);
+  border:1px solid var(--line);color:var(--ink);font-family:inherit;
+  appearance:none;-webkit-appearance:none}
+.rasterzeile .uhr:focus{border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--soft);outline:0}
+.rasterzeile .uhr.falsch{border-color:var(--bad);color:var(--bad)}
+.rasterzeile .dauer{flex:0 0 52px;text-align:right;font-size:11.5px;color:var(--muted);
+  font-variant-numeric:tabular-nums}
+.rasterzeile.luecke{border-top:1px dashed var(--line)}
+.rasterfuss{margin-top:10px}
+.rasterfuss .mini{display:block;text-align:center;margin-bottom:8px;
+  font-variant-numeric:tabular-nums}
+.rasterfuss .knoepfe{display:flex;align-items:center;justify-content:center;gap:10px}
 .planleer{text-align:center;padding:18px 10px}
 .planleer p{font-size:13.5px;color:var(--muted);margin:0 0 14px}
 
@@ -300,7 +427,7 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 .zahlwahl{display:flex;gap:6px}
 .zahlwahl button{flex:1;min-height:44px;border:1px solid var(--line);background:var(--bg);
   border-radius:11px;font-size:16px;font-weight:700;color:var(--ink);cursor:pointer;padding:0}
-.zahlwahl button.on{background:var(--accent);border-color:var(--accent);color:#FBF8F3}
+.zahlwahl button.on{background:var(--accent);border-color:var(--accent);color:var(--onaccent)}
 .schalter{display:flex;align-items:center;gap:10px;padding:11px 0;
   border-bottom:1px solid var(--line);cursor:pointer}
 .schalter:last-of-type{border-bottom:0}
@@ -337,7 +464,7 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 .minibtn{flex:1;min-width:0;min-height:34px;border:1px solid var(--line);background:var(--bg);
   border-radius:8px;font-size:11.5px;font-weight:650;color:var(--muted);cursor:pointer;padding:0;
   overflow:hidden;white-space:nowrap}
-.minibtn.on{background:var(--accent);border-color:var(--accent);color:#FBF8F3}
+.minibtn.on{background:var(--accent);border-color:var(--accent);color:var(--onaccent)}
 .minibtn.on.s1{background:var(--good);border-color:var(--good)}
 .minibtn.on.s2{background:var(--warn);border-color:var(--warn)}
 .minibtn.on.s3{background:var(--bad);border-color:var(--bad)}
@@ -403,7 +530,7 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 .statusrow button.on[data-s="verschoben"]{background:var(--warn)}
 .field{margin-top:12px}
 .field label{display:block}
-.ovl{position:fixed;inset:0;z-index:60;background:rgba(40,36,30,.45);
+.ovl{position:fixed;inset:0;z-index:60;background:var(--scrim);
   display:flex;align-items:flex-end;justify-content:center;padding:0}
 .ovl[hidden]{display:none}
 .modal{background:var(--card);width:100%;max-width:520px;border-radius:18px 18px 0 0;
@@ -464,7 +591,7 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 .readbox .iconbtn{width:36px;height:36px}
 
 /* --- Baustein: Drop-up (Klasse + Fach) --- */
-.dupscrim{position:fixed;inset:0;background:rgba(56,52,45,.30);z-index:28;opacity:0;
+.dupscrim{position:fixed;inset:0;background:var(--scrim);z-index:28;opacity:0;
   transition:opacity .18s ease;pointer-events:none}
 .dupscrim.open{opacity:1;pointer-events:auto}
 .dropup{position:fixed;left:0;right:0;z-index:29;
@@ -482,7 +609,7 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 .selchip{border:1px solid var(--line);background:var(--surface);color:var(--ink);
   border-radius:999px;padding:8px 15px;font-size:14.5px;font-weight:650;cursor:pointer;
   line-height:1.2}
-.selchip.on{background:var(--accent);border-color:var(--accent);color:#FBF8F3}
+.selchip.on{background:var(--accent);border-color:var(--accent);color:var(--onaccent)}
 .selchip.add{background:0;color:var(--muted);border-style:dashed;font-weight:600}
 .duplink{display:flex;align-items:center;gap:10px;width:100%;border:0;background:0;
   padding:13px 2px;border-top:1px solid var(--line);cursor:pointer;text-align:left;
@@ -523,11 +650,24 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 
 <header>
   <div class="hdr-row">
-    <div>
+    <div class="hdr-txt">
       <div class="hdr-title" id="hTitle">Loewi</div>
       <div class="hdr-sub" id="hSub">Anwesenheit &amp; Mitarbeit · offline</div>
     </div>
     <button class="pill" id="saveState">gespeichert</button>
+    <button class="themebtn" id="btnTheme" type="button"
+      aria-label="Helles oder dunkles Design" title="Helles oder dunkles Design">
+      <svg class="ic-sonne" viewBox="0 0 24 24" width="19" height="19" fill="none"
+        stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <circle cx="12" cy="12" r="4.2"/>
+        <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2
+                 M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/>
+      </svg>
+      <svg class="ic-mond" viewBox="0 0 24 24" width="19" height="19" fill="none"
+        stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.4 8.4 0 1 0 10.2 10.2Z"/>
+      </svg>
+    </button>
   </div>
 </header>
 
@@ -583,10 +723,15 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
         </div>
         <div class="sep"></div>
         <label class="lbl">Zeitraster</label>
+        <p class="hint" style="margin:0 0 10px">Gilt für alle Tage. Die Uhrzeiten stehen
+          später auf jeder Stundenkarte.</p>
         <div id="rasterListe"></div>
-        <div class="actions" style="margin-top:12px">
-          <button class="act neutral mini" id="rasterPlus">Stunde anhängen</button>
-          <button class="act quiet" id="rasterMinus">Letzte entfernen</button>
+        <div class="rasterfuss">
+          <span class="mini" id="rasterInfo"></span>
+          <div class="knoepfe">
+            <button class="act neutral mini" id="rasterPlus">Stunde anhängen</button>
+            <button class="act quiet" id="rasterMinus">Letzte entfernen</button>
+          </div>
         </div>
       </div>
     </details>
@@ -1790,12 +1935,12 @@ function flagSaved(txt){
   const el = document.getElementById("saveState");
   if(!storageOk){
     el.textContent = "nicht gespeichert!";
-    el.style.background = "rgba(192,57,43,.15)"; el.style.color = "#C0392B";
+    el.style.background = "var(--bad-soft)"; el.style.color = "var(--bad)";
     return;
   }
   if(typeof backupFaellig === "function" && backupFaellig()){
     el.textContent = "Sicherung fällig";
-    el.style.background = "rgba(217,131,36,.15)"; el.style.color = "#B36A12";
+    el.style.background = "var(--warn-soft)"; el.style.color = "var(--warn)";
     return;
   }
   el.textContent = txt;
@@ -2755,6 +2900,10 @@ function renderPlanTab(){
   $("#planWoche").style.display = ansicht === "woche" ? "" : "none";
 
   renderRasterListe();
+  const rz = planRaster();
+  const von = rz[0] && rz[0].von, bis = rz[rz.length - 1] && rz[rz.length - 1].bis;
+  $("#rasterInfo").textContent = rz.length + " Stunden" +
+    (von && bis ? " · " + von + " – " + bis : "");
   if(ansicht === "tag") renderPlanTag(); else renderPlanWoche();
 }
 function planPille(){
@@ -2973,25 +3122,105 @@ function slotDialog(tag, nr){
   }
 }
 
+/* Ein Feld für eine Uhrzeit in 24-Stunden-Schreibweise. Beim Tippen setzt es
+   den Doppelpunkt selbst; beim Verlassen wird ergänzt und geprüft:
+   „8“ wird 08:00, „830“ wird 08:30, Unsinn springt auf den alten Wert zurück. */
+function uhrLesen(text){
+  const z = String(text || "").replace(/[^0-9]/g, "").slice(0, 4);
+  if(!z.length) return null;
+  let st, mi;
+  if(z.length <= 2){ st = Number(z); mi = 0; }
+  else if(z.length === 3){ st = Number(z.slice(0, 1)); mi = Number(z.slice(1)); }
+  else { st = Number(z.slice(0, 2)); mi = Number(z.slice(2)); }
+  if(!(st >= 0 && st <= 23) || !(mi >= 0 && mi <= 59)) return null;
+  return String(st).padStart(2, "0") + ":" + String(mi).padStart(2, "0");
+}
+function uhrFeld(r, feld){
+  const inp = document.createElement("input");
+  inp.type = "text";
+  inp.className = "uhr";
+  inp.value = r[feld] || "";
+  inp.maxLength = 5;
+  inp.inputMode = "numeric";
+  inp.autocomplete = "off";
+  inp.placeholder = "--:--";
+  inp.setAttribute("aria-label",
+    (feld === "von" ? "Beginn" : "Ende") + " der " + r.nr + ". Stunde, Uhrzeit wie 08:00");
+  inp.addEventListener("focus", () => inp.select());
+  inp.addEventListener("input", () => {
+    const z = inp.value.replace(/[^0-9]/g, "").slice(0, 4);
+    inp.value = z.length > 2 ? z.slice(0, 2) + ":" + z.slice(2) : z;
+    inp.classList.remove("falsch");
+  });
+  inp.addEventListener("blur", () => {
+    if(inp.value.trim() === ""){ r[feld] = ""; save(); renderPlanTab(); return; }
+    const wert = uhrLesen(inp.value);
+    if(!wert){
+      inp.classList.add("falsch");
+      toast("Uhrzeit bitte wie 08:00");
+      inp.value = r[feld] || "";
+      setTimeout(() => inp.classList.remove("falsch"), 1200);
+      return;
+    }
+    if(wert === r[feld]){ inp.value = wert; return; }
+    r[feld] = wert; save(); renderPlanTab();
+  });
+  inp.addEventListener("keydown", ev => { if(ev.key === "Enter") inp.blur(); });
+  return inp;
+}
+
+/* Minuten seit Mitternacht – für Dauer und Pausen. */
+function minuten(hhmm){
+  const t = /^(\d{1,2}):(\d{2})$/.exec(String(hhmm || ""));
+  return t ? Number(t[1]) * 60 + Number(t[2]) : null;
+}
 function renderRasterListe(){
   const box = $("#rasterListe"); box.innerHTML = "";
-  planRaster().forEach(r => {
+  const raster = planRaster();
+
+  const kopf = document.createElement("div");
+  kopf.className = "rasterkopf";
+  kopf.innerHTML = '<span class="kn">Std.</span><span class="kz">Beginn – Ende</span>' +
+                   '<span class="kd">Dauer</span>';
+  box.appendChild(kopf);
+
+  const tafel = document.createElement("div");
+  tafel.className = "rastertafel";
+  raster.forEach((r, i) => {
     const zeile = document.createElement("div");
     zeile.className = "rasterzeile";
+    /* Steht zwischen dieser und der vorigen Stunde mehr als eine kurze
+       Wende, ist das eine Pause – die zeigt eine gestrichelte Trennung. */
+    const vor = raster[i - 1];
+    if(vor && minuten(vor.bis) !== null && minuten(r.von) !== null &&
+       minuten(r.von) - minuten(vor.bis) >= 10) zeile.classList.add("luecke");
+
     const nr = document.createElement("div");
     nr.className = "nr";
-    nr.textContent = r.nr + ". Std.";
+    nr.textContent = r.nr;
     zeile.appendChild(nr);
-    ["von", "bis"].forEach(feld => {
-      const inp = document.createElement("input");
-      inp.type = "time";
-      inp.value = r[feld] || "";
-      inp.setAttribute("aria-label", (feld === "von" ? "Beginn" : "Ende") + " der " + r.nr + ". Stunde");
-      inp.addEventListener("change", () => { r[feld] = inp.value; save(); renderPlanTab(); });
-      zeile.appendChild(inp);
+
+    const zeiten = document.createElement("div");
+    zeiten.className = "zeiten";
+    ["von", "bis"].forEach((feld, k) => {
+      if(k === 1){
+        const bis = document.createElement("span");
+        bis.className = "bis"; bis.textContent = "–";
+        zeiten.appendChild(bis);
+      }
+      zeiten.appendChild(uhrFeld(r, feld));
     });
-    box.appendChild(zeile);
+    zeile.appendChild(zeiten);
+
+    const dauer = document.createElement("div");
+    dauer.className = "dauer";
+    const a = minuten(r.von), b = minuten(r.bis);
+    dauer.textContent = (a !== null && b !== null && b > a) ? (b - a) + " min" : "–";
+    zeile.appendChild(dauer);
+
+    tafel.appendChild(zeile);
   });
+  box.appendChild(tafel);
 }
 
 $("#planZurueck").addEventListener("click", () => {
@@ -5202,6 +5431,47 @@ sperren();
 flagSaved("gespeichert");
 if(backupFaellig()) setTimeout(()=>toast("Sicherung fällig – bitte Excel-Datei erstellen"), 900);
 window.addEventListener("beforeunload", () => { try{ save(); }catch(e){} });
+/* ---------- Helles und dunkles Design ----------
+   Drei Zustände: dem Gerät folgen, hell, dunkel. Der Knopf schaltet zwischen
+   hell und dunkel um und merkt sich die Wahl; wer nie drückt, bleibt beim
+   Gerät. Die Farbe der Statusleiste zieht mit, damit oben nichts blitzt. */
+const THEMA_KEY = "loewi.thema";
+function geraetDunkel(){
+  return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+function themaGesetzt(){
+  try{ const w = localStorage.getItem(THEMA_KEY);
+       return (w === "hell" || w === "dunkel") ? w : null; }catch(e){ return null; }
+}
+function istDunkel(){
+  const w = themaGesetzt();
+  return w ? w === "dunkel" : geraetDunkel();
+}
+function themaAnwenden(){
+  const w = themaGesetzt();
+  const wurzel = document.documentElement;
+  if(w === "hell") wurzel.setAttribute("data-theme", "light");
+  else if(w === "dunkel") wurzel.setAttribute("data-theme", "dark");
+  else wurzel.removeAttribute("data-theme");
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.setAttribute("content", istDunkel() ? "#141210" : "#F2EDE4");
+  const b = $("#btnTheme");
+  if(b) b.setAttribute("aria-label", istDunkel() ? "Zum hellen Design" : "Zum dunklen Design");
+}
+$("#btnTheme").addEventListener("click", () => {
+  const neu = istDunkel() ? "hell" : "dunkel";
+  try{ localStorage.setItem(THEMA_KEY, neu); }catch(e){}
+  themaAnwenden();
+  toast(neu === "dunkel" ? "Dunkles Design" : "Helles Design");
+});
+if(window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const horch = () => { if(!themaGesetzt()) themaAnwenden(); };
+  if(mq.addEventListener) mq.addEventListener("change", horch);
+  else if(mq.addListener) mq.addListener(horch);
+}
+themaAnwenden();
+
 if("serviceWorker" in navigator && location.protocol.indexOf("http") === 0){
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js").catch(()=>{});
