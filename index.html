@@ -27,7 +27,8 @@ try{ var w = localStorage.getItem("loewi.thema");
   --accent:#5C7C7A; --accent-dk:#476462; --soft:#E4EBE7;
   --good:#5F7F55; --good-soft:#E4EBDC;
   --bad:#A05248;  --bad-soft:#F0E3DF;
-  --warn:#A8823F; --warn-soft:#F1E8D6;
+  --warn:#A8823F; --warn-soft:#F1E8D6; --warn-dk:#75581F;
+  --dienst:#5A6B85; --dienst-soft:#E4E8F0;
   /* Schrift auf farbigem Grund – hell wie dunkel jeweils der Gegenpol */
   --onaccent:#FBF8F3;
   --scrim:rgba(40,36,30,.45);
@@ -45,7 +46,8 @@ try{ var w = localStorage.getItem("loewi.thema");
     --accent:#6FA8A2; --accent-dk:#A8CFC9; --soft:#22302E;
     --good:#84AE72; --good-soft:#1F2A1A;
     --bad:#DB8A7B;  --bad-soft:#33201C;
-    --warn:#DDB268; --warn-soft:#332818;
+    --warn:#DDB268; --warn-soft:#332818; --warn-dk:#EBC98D;
+    --dienst:#93A9CB; --dienst-soft:#1F2634;
     --onaccent:#10201E;
     --scrim:rgba(0,0,0,.62);
     --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 28px rgba(0,0,0,.45);
@@ -62,7 +64,8 @@ try{ var w = localStorage.getItem("loewi.thema");
     --accent:#6FA8A2; --accent-dk:#A8CFC9; --soft:#22302E;
     --good:#84AE72; --good-soft:#1F2A1A;
     --bad:#DB8A7B;  --bad-soft:#33201C;
-    --warn:#DDB268; --warn-soft:#332818;
+    --warn:#DDB268; --warn-soft:#332818; --warn-dk:#EBC98D;
+    --dienst:#93A9CB; --dienst-soft:#1F2634;
     --onaccent:#10201E;
     --scrim:rgba(0,0,0,.62);
     --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 28px rgba(0,0,0,.45);
@@ -71,7 +74,7 @@ try{ var w = localStorage.getItem("loewi.thema");
 html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
   font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   font-size:16px;line-height:1.4;-webkit-text-size-adjust:100%}
-body{padding-bottom:calc(78px + env(safe-area-inset-bottom))}
+body{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
 h1,h2,h3{margin:0;font-weight:650;letter-spacing:-.01em}
 button,input,select,textarea{font:inherit;color:inherit}
 
@@ -79,12 +82,31 @@ header{position:sticky;top:0;z-index:20;background:var(--bg);
   border-bottom:1px solid var(--line);padding:10px 16px 8px;
   padding-top:calc(10px + env(safe-area-inset-top))}
 .hdr-row{display:flex;align-items:center;gap:8px}
-.hdr-txt{flex:1;min-width:0}
-.hdr-title{font-size:19px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hdr-sub{font-size:12px;color:var(--muted);margin-top:1px;
+/* Die Kopfzeile ist der Auswahlknopf: Klasse und Fach stehen dort, wo man
+   ohnehin hinsieht, und ein Tipp öffnet die Auswahl. */
+.hdr-txt{flex:0 1 auto;min-width:0;margin-right:auto;display:flex;align-items:center;gap:4px;
+  border:0;background:0;padding:4px 8px 4px 6px;margin-left:-6px;border-radius:11px;
+  text-align:left;color:inherit;font:inherit;cursor:pointer}
+.hdr-txt:active{background:var(--surface)}
+.hdr-txt.offen{background:var(--surface)}
+.hdr-wer{flex:0 1 auto;min-width:0}
+.hdr-title{display:block;font-size:19px;font-weight:700;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pill{flex:0 0 auto;background:var(--soft);color:var(--accent-dk);border-radius:999px;
-  padding:5px 12px;font-size:13px;font-weight:650;border:0}
+.hdr-sub{display:block;font-size:12px;color:var(--muted);margin-top:1px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hdr-pfeil{flex:0 0 auto;color:var(--muted);line-height:0;
+  transition:transform .2s ease}
+.hdr-txt.offen .hdr-pfeil{transform:rotate(180deg);color:var(--accent-dk)}
+/* Kein Punkt neben dem Männchen – der Rahmen färbt sich, dann verrutscht nichts. */
+.themebtn .punkt{position:absolute;inset:0;border-radius:11px;border:2px solid transparent;
+  pointer-events:none}
+.themebtn .punkt.rot{border-color:var(--bad)}
+.themebtn .punkt.gelb{border-color:var(--warn)}
+.themebtn .punkt[hidden]{display:none}
+.profilweg{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  width:100%;border:0;background:0;padding:12px 2px;border-top:1px solid var(--line);
+  cursor:pointer;text-align:left;font:inherit;color:inherit;font-size:14.5px;font-weight:600}
+.profilwege{margin-top:16px}
 
 /* Sonne und Mond liegen übereinander; beim Umschalten dreht die eine heraus,
    die andere herein – eine Bewegung, kein Blinken. */
@@ -94,6 +116,7 @@ header{position:sticky;top:0;z-index:20;background:var(--bg);
 .themebtn:active{transform:scale(.94)}
 .themebtn svg{position:absolute;top:50%;left:50%;transition:
   transform .32s cubic-bezier(.4,0,.2,1), opacity .22s ease}
+.themebtn .ic-mitte{transform:translate(-50%,-50%)}
 .themebtn .ic-sonne{transform:translate(-50%,-50%) rotate(0deg);opacity:1}
 .themebtn .ic-mond{transform:translate(-50%,20px) rotate(-70deg);opacity:0}
 :root[data-theme="dark"] .themebtn{color:var(--accent-dk);border-color:var(--line)}
@@ -105,7 +128,9 @@ header{position:sticky;top:0;z-index:20;background:var(--bg);
   :root:not([data-theme="light"]) .themebtn .ic-mond{transform:translate(-50%,-50%) rotate(0deg);opacity:1}
 }
 
-main{padding:14px 16px 8px;max-width:760px;margin:0 auto}
+/* Unten Luft, damit der Plus-Knopf nichts dauerhaft verdeckt – man kann
+   jeden Inhalt über ihn hinausscrollen. */
+main{padding:14px 16px 74px;max-width:760px;margin:0 auto}
 
 /* Im Dunkeln trägt nicht der Schatten, sondern die Helligkeitsstufe.
    Ein schwacher Lichtsaum an der Oberkante gibt den Karten Halt. */
@@ -200,9 +225,12 @@ td.strong{font-weight:700;color:var(--accent-dk)}
 nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;
   background:var(--bg);border-top:1px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom)}
-nav button{flex:1;border:0;background:0;padding:9px 4px 10px;color:var(--muted);
-  font-size:11px;font-weight:650;cursor:pointer;display:flex;flex-direction:column;
-  align-items:center;gap:3px}
+nav button{flex:1;min-width:0;border:0;background:0;padding:9px 2px 10px;color:var(--muted);
+  font-size:10px;font-weight:650;letter-spacing:-.1px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+nav button > span.ic{flex:0 0 auto}
+@media (min-width:420px){ nav button{font-size:11px;letter-spacing:0} }
 nav button .ic{line-height:0;display:block}
 nav button.on{color:var(--accent-dk)}
 nav button{min-width:0}
@@ -265,6 +293,9 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 .kindnr{flex:0 0 auto;font-size:12px;font-weight:650;color:var(--muted)}
 .kindname{font-size:13.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap;transition:color .12s ease}
+.sumlegende{margin-top:10px;line-height:1.7}
+.sumlegende b{color:var(--ink)}
+.bchev{flex:0 0 auto;color:var(--muted);font-size:16px}
 #tblSum th.chevzelle,#tblSum td.chevzelle{width:14px;padding:0 0 0 2px}
 .chevzelle span{display:inline-block;color:var(--muted);font-size:17px;line-height:1;
   transition:transform .12s ease}
@@ -336,6 +367,173 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
   background:var(--surface);border-radius:12px;font-size:20px;font-weight:700;color:var(--ink);
   cursor:pointer;padding:0}
 .kindwahl .pfeil:disabled{opacity:.35;cursor:default}
+.taghinweis{display:flex;align-items:center;gap:12px;background:var(--warn-soft);
+  border-color:var(--warn-soft)}
+.taghinweis b{font-size:14px}
+.taghinweis > div{flex:1;min-width:0}
+.taghinweis .act{flex:0 0 auto}
+
+/* --- Der Assistent für eine neue Stunde --- */
+.schrittleiste{display:flex;gap:6px;margin-bottom:12px}
+.schritt{flex:1;min-width:0;display:flex;align-items:center;gap:6px;padding:7px 9px;
+  border-radius:10px;background:var(--surface);font-size:12px;color:var(--muted)}
+.schritt b{flex:0 0 18px;width:18px;height:18px;border-radius:50%;background:var(--line);
+  color:var(--muted);font-size:11px;display:flex;align-items:center;justify-content:center}
+.schritt span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.schritt.an{background:var(--soft);color:var(--accent-dk);font-weight:650}
+.schritt.an b{background:var(--accent);color:var(--onaccent)}
+.schritt.fertig b{background:var(--good);color:var(--onaccent)}
+.wahl{display:flex;flex-direction:column;gap:9px;margin-top:14px}
+.wahlknopf{display:block;width:100%;text-align:left;border:1px solid var(--line);
+  background:var(--bg);border-radius:12px;padding:13px 15px;cursor:pointer;
+  font:inherit;color:inherit}
+.wahlknopf:active{background:var(--surface)}
+.wahlknopf b{display:block;font-size:15.5px;font-weight:650}
+.wahlknopf span{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.wahlknopf.on{border-color:var(--accent);background:var(--soft)}
+.statuschip{display:inline-block;border-radius:999px;padding:5px 13px;font-size:13.5px;
+  font-weight:650;background:var(--surface);color:var(--muted)}
+.statuschip.gut{background:var(--good-soft);color:var(--good)}
+.statuschip.bad{background:var(--bad-soft);color:var(--bad)}
+.statuschip.warn{background:var(--warn-soft);color:var(--warn)}
+
+/* --- Monatskalender --- */
+.kalender{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:12px}
+.kalkopf{text-align:center;font-size:10px;font-weight:750;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--muted);padding-bottom:4px}
+.kaltag{position:relative;aspect-ratio:1;border:0;background:0;border-radius:10px;
+  cursor:pointer;padding:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:2px;font:inherit;color:var(--ink)}
+.kaltag b{font-size:13.5px;font-weight:600;line-height:1}
+.kaltag.fremd{opacity:.3}
+.kaltag.we{color:var(--muted)}
+.kaltag.ferien{background:var(--warn-soft);color:var(--warn)}
+.kaltag.heute b{color:var(--accent-dk);font-weight:800}
+.kaltag.heute{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.kaltag.gewaehlt{background:var(--accent);color:var(--onaccent)}
+.kaltag.gewaehlt b{color:var(--onaccent)}
+.kalpunkte{display:flex;gap:3px;height:5px;align-items:center}
+.kp{width:5px;height:5px;border-radius:50%;display:block}
+.kp.termin{background:var(--accent-dk)}
+.kp.todo{background:var(--warn)}
+.kaltag.gewaehlt .kp{background:var(--onaccent)}
+
+/* --- Der Plus-Knopf ---
+   Sitzt unten links über allem, außerhalb der Navigationsleiste, damit er den
+   Daumen nicht mit den Tabs streitet. */
+.fab{position:fixed;z-index:40;left:16px;
+  bottom:calc(70px + env(safe-area-inset-bottom));
+  width:54px;height:54px;border-radius:18px;border:0;cursor:pointer;padding:0;
+  background:var(--accent);color:var(--onaccent);
+  box-shadow:0 6px 18px rgba(0,0,0,.22), 0 1px 3px rgba(0,0,0,.2);
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .22s cubic-bezier(.3,.8,.4,1)}
+.fab:active{transform:scale(.93)}
+.fab.offen{transform:rotate(45deg)}
+.fabscrim{position:fixed;inset:0;z-index:44;background:var(--scrim);opacity:0;
+  visibility:hidden;transition:opacity .2s ease,visibility .2s ease}
+.fabscrim.open{opacity:1;visibility:visible}
+.fabsheet{position:fixed;left:0;right:0;z-index:45;
+  bottom:0;background:var(--card);border-top:1px solid var(--line);
+  border-radius:20px 20px 0 0;box-shadow:0 -14px 34px rgba(0,0,0,.22);
+  padding:10px 16px calc(20px + env(safe-area-inset-bottom));
+  max-height:78vh;overflow:auto;transform:translateY(110%);
+  transition:transform .24s cubic-bezier(.2,.8,.3,1);visibility:hidden}
+.fabsheet.open{transform:translateY(0);visibility:visible}
+.fabgriff{width:38px;height:4px;border-radius:999px;background:var(--line);margin:0 auto 12px}
+.fabtitel{font-size:10.5px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 6px 2px}
+.fabzeile{display:flex;align-items:center;gap:13px;width:100%;border:0;background:0;
+  padding:12px 2px;border-top:1px solid var(--line);cursor:pointer;text-align:left;
+  font:inherit;color:inherit}
+.fabzeile:first-child{border-top:0}
+.fabzeile:active{background:var(--surface)}
+.fabzeile .fi{flex:0 0 40px;width:40px;height:40px;border-radius:12px;background:var(--soft);
+  color:var(--accent-dk);display:flex;align-items:center;justify-content:center}
+.fabzeile .fw{flex:1;min-width:0}
+.fabzeile .fw b{display:block;font-size:15px;font-weight:650}
+.fabzeile .fw span{display:block;font-size:12.5px;color:var(--muted);margin-top:1px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (min-width:560px){
+  .fabsheet{left:50%;transform:translate(-50%,110%);max-width:520px;
+    border-radius:20px;bottom:24px}
+  .fabsheet.open{transform:translate(-50%,0)}
+}
+
+/* --- Organisation --- */
+/* Eine Überschrift für alle Bereiche – gleiche Bauart wie in der Organisation. */
+.seitenkopf{padding:0;overflow:hidden}
+.seitenkopf .skopf{padding:14px 15px 12px;background:var(--surface);
+  border-bottom:1px solid var(--line)}
+.seitenkopf .skopf h3{font-size:16.5px}
+.seitenkopf .skopf .mini{margin-top:2px}
+.seitenkopf .sinhalt{padding:12px 14px 14px}
+.faqgruppe h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:2px}
+.faqfrage{border-top:1px solid var(--line)}
+.faqgruppe h3 + .faqfrage{border-top:0}
+.faqfrage summary{list-style:none;cursor:pointer;padding:11px 0 10px;
+  font-size:14.5px;font-weight:650;display:flex;align-items:flex-start;gap:8px}
+.faqfrage summary::-webkit-details-marker{display:none}
+.faqfrage summary::after{content:"›";margin-left:auto;color:var(--muted);font-size:17px;
+  line-height:1;transition:transform .18s ease}
+.faqfrage[open] summary::after{transform:rotate(90deg)}
+.faqfrage p{margin:0 0 12px}
+.heutekarte{padding:0;overflow:hidden}
+.heutekarte .hkopf{padding:14px 15px 12px;background:var(--surface);
+  border-bottom:1px solid var(--line)}
+.heutekarte .hkopf h3{font-size:16.5px}
+.heutekarte .hkopf .mini{margin-top:2px}
+.hpunkt{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;
+  padding:11px 15px;border:0;border-top:1px solid var(--line);background:0;
+  font:inherit;color:inherit;cursor:default}
+.hpunkt:first-of-type{border-top:0}
+button.hpunkt{cursor:pointer}
+button.hpunkt:active{background:var(--surface)}
+.hpunkt .hicon{flex:0 0 8px;width:8px;height:8px;border-radius:50%;margin-top:6px;
+  background:var(--muted)}
+.hpunkt.plan .hicon{background:var(--accent)}
+.hpunkt.termin .hicon{background:var(--accent-dk)}
+.hpunkt.todo .hicon{background:var(--warn)}
+.hpunkt.warn .hicon{background:var(--bad)}
+.hpunkt.gut .hicon{background:var(--good)}
+.hpunkt.frei .hicon{background:var(--warn)}
+.hpunkt .htxt{flex:1;min-width:0;font-size:14px;line-height:1.4}
+.hpunkt .hchev{flex:0 0 auto;color:var(--muted);font-size:16px}
+
+.terminzeile{display:flex;align-items:center;gap:11px;width:100%;border:0;background:0;
+  padding:9px 0;border-top:1px solid var(--line);cursor:pointer;text-align:left;
+  font:inherit;color:inherit}
+.terminzeile:active{background:var(--surface)}
+.terminzeile .tdatum{flex:0 0 38px;text-align:center;line-height:1.05}
+.terminzeile .tdatum b{display:block;font-size:16px}
+.terminzeile .tdatum span{display:block;font-size:10px;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.04em}
+.terminzeile.heute .tdatum b{color:var(--accent-dk)}
+.terminzeile .ttxt{flex:1;min-width:0}
+.terminzeile .ttxt b{display:block;font-size:14.5px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.terminzeile .ttxt span{display:block;font-size:12px;color:var(--muted);margin-top:1px}
+
+.todozeile{display:flex;align-items:center;gap:11px;padding:8px 0;
+  border-top:1px solid var(--line)}
+.haken{flex:0 0 24px;width:24px;height:24px;border-radius:8px;cursor:pointer;
+  border:1.5px solid var(--line);background:var(--card);color:transparent;
+  display:flex;align-items:center;justify-content:center;padding:0}
+.haken.an{background:var(--good);border-color:var(--good);color:var(--onaccent)}
+.todozeile .ttext{flex:1;min-width:0;border:0;background:0;text-align:left;
+  font:inherit;color:inherit;cursor:pointer;padding:2px 0}
+.todozeile .ttext b{display:block;font-size:14.5px;font-weight:600}
+.todozeile.fertig .ttext b{text-decoration:line-through;color:var(--muted);font-weight:500}
+.todozeile.ueber .ttext .mini{color:var(--bad);font-weight:650}
+
+.freizeile{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  width:100%;border:0;background:0;padding:9px 0;border-top:1px solid var(--line);
+  cursor:pointer;text-align:left;font:inherit;color:inherit}
+.freizeile:first-child{border-top:0}
+.freizeile b{display:block;font-size:14.5px}
+.freizeile.vorbei{opacity:.5}
+
 /* --- Stundenplan --- */
 .planleiste{display:flex;align-items:center;gap:10px}
 .planleiste .pfeil{flex:0 0 auto;width:40px;height:40px;border:1px solid var(--line);
@@ -352,6 +550,47 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 .tagchip.on{background:var(--accent);border-color:var(--accent)}
 .tagchip.on b,.tagchip.on span{color:var(--onaccent)}
 .tagchip.heute{border-color:var(--accent)}
+.tagchip.frei{opacity:.5;border-style:dashed}
+.tagchip.frei.on{opacity:1}
+.raster th.freispalte{color:var(--warn)}
+.raster td.freispalte{opacity:.45}
+/* Die Zeitspalte fährt von links ein, wenn man den Uhr-Knopf drückt. */
+.raster .nrspalte{width:0;padding:0;overflow:hidden;text-align:right;
+  vertical-align:middle;transition:width .26s ease}
+.raster.mitzeit .nrspalte{width:46px;padding:0 6px 0 0}
+.raster .nrspalte .zt{display:block;font-size:10px;line-height:1.25;color:var(--muted);
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+  opacity:0;transform:translateX(-10px);transition:opacity .22s ease,transform .26s ease}
+.raster.mitzeit .nrspalte .zt{opacity:1;transform:none}
+.raster .nrspalte .zt b{display:block;font-weight:700;color:var(--ink)}
+.raster .nrspalte .zt i{display:block;font-style:normal}
+.uhrbtn.on{background:var(--soft);color:var(--accent-dk);border-color:var(--soft)}
+.raster tr.dienstzeile td{padding:1px 1px 4px}
+.dienstband{display:block;font-size:9.5px;font-weight:650;color:var(--dienst);
+  background:var(--dienst-soft);border-radius:6px;padding:2px 3px;text-align:center;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.freikarte{border-style:dashed;opacity:.85}
+.freikarte .was h3{color:var(--muted);font-weight:600}
+.vertleiste{margin-top:10px}
+.vertleiste .act{background:var(--warn-soft);border-color:var(--warn);color:var(--warn-dk);
+  font-weight:700}
+.vertleiste .act:active{background:var(--warn);color:var(--onaccent)}
+.vertleiste.an{outline:2px dashed var(--warn);outline-offset:6px;border-radius:10px}
+/* Der Knopf gehört zum Plan, die Voreinstellungen darunter nicht mehr. */
+.planTrenner{height:1px;background:var(--line);margin:26px 4px 18px}
+.stundenkarte .marke{display:inline-block;margin-left:7px;font-size:10.5px;font-weight:700;
+  letter-spacing:.02em;text-transform:uppercase;border-radius:6px;padding:2px 6px;
+  background:var(--warn-soft);color:var(--warn);vertical-align:middle}
+.stundenkarte.vertretung{border-left:3px solid var(--warn)}
+.stundenkarte.extra{border-left:3px dashed var(--accent)}
+.dienststreifen{display:flex;align-items:center;gap:9px;margin:-6px 0 12px;padding:8px 14px;
+  border-radius:11px;background:var(--dienst-soft);border:1px solid transparent}
+.dienststreifen .di{flex:0 0 auto;color:var(--dienst);line-height:0}
+.dienststreifen b{font-size:13.5px;color:var(--dienst)}
+.dienststreifen .mini{margin-left:auto;color:var(--dienst);opacity:.8}
+.stundenkarte.gedimmt{opacity:.55}
+.card.freitag{text-align:center;padding:18px 14px}
+.card.freitag h3{font-size:17px;color:var(--warn)}
 .stundenkarte{display:flex;align-items:stretch;gap:12px;padding:12px 14px;cursor:pointer}
 .stundenkarte .zeit{flex:0 0 58px;text-align:center;border-right:1px solid var(--line);
   padding-right:10px;line-height:1.2}
@@ -373,7 +612,7 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
   text-transform:none;letter-spacing:0}
 .raster th.heute{color:var(--accent-dk)}
 .raster td{padding:2px 1px;border:0;vertical-align:top}
-.raster .nrspalte{width:22px;font-size:10px;color:var(--muted);text-align:center;padding-top:9px}
+
 .zelle{width:100%;min-height:44px;border:1px solid var(--line);background:var(--card);
   border-radius:9px;padding:5px 1px;cursor:pointer;line-height:1.15;overflow:hidden;
   display:block;text-align:center;font-family:inherit}
@@ -381,11 +620,13 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 .zelle span{display:block;font-size:8.5px;color:var(--muted);overflow:hidden;
   text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.1px}
 .zelle.leer{background:0;border-style:dashed;border-color:var(--line)}
-.zelle.erfasst{background:var(--good-soft);border-color:var(--good-soft)}
-.zelle.ausgef{background:var(--bad-soft);border-color:var(--bad-soft)}
-.zelle.heute:not(.leer){box-shadow:inset 0 0 0 1px var(--accent)}
-.raster td.heute{background:var(--surface)}
-.raster td.heute:first-child{border-radius:8px 0 0 8px}
+/* Eine erfasste Stunde bekommt nur einen Punkt, keine grüne Fläche. */
+.zelle{position:relative}
+.zpunkt{position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;
+  background:var(--good);display:block}
+.zelle.ausgef{background:var(--bad-soft);border-color:var(--bad-soft);opacity:.7}
+.zelle.vertretung{background:var(--warn-soft);border-color:var(--warn)}
+.raster th.heute{border-radius:8px 8px 0 0}
 /* Zeitraster: eine Tafel mit fester Spaltenordnung. Die Stundenzahl steht
    als Marke links, dann Beginn – Ende, rechts die Dauer als stille Auskunft. */
 .rasterkopf{display:flex;align-items:center;gap:10px;padding:0 0 8px;
@@ -420,6 +661,21 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 .rasterfuss .mini{display:block;text-align:center;margin-bottom:8px;
   font-variant-numeric:tabular-nums}
 .rasterfuss .knoepfe{display:flex;align-items:center;justify-content:center;gap:10px}
+/* „Jetzt“ – ein ruhiger Streifen, kein Alarm. */
+.jetztstreifen{display:flex;flex-direction:column;gap:1px;padding:10px 14px;
+  border-radius:12px;background:var(--surface);margin-bottom:12px;
+  border:1px solid var(--line)}
+.jetztstreifen b{font-size:12.5px;font-weight:750;letter-spacing:.02em;color:var(--muted)}
+.jetztstreifen span{font-size:14px;color:var(--ink)}
+.jetztstreifen.an{background:var(--soft);border-color:var(--accent)}
+.jetztstreifen.an b{color:var(--accent-dk)}
+.stundenkarte.jetzt{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+body.vertmodus .stundenkarte,
+body.vertmodus .zelle:not(.leer){box-shadow:0 0 0 2px var(--warn)}
+body.vertmodus .stundenkarte{cursor:pointer}
+.stundenkarte.jetzt .zeit b{color:var(--accent-dk)}
+.stundenkarte.gleich .zeit b{color:var(--accent-dk)}
+.zelle.jetzt{box-shadow:inset 0 0 0 2px var(--accent)}
 .planleer{text-align:center;padding:18px 10px}
 .planleer p{font-size:13.5px;color:var(--muted);margin:0 0 14px}
 
@@ -589,20 +845,25 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
   display:block;white-space:pre-wrap}
 .readbox>summary .rb-s.empty{font-style:italic}
 .readbox .iconbtn{width:36px;height:36px}
+/* Der Kasten klappt nicht mehr – die Kopfzeile trennt nur noch ab. */
+.readbox.offen{overflow:hidden}
+.readbox.offen > #boxKopfSum{display:flex;align-items:center;gap:10px;
+  padding:13px 15px;border-bottom:1px solid var(--line);background:var(--surface)}
+.readbox.offen > #boxKopfSum .grow{flex:1;min-width:0}
 
 /* --- Baustein: Drop-up (Klasse + Fach) --- */
 .dupscrim{position:fixed;inset:0;background:var(--scrim);z-index:28;opacity:0;
   transition:opacity .18s ease;pointer-events:none}
 .dupscrim.open{opacity:1;pointer-events:auto}
 .dropup{position:fixed;left:0;right:0;z-index:29;
-  bottom:calc(57px + env(safe-area-inset-bottom));
-  background:var(--card);border-top:1px solid var(--line);border-radius:18px 18px 0 0;
-  box-shadow:0 -12px 34px rgba(56,52,45,.16);padding:14px 16px 18px;
-  max-height:72vh;overflow:auto;transform:translateY(115%);
+  top:calc(58px + env(safe-area-inset-top));
+  background:var(--card);border-bottom:1px solid var(--line);border-radius:0 0 18px 18px;
+  box-shadow:0 14px 34px rgba(0,0,0,.18);padding:16px 16px 14px;
+  max-height:72vh;overflow:auto;transform:translateY(-115%);
   transition:transform .22s cubic-bezier(.2,.8,.3,1);visibility:hidden}
 .dropup.open{transform:translateY(0);visibility:visible}
 .dupgriff{width:38px;height:4px;border-radius:999px;background:var(--line);
-  margin:0 auto 12px}
+  margin:12px auto 0;order:99}
 .duptitle{font-size:10.5px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;
   color:var(--muted);margin:2px 0 8px}
 .chiprow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:15px}
@@ -650,11 +911,23 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 
 <header>
   <div class="hdr-row">
-    <div class="hdr-txt">
-      <div class="hdr-title" id="hTitle">Loewi</div>
-      <div class="hdr-sub" id="hSub">Anwesenheit &amp; Mitarbeit · offline</div>
-    </div>
-    <button class="pill" id="saveState">gespeichert</button>
+    <button class="hdr-txt" id="navAuswahl" type="button"
+      aria-haspopup="true" aria-expanded="false" aria-label="Klasse und Fach wählen">
+      <span class="hdr-wer">
+        <span class="hdr-title" id="hTitle">Loewi</span>
+        <span class="hdr-sub" id="hSub">Anwesenheit &amp; Mitarbeit · offline</span>
+      </span>
+      <span class="hdr-pfeil" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </span>
+    </button>
+    <button class="themebtn" id="btnProfil" type="button" aria-label="Profil">
+      <svg class="ic-mitte" viewBox="0 0 24 24" width="19" height="19" fill="none"
+        stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8.6" r="3.6"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/></svg>
+      <span class="punkt" id="profilPunkt" hidden></span>
+    </button>
     <button class="themebtn" id="btnTheme" type="button"
       aria-label="Helles oder dunkles Design" title="Helles oder dunkles Design">
       <svg class="ic-sonne" viewBox="0 0 24 24" width="19" height="19" fill="none"
@@ -692,6 +965,8 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
         <div class="planwoche"><b id="planKW">–</b><span id="planSpanne"></span></div>
         <button class="pfeil" id="planVor" aria-label="Woche vor">›</button>
       </div>
+      <div class="mini" id="planFrei" style="display:none;text-align:center;margin-top:8px;
+        color:var(--warn);font-weight:650"></div>
       <div class="segrow klein" id="planAnsicht" style="margin:12px 0 0">
         <span class="pille" id="planPille"></span>
         <button data-a="tag" class="on">Tag</button>
@@ -707,24 +982,13 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
       <button class="act quiet" id="planHeute">Zur laufenden Woche</button>
     </div>
 
+    <div class="planTrenner"></div>
+
     <details class="newbox" id="planBox">
-      <summary>Stundenplan einrichten</summary>
+      <summary>Voreinstellungen</summary>
       <div class="inner">
-        <p class="hint" style="margin-top:0">Der Plan gilt für jede Woche gleich. Tippe unten im
-          <b>Wochenraster</b> auf eine Stelle, um dort Klasse und Fach einzutragen – die Ansicht
-          schaltet dafür von allein um.</p>
-        <div class="actions" style="margin-top:12px">
-          <button class="act neutral" id="planBearbeiten" style="width:100%">Raster bearbeiten</button>
-        </div>
-        <div class="sep"></div>
-        <div class="schalter" id="swVorschlag">
-          <div class="txt">Thema vorschlagen<small>Beim Anlegen die nächste offene Einheit der Reihe eintragen</small></div>
-          <div class="kipp"></div>
-        </div>
-        <div class="sep"></div>
         <label class="lbl">Zeitraster</label>
-        <p class="hint" style="margin:0 0 10px">Gilt für alle Tage. Die Uhrzeiten stehen
-          später auf jeder Stundenkarte.</p>
+        <p class="hint" style="margin:0 0 10px">Gilt für alle Tage.</p>
         <div id="rasterListe"></div>
         <div class="rasterfuss">
           <span class="mini" id="rasterInfo"></span>
@@ -732,6 +996,23 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
             <button class="act neutral mini" id="rasterPlus">Stunde anhängen</button>
             <button class="act quiet" id="rasterMinus">Letzte entfernen</button>
           </div>
+        </div>
+
+        <div class="sep"></div>
+        <label class="lbl">Aufsichten und Dienste</label>
+        <p class="hint" style="margin:0 0 10px">Pausen- und Busaufsicht, Vertretungsdienste.</p>
+        <div id="dienstListe"></div>
+        <div class="actions" style="margin-top:10px">
+          <button class="act neutral mini" id="btnDienstNeu">+ Dienst</button>
+        </div>
+
+        <div class="sep"></div>
+        <label class="lbl">Ferien und freie Tage</label>
+        <p class="hint" style="margin:0 0 10px">An diesen Tagen zeigt der Plan keine Stunden.</p>
+        <div id="orgFreiListe"></div>
+        <div class="actions" style="margin-top:10px">
+          <button class="act neutral mini" id="btnFerienNeu">+ Ferien</button>
+          <button class="act neutral mini" id="btnFeiertagNeu">+ Einzelner Tag</button>
         </div>
       </div>
     </details>
@@ -741,35 +1022,6 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 
   <!-- Ebene 1: Liste aller Stunden -->
   <div id="stdListe">
-    <details class="newbox" id="newStunde">
-      <summary>+ Neue Stunde</summary>
-      <div class="inner">
-        <div class="grid2">
-          <div>
-            <label class="lbl" for="nsDatum">Datum</label>
-            <input type="date" id="nsDatum">
-          </div>
-          <div>
-            <label class="lbl" for="nsEinheit">Aus der Planung</label>
-            <select id="nsEinheit"></select>
-          </div>
-        </div>
-        <div style="margin-top:10px">
-          <label class="lbl" for="nsThema">Was wurde gemacht</label>
-          <input type="text" id="nsThema" placeholder="z. B. Ballschule: Werfen und Fangen">
-        </div>
-        <div class="actions" style="margin-top:8px">
-          <button class="act quiet" id="btnWieLetztes">Wie letztes Mal übernehmen</button>
-        </div>
-        <div class="actions" style="margin-top:12px">
-          <button class="act primary" id="btnStundeAnlegen">Stunde anlegen</button>
-          <button class="act warnout mini" id="btnStundeAusfall">Ausgefallen</button>
-        </div>
-        <p class="hint">„Ausgefallen“ legt die Stunde ohne Eintragungen an – der Grund kommt
-          einfach in <b>Was wurde gemacht</b>.</p>
-      </div>
-    </details>
-
     <div class="card">
       <div class="suchfeld" id="stdSucheBox" style="display:none">
         <span class="lupe"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg></span>
@@ -780,20 +1032,99 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
     </div>
   </div>
 
+  <!-- Ebene 0: Neue Stunde in drei Schritten -->
+  <div id="stdNeu" style="display:none">
+    <div class="topbar" id="tbNeu"></div>
+    <div class="schrittleiste" id="neuSchritte"></div>
+
+    <div class="card" id="neu1">
+      <h3 style="font-size:16px;margin-bottom:2px">Was war in dieser Stunde?</h3>
+      <div class="mini" id="neuWer"></div>
+      <div class="wahl" id="neuArt">
+        <button class="wahlknopf" data-a="gehalten">
+          <b>Stattgefunden</b><span>Ganz normal unterrichtet</span></button>
+        <button class="wahlknopf" data-a="ausgefallen">
+          <b>Ausgefallen</b><span>Kein Unterricht – Grund notieren</span></button>
+        <button class="wahlknopf" data-a="vertretung">
+          <b>Vertretung</b><span>Fremde Klasse oder fremdes Fach</span></button>
+      </div>
+    </div>
+
+    <div class="card" id="neu2" style="display:none">
+      <h3 style="font-size:16px;margin-bottom:10px" id="neu2Titel">Angaben zur Stunde</h3>
+      <div id="neu2Vertretung" style="display:none">
+        <div class="grid2">
+          <div>
+            <label class="lbl" for="nvKlasse">Klasse</label>
+            <select id="nvKlasse"></select>
+          </div>
+          <div>
+            <label class="lbl" for="nvFach">Fach</label>
+            <select id="nvFach"></select>
+          </div>
+        </div>
+        <div class="sep"></div>
+      </div>
+      <div class="grid2">
+        <div>
+          <label class="lbl" for="nsDatum">Datum</label>
+          <input type="date" id="nsDatum">
+        </div>
+        <div id="nsEinheitFeld">
+          <label class="lbl" for="nsEinheit">Aus der Planung</label>
+          <select id="nsEinheit"></select>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <label class="lbl" for="nsThema" id="nsThemaLabel">Was wurde gemacht</label>
+        <textarea id="nsThema" rows="2" style="min-height:46px"
+          placeholder="z. B. Ballschule: Werfen und Fangen"></textarea>
+      </div>
+      <div style="margin-top:10px" id="nsHaFeld">
+        <label class="lbl" for="nsHa">Hausaufgabe</label>
+        <textarea id="nsHa" rows="2" style="min-height:46px" placeholder="optional"></textarea>
+      </div>
+      <div style="margin-top:10px">
+        <label class="lbl" for="nsNotiz">Notiz</label>
+        <textarea id="nsNotiz" rows="2" placeholder="optional"></textarea>
+      </div>
+      <div class="actions" style="margin-top:8px">
+        <button class="act quiet" id="btnWieLetztes">Wie letztes Mal übernehmen</button>
+      </div>
+      <div class="actions" style="margin-top:12px">
+        <button class="act primary" id="btnNeuWeiter" style="width:100%">Weiter</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Ebene 2: Stunde ansehen -->
   <div id="stdAnsicht" style="display:none">
     <div class="topbar" id="tbAnsicht"></div>
+
     <div class="card">
-      <div class="read" id="stdKopf"></div>
-      <div class="actions" style="margin-top:14px">
-        <button class="act primary" id="btnZumErfassen" style="width:100%">Eintragen &amp; bearbeiten</button>
+      <div class="rowline" style="padding-top:0;border-bottom:0;padding-bottom:0">
+        <h3 style="font-size:15px">Status</h3>
+        <button class="iconbtn" id="btnStatusEdit" aria-label="Status ändern"></button>
       </div>
+      <div id="stdStatus" style="margin-top:8px"></div>
     </div>
-    <div class="tiles" id="stdTiles"></div>
+
     <div class="card">
-      <h3 style="font-size:15px;margin-bottom:6px">Eintragungen</h3>
-      <div id="stdCodes"></div>
+      <div class="rowline" style="padding-top:0;border-bottom:0;padding-bottom:0">
+        <h3 style="font-size:15px">Angaben</h3>
+        <button class="iconbtn" id="btnDatenEdit" aria-label="Angaben bearbeiten"></button>
+      </div>
+      <div class="read" id="stdKopf"></div>
     </div>
+
+    <div class="card" id="stdMitarbeitKarte">
+      <div class="rowline" style="padding-top:0;border-bottom:0;padding-bottom:0">
+        <h3 style="font-size:15px">Mitarbeit</h3>
+        <button class="iconbtn" id="btnMitarbeitEdit" aria-label="Mitarbeit bearbeiten"></button>
+      </div>
+      <div id="stdCodes" style="margin-top:6px"></div>
+    </div>
+
     <div style="text-align:center">
       <button class="act quiet" id="btnStundeDel">Stunde löschen</button>
     </div>
@@ -802,15 +1133,13 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
   <!-- Ebene 3: Erfassen -->
   <div id="stdErfassen" style="display:none">
     <div class="topbar" id="tbErfassen"></div>
-    <details class="newbox readbox" id="boxKopf">
-      <summary id="boxKopfSum">
+    <div class="newbox readbox offen" id="boxKopf" style="display:none">
+      <div id="boxKopfSum">
         <span class="grow">
           <span class="rb-t" id="bkTitel">Stunde</span>
           <span class="rb-s" id="bkSub"></span>
         </span>
-        <span class="iconbtn" id="bkEdit" role="button" tabindex="0"
-          aria-label="Datum, Thema und Notiz bearbeiten"></span>
-      </summary>
+      </div>
       <div class="inner">
         <div class="grid2">
           <div>
@@ -828,15 +1157,22 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
             placeholder="z. B. Ballschule: Werfen und Fangen"></textarea>
         </div>
         <div style="margin-top:10px">
+          <label class="lbl" for="inHa">Hausaufgabe</label>
+          <textarea id="inHa" rows="2" style="min-height:46px"
+            placeholder="Was ist bis zum nächsten Mal auf?"></textarea>
+        </div>
+        <div style="margin-top:10px">
           <label class="lbl" for="inStdNotiz">Notiz zur Stunde (Ausfall, Vertretung, offen geblieben)</label>
           <textarea id="inStdNotiz" rows="2" placeholder="optional"></textarea>
         </div>
       </div>
-    </details>
+    </div>
+
+    <div id="tagHinweis"></div>
 
     <div class="card" id="listCard">
       <div class="rowline" style="padding-top:0">
-        <div class="mini legend"><b>+</b>1–2 <b>o</b>3–4 <b>–</b>5–6 · <b>k</b>krank · <b>v</b>Sportzeug</div>
+        <div class="mini legend" id="erfLegende"></div>
         <div class="mini" id="progress" style="white-space:nowrap"></div>
       </div>
       <div class="actions" style="margin:2px 0 10px">
@@ -891,9 +1227,7 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
           <div class="actions" style="margin-top:6px">
             <button class="act primary" id="btnTestAnlegen" style="width:100%">Test anlegen</button>
           </div>
-          <p class="hint">Kriterien mit <b>Skala</b> werden mit 1 bis 6 benotet und ergeben den
-            Testdurchschnitt. Kriterien als <b>Textfeld</b> nehmen alles auf, was sich nicht benoten
-            lässt – die gesprungene Höhe, die Zeit, eine Beobachtung. Sie zählen nicht in den Schnitt.</p>
+          <p class="hint"><b>Skala</b> zählt in den Schnitt, <b>Textfeld</b> nimmt freie Angaben auf und zählt nicht mit.</p>
         </div>
       </details>
       <div class="card">
@@ -917,16 +1251,14 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
             <button class="act neutral mini" id="btnEkAdd">Hinzufügen</button>
           </div>
           <div class="chiprow" id="ekKritListe" style="margin-top:10px"></div>
-          <p class="hint">Entfernst du ein Kriterium, verschwinden auch seine Eintragungen –
-            das lässt sich unten über „Rückgängig“ zurückholen.</p>
+          <p class="hint">Ein entferntes Kriterium nimmt seine Eintragungen mit.</p>
         </div>
       </details>
       <div class="card">
         <div style="overflow-x:auto">
           <table class="ttab" id="tblTest"><thead></thead><tbody></tbody></table>
         </div>
-        <p class="hint">Leere Felder sind noch nicht bewertet und zählen nicht in den Schnitt.
-          Die Bemerkungen stehen in der letzten Spalte – seitlich wischen.</p>
+        <p class="hint">Leere Felder zählen nicht. Zeile antippen, um ein Kind zu bewerten.</p>
       </div>
       <div class="actions" style="margin-bottom:12px">
         <button class="act primary" id="btnTestErfassen" style="width:100%">Bewerten</button>
@@ -983,10 +1315,7 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
   <details class="newbox" id="einstufBox">
     <summary>Kinder einstufen</summary>
     <div class="inner">
-      <p class="hint" style="margin-top:0">Ohne Einstufung wird rein zufällig gelost.
-        <b>K</b> heißt: heute nicht dabei – das Kind wird ausgegraut und nicht eingeteilt.
-        Wer befreit ist, steht dort von allein. Die Angaben bleiben auf diesem Gerät und
-        hängen an der Klasse, nicht am Fach.</p>
+      <p class="hint" style="margin-top:0">Ohne Einstufung wird zufällig gelost.</p>
       <div class="actions" style="margin-top:12px">
         <button class="act neutral mini" id="btnKrankAusStunde">K aus der letzten Stunde</button>
         <button class="act quiet" id="btnKrankWeg">Alle K entfernen</button>
@@ -1017,8 +1346,7 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
         <label class="lbl" for="nrJahrgang">Für welchen Jahrgang</label>
         <select id="nrJahrgang"></select>
       </div>
-      <p class="hint">Reihen gehören zum Fach, nicht zur Klasse – du kannst sie in jeder Klasse
-        einsetzen. Der Jahrgang sagt, für welche Stufe die Reihe gedacht ist.</p>
+      <p class="hint">Reihen gehören zum Fach und lassen sich in jeder Klasse nutzen.</p>
       <div class="actions" style="margin-top:12px">
         <button class="act primary" id="btnReiheAdd" style="width:100%">Reihe anlegen</button>
       </div>
@@ -1027,8 +1355,7 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
         <button class="act neutral" id="btnReiheImport" style="width:100%">Geteilte Reihe einfügen</button>
         <input type="file" id="fileReihe" accept="application/json,.json" style="display:none">
       </div>
-      <p class="hint">Eine von Kolleginnen oder Kollegen geteilte Reihen-Datei landet als neue Reihe
-        im gerade gewählten Fach. Deine übrigen Daten bleiben unberührt.</p>
+      <p class="hint">Geteilte Reihen kommen als neue Reihe dazu, vorhandene bleiben.</p>
       </div>
     </details>
     <div class="card">
@@ -1048,8 +1375,7 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
       <div class="actions">
         <button class="act neutral" id="btnReiheExport" style="width:100%">Reihe teilen</button>
       </div>
-      <p class="hint">Erzeugt eine eigene Datei nur mit dieser Reihe und ihren Einheiten – ohne
-        Klassen, ohne Kinder, ohne Eintragungen. Sie ersetzt keine Sicherung.</p>
+      <p class="hint">Nur die Reihe und ihre Einheiten – ohne Klassen und Eintragungen.</p>
     </div>
     <div style="text-align:center">
       <button class="act quiet" id="btnReiheDel">Reihe löschen</button>
@@ -1154,7 +1480,7 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
         <button class="act primary" id="btnEditSave">Speichern</button>
         <button class="act neutral" id="btnEditBack">Zurück</button>
       </div>
-      <p class="hint">Deine Eingaben werden schon beim Tippen gesichert – der Knopf bringt dich zurück zur Ansicht.</p>
+      <p class="hint">Eingaben werden schon beim Tippen gesichert.</p>
     </div>
   </div>
 </section>
@@ -1163,23 +1489,23 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 <section class="view" id="v-uebersicht">
 
   <div id="sumListe">
-    <div class="tiles" id="sumTiles"></div>
-    <div class="card">
-      <table id="tblSum">
-        <thead><tr><th>Kind</th><th>k</th><th>v</th><th>+</th><th>o</th><th>–</th><th>Ø</th>
-          <th>Ø&nbsp;Test</th><th class="chevzelle"></th></tr></thead>
-        <tbody></tbody>
-      </table>
-
-    </div>
-    <div class="card">
-      <h3 style="font-size:15px;margin-bottom:6px">Stundenübersicht</h3>
-      <div id="stdList"></div>
+    <div class="card seitenkopf" id="sumKopf">
+      <div class="skopf">
+        <h3>Klassenliste</h3>
+        <div class="mini" id="sumWer"></div>
+      </div>
+      <div class="sinhalt">
+        <table id="tblSum">
+          <thead><tr><th>Kind</th><th>Fehlt</th><th id="thVerg">Verg.</th><th>Ø</th>
+            <th>Test</th><th class="chevzelle"></th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="sumlegende mini" id="sumLegende"></div>
+      </div>
     </div>
     <div class="card">
       <h3 style="font-size:15px;margin-bottom:4px">Berichte</h3>
-      <p class="hint" style="margin-top:0">Eine PDF je Kind – Kennzahlen, Mitarbeit im Verlauf und
-        alle Testergebnisse. Für Elterngespräche und Zeugnisnotizen.</p>
+      <p class="hint" style="margin-top:0">Eine PDF je Kind, für Elterngespräche und Zeugnisse.</p>
       <div class="actions" style="margin-top:12px">
         <button class="act neutral" id="btnAllePdf" style="width:100%">Alle Kinder als PDF</button>
       </div>
@@ -1207,14 +1533,79 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
         <input type="date" id="kindBefreit">
         <button class="act neutral mini" id="btnBefreitWeg">Aufheben</button>
       </div>
-      <p class="hint">Solange die Befreiung läuft, wird das Kind in neuen Stunden automatisch
-        auf <b>k</b> gesetzt. Du kannst das in jeder Stunde einzeln überschreiben.</p>
+      <p class="hint">Setzt das Kind in neuen Stunden auf <b>k</b>, einzeln überschreibbar.</p>
     </div>
     <div class="card">
       <h3 style="font-size:15px;margin-bottom:6px">Verlauf</h3>
       <div id="kindVerlauf"></div>
     </div>
   </div>
+</section>
+
+<!-- ============ ORGANISATION ============ -->
+<section class="view" id="v-organisation">
+
+  <div id="orgHeute"></div>
+
+  <div class="segrow" id="orgSeg">
+    <span class="pille" id="orgPille"></span>
+    <button data-o="kalender" class="on">Kalender</button>
+    <button data-o="termine">Termine</button>
+    <button data-o="todos">Aufgaben</button>
+    <button data-o="notizen">Notizen</button>
+  </div>
+
+  <div id="orgKalender">
+    <div class="card">
+      <div class="planleiste">
+        <button class="pfeil" id="kalZurueck" aria-label="Monat zurück">‹</button>
+        <div class="planwoche"><b id="kalMonat">–</b><span id="kalJahr"></span></div>
+        <button class="pfeil" id="kalVor" aria-label="Monat vor">›</button>
+      </div>
+      <div class="kalender" id="kalGitter"></div>
+    </div>
+    <div class="card" id="kalTag"></div>
+  </div>
+
+  <div id="orgTermineBox" style="display:none">
+    <div class="card">
+      <div class="rowline" style="padding-top:0">
+        <h3 style="font-size:15px">Termine</h3>
+        <button class="act neutral mini" id="btnTerminNeu">+ Termin</button>
+      </div>
+      <div id="orgTermine"></div>
+    </div>
+  </div>
+
+  <div id="orgTodosBox" style="display:none">
+    <div class="card">
+      <div class="rowline" style="padding-top:0">
+        <h3 style="font-size:15px">Aufgaben</h3>
+        <button class="act neutral mini" id="btnTodoNeu">+ Aufgabe</button>
+      </div>
+      <div class="segrow klein" id="todoFilter" style="margin:10px 0 4px">
+        <span class="pille" id="todoPille"></span>
+        <button data-t="offen" class="on">Offen</button>
+        <button data-t="alle">Alle</button>
+        <button data-t="fertig">Erledigt</button>
+      </div>
+      <div id="orgTodos"></div>
+    </div>
+  </div>
+
+  <div id="orgNotizenBox" style="display:none">
+    <div class="card">
+      <div class="rowline" style="padding-top:0">
+        <h3 style="font-size:15px">Notizen</h3>
+        <button class="act neutral mini" id="btnNotizNeu">+ Notiz</button>
+      </div>
+      <p class="hint" style="margin:6px 0 0">Konferenzen, Besprechungen, Gedanken.</p>
+      <div id="orgNotizen"></div>
+    </div>
+  </div>
+
+  <p class="hint" style="text-align:center;margin-top:14px">
+    Alles bleibt auf diesem Gerät. Namen von Kindern und Eltern sind personenbezogene Daten.</p>
 </section>
 
 <!-- ============ KLASSEN ============ -->
@@ -1235,9 +1626,7 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
     <div class="actions" style="margin-top:12px">
       <button class="act primary" id="btnKlasseAdd" style="width:100%">Klasse anlegen</button>
     </div>
-    <p class="hint">Klassen sind unabhängig vom Fach. Welches Fach du gerade unterrichtest, wählst du
-      unten über <b>Auswahl</b>.<br>Die App arbeitet mit Nummern. Wer welche Nummer hat, steht in deiner
-      Klassenliste – so enthält das Gerät keine Namen.</p>
+    <p class="hint">Klassen sind unabhängig vom Fach.</p>
     </div>
   </details>
 
@@ -1254,7 +1643,7 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
       <div class="actions" style="margin-top:12px">
         <button class="act primary" id="btnFachAdd" style="width:100%">Fach anlegen</button>
       </div>
-      <p class="hint">Ein Fach bündelt seine Unterrichtsreihen – diese gelten für alle Klassen.</p>
+      <p class="hint">Ein Fach bündelt seine Unterrichtsreihen.</p>
     </div>
   </details>
 
@@ -1265,13 +1654,84 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 
   <div class="card" id="kuerzelCard">
     <h3 style="font-size:15px;margin-bottom:4px">Kürzel (optional)</h3>
-    <p class="hint" style="margin-top:0">Nur wenn du sie brauchst – am besten Initialen wie „M.K.“, keine vollen Namen.</p>
+    <p class="hint" style="margin-top:0">Am besten Initialen wie „M.K.“, keine vollen Namen.</p>
     <div id="kuerzelList" style="margin-top:8px"></div>
   </div>
 </section>
 
 <!-- ============ DATEN ============ -->
+
+<section class="view" id="v-faq">
+  <div class="topbar" id="tbFaq"></div>
+  <div class="card seitenkopf">
+    <div class="skopf">
+      <h3>Häufige Fragen</h3>
+      <div class="mini">Kurz beantwortet – tippe auf eine Frage.</div>
+    </div>
+  </div>
+
+  <div class="card faqgruppe">
+    <h3>Anfangen</h3>
+      <details class="faqfrage"><summary>Womit fange ich an?</summary><p class="hint">Tippe oben auf die Kopfzeile: dort legst du über die Stifte deine Klassen und Fächer an. Danach trägst du im Plan einmal deinen Stundenplan ein – ab dann läuft alles über den Plan.</p></details>
+      <details class="faqfrage"><summary>Warum stehen dort Nummern und keine Namen?</summary><p class="hint">Loewi arbeitet mit den Nummern der Klassenliste. Das ist der datenschutzfreundliche Weg: ohne Namen sind die Daten auf dem Gerät für Fremde wertlos. Namen kannst du je Klasse hinterlegen, wenn deine Schule das erlaubt hat.</p></details>
+      <details class="faqfrage"><summary>Brauche ich eine Genehmigung?</summary><p class="hint">In NRW brauchst du für die Verarbeitung von Schülerdaten auf einem privaten Gerät die Genehmigung der Schulleitung (VO-DV I). Mit bloßen Nummern bewegst du dich auf der sicheren Seite; mit Namen brauchst du die Genehmigung.</p></details>
+      <details class="faqfrage"><summary>Muss ich online sein?</summary><p class="hint">Nein. Loewi läuft vollständig im Browser und braucht kein Netz. Es wird auch nichts hochgeladen – es gibt keinen Server, auf den etwas gehen könnte.</p></details>
+  </div>
+  <div class="card faqgruppe">
+    <h3>Stunden dokumentieren</h3>
+      <details class="faqfrage"><summary>Wie dokumentiere ich eine Stunde?</summary><p class="hint">Im Plan auf die Stunde tippen. Gibt es sie noch nicht, führt dich der Assistent in drei Schritten: 1. Was war (stattgefunden, ausgefallen, Vertretung), 2. Angaben wie Thema und Hausaufgabe, 3. Mitarbeit je Kind.</p></details>
+      <details class="faqfrage"><summary>Warum kann ich im Stunden-Tab keine Stunde mehr anlegen?</summary><p class="hint">Damit es nur einen Weg gibt. Eine Stunde gehört zu einem Termin im Plan – so bekommt sie Datum, Klasse und Fach von allein richtig. Für alles Ungeplante gibt es den Plus-Knopf unten links.</p></details>
+      <details class="faqfrage"><summary>Was bedeuten + o – k v?</summary><p class="hint">+ über dem Erwartbaren, o wie erwartet, – darunter. k heißt: heute nicht da – dann zählt die Stunde für dieses Kind nicht mit. v steht für vergessen (Sportzeug, Hausaufgaben, Material – je Fach benennbar) und lässt sich mit + o – kombinieren.</p></details>
+      <details class="faqfrage"><summary>Ich habe mich vertippt – wie ändere ich das?</summary><p class="hint">In der Stundenübersicht hat jede der drei Karten – Status, Angaben, Mitarbeit – einen eigenen Stift. Du änderst also genau das, was falsch ist.</p></details>
+      <details class="faqfrage"><summary>Eine Stunde ist ausgefallen.</summary><p class="hint">Im ersten Schritt „Ausgefallen“ wählen und den Grund eintragen. Die Stunde steht dann rot in der Liste, hat keine Eintragungen und zählt in keiner Auswertung mit.</p></details>
+      <details class="faqfrage"><summary>Kann ich etwas rückgängig machen?</summary><p class="hint">Nach jedem Löschen erscheint unten sieben Sekunden lang „Rückgängig“.</p></details>
+  </div>
+  <div class="card faqgruppe">
+    <h3>Plan</h3>
+      <details class="faqfrage"><summary>Wie trage ich meinen Stundenplan ein?</summary><p class="hint">Im Plan auf „Woche“ umschalten und oben rechts den Stift drücken. Dann tippst du auf die Felder und wählst Klasse, Fach und Raum. Der Plan gilt für jede Woche.</p></details>
+      <details class="faqfrage"><summary>Wo stelle ich die Uhrzeiten ein?</summary><p class="hint">Unter „Voreinstellungen“ im Zeitraster. Die Zeiten gelten für alle Tage. In der Wochenansicht blendest du sie mit dem Uhr-Knopf oben rechts ein und wieder aus.</p></details>
+      <details class="faqfrage"><summary>Was ist der grüne Punkt in einer Zelle?</summary><p class="hint">Diese Stunde ist schon dokumentiert.</p></details>
+      <details class="faqfrage"><summary>Wie trage ich eine Vertretung ein?</summary><p class="hint">Unter der Tages- oder Wochenansicht auf „Vertretung eintragen“. Das Raster wird hervorgehoben; dann tippst du die Stunde an – auch eine freie – und trägst Klasse, Fach und Raum ein. Die Stunde erscheint einmalig gelb und lässt sich mit einem Tipp zurücksetzen.</p></details>
+      <details class="faqfrage"><summary>Und Aufsichten oder andere Dienste?</summary><p class="hint">Unter „Voreinstellungen“ bei „Aufsichten und Dienste“. Sie erscheinen als schmales blaues Band an der richtigen Stelle im Tag und in der Woche – Vertretungen sind gelb, Dienste blau, das lässt sich nicht verwechseln.</p></details>
+      <details class="faqfrage"><summary>Ferien und freie Tage?</summary><p class="hint">Ebenfalls unter „Voreinstellungen“. An diesen Tagen zeigt der Plan keine Stunden.</p></details>
+      <details class="faqfrage"><summary>Wo sehe ich, in welcher Stunde ich gerade bin?</summary><p class="hint">In der Tagesansicht: sobald das Zeitraster steht, markiert Loewi die laufende und die nächste Stunde und springt beim Öffnen dorthin.</p></details>
+  </div>
+  <div class="card faqgruppe">
+    <h3>Klassenliste</h3>
+      <details class="faqfrage"><summary>Was zeigt die Klassenliste?</summary><p class="hint">Je Kind: Fehltage, wie oft etwas vergessen wurde, den Mitarbeits-Schnitt und den Test-Schnitt. Tippst du auf eine Zeile, siehst du den Verlauf dieses Kindes.</p></details>
+      <details class="faqfrage"><summary>Ein Kind ist längerfristig befreit.</summary><p class="hint">Im Verlauf des Kindes „Befreit bis“ setzen. In neuen Stunden wird es dann automatisch auf k gesetzt.</p></details>
+      <details class="faqfrage"><summary>Kann ich einen Bericht ausdrucken?</summary><p class="hint">Im Verlauf eines Kindes „Als PDF sichern“, oder unten in der Klassenliste „Alle Kinder als PDF“ – eine Seite je Kind.</p></details>
+  </div>
+  <div class="card faqgruppe">
+    <h3>Planung</h3>
+      <details class="faqfrage"><summary>Wozu die Unterrichtsreihen?</summary><p class="hint">Eine Reihe gehört zum Fach, nicht zur Klasse: du planst sie einmal und setzt sie in jeder Klasse ein. Ob eine Einheit gehalten ist, merkt sich Loewi je Klasse.</p></details>
+      <details class="faqfrage"><summary>Kann ich eine Reihe weitergeben?</summary><p class="hint">In der Reihe unten auf „Reihe teilen“ – das ergibt eine Datei nur mit dieser Reihe. Wer sie bekommt, fügt sie im Planungs-Tab über „+ Neue Unterrichtsreihe“ ein. Das ist kein Ersatz für die Sicherung.</p></details>
+  </div>
+  <div class="card faqgruppe">
+    <h3>Organisation</h3>
+      <details class="faqfrage"><summary>Was steckt im Organisations-Tab?</summary><p class="hint">Ganz oben „Was steht heute an?“ – morgens der Ausblick, nachmittags das, was noch offen ist. Darunter Kalender, Termine, Aufgaben und Notizen.</p></details>
+      <details class="faqfrage"><summary>Wofür ist der Plus-Knopf unten links?</summary><p class="hint">Er liegt über allem und legt von jeder Stelle aus an, was du brauchst: Termin, Aufgabe, Notiz, Hausaufgabe oder Test.</p></details>
+  </div>
+  <div class="card faqgruppe">
+    <h3>Tests und Teams</h3>
+      <details class="faqfrage"><summary>Wie funktionieren Tests?</summary><p class="hint">Oben im Stunden-Tab auf „Tests“. Du legst eigene Kriterien fest und vergibst 1 bis 6. Bewertet wird kriterienweise – so tippst du an einer Station die ganze Klasse durch. Der Test-Schnitt bleibt vom Mitarbeits-Schnitt getrennt.</p></details>
+      <details class="faqfrage"><summary>Was macht der Teams-Umschalter?</summary><p class="hint">Im Sport lost Loewi Mannschaften aus – auf Wunsch nach Stärke ausgeglichen und Geschlecht gemischt. Unter „Kinder einstufen“ trägst du das ein; befreite Kinder stehen dort von allein.</p></details>
+  </div>
+  <div class="card faqgruppe">
+    <h3>Daten und Sicherheit</h3>
+      <details class="faqfrage"><summary>Wo liegen meine Daten?</summary><p class="hint">Nur in diesem Browser auf diesem Gerät. Nichts geht ins Netz, es gibt kein Konto und keinen Server.</p></details>
+      <details class="faqfrage"><summary>Wie mache ich eine Sicherung?</summary><p class="hint">Im Profil unter „Daten und Sicherung“ auf „Sicherung (.json)“. Du kannst sie mit einem Passwort verschlüsseln – dann ist die Datei ohne dein Passwort nicht lesbar. Mach das mindestens einmal pro Woche.</p></details>
+      <details class="faqfrage"><summary>Kann ich auf ein anderes Gerät wechseln?</summary><p class="hint">Ja: Sicherung erstellen, auf dem anderen Gerät Loewi öffnen und die Datei unter „Daten und Sicherung“ wieder einspielen.</p></details>
+      <details class="faqfrage"><summary>Was passiert, wenn ich den Browser-Cache lösche?</summary><p class="hint">Dann sind die Daten weg. Genau dafür ist die Sicherung da.</p></details>
+      <details class="faqfrage"><summary>Was bringt der Zahlencode?</summary><p class="hint">Er ist ein Sichtschutz gegen neugierige Blicke, keine Verschlüsselung. Der eigentliche Schutz ist die Sperre deines Geräts.</p></details>
+      <details class="faqfrage"><summary>Wie kommt ein Update auf mein Gerät?</summary><p class="hint">Du ersetzt die Datei index.html – deine Daten liegen getrennt davon und bleiben erhalten.</p></details>
+      <details class="faqfrage"><summary>Excel oder PDF?</summary><p class="hint">Unter „Daten und Sicherung“. Die Excel-Datei enthält Klassenliste, Einzelliste, Stundendoku und Planung und eignet sich für die Mappe.</p></details>
+  </div>
+  <p class="hint" style="text-align:center">Fehlt eine Frage? Sie kommt beim nächsten Update dazu.</p>
+</section>
+
 <section class="view" id="v-daten">
+  <div class="topbar" id="tbDaten"></div>
   <div class="card">
     <div class="rowline" style="padding-top:0">
       <div>
@@ -1296,7 +1756,7 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
       <button class="act" id="btnRestore">Sicherung einlesen</button>
       <input type="file" id="fileRestore" accept="application/json,.json" style="display:none">
     </div>
-    <p class="hint">Ersetzt den kompletten Datenbestand dieses Geräts durch die Sicherungsdatei.</p>
+    <p class="hint">Ersetzt alle Daten dieses Geräts.</p>
     <div class="sep"></div>
     <div class="actions">
       <button class="act danger" id="btnWipe">Alle Daten löschen</button>
@@ -1311,61 +1771,15 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
       <button class="act neutral" id="btnPinSetzen">Code festlegen</button>
       <button class="act quiet" id="btnPinWeg">Code entfernen</button>
     </div>
-    <p class="hint">Beim Öffnen wird nach dem Code gefragt. Das ist ein <b>Sichtschutz</b>, keine
-      Verschlüsselung: Die Daten liegen unverändert im Browser. Lege vorher eine Sicherung an –
-      wer den Code vergisst, kommt nur über das Löschen der Browserdaten wieder hinein.</p>
+    <p class="hint"><b>Sichtschutz</b>, keine Verschlüsselung. Nutze zusätzlich die Gerätesperre.</p>
   </div>
 
-  <div class="card">
-    <details>
-      <summary>Kurzanleitung</summary>
-      <p class="hint">
-        <b>Stundenplan:</b> Der linke Tab zeigt deine Woche. Trage den Plan einmal ein –
-        danach tippst du am Schultag einfach auf die Stunde: Klasse und Fach stellen sich um,
-        die Stunde für dieses Datum wird angelegt, und du landest direkt beim Eintragen. Jede
-        Kachel sagt dir, ob sie schon erfasst ist.<br><br>
-        <b>Auswahl:</b> Unten in der Mitte wählst du Klasse <i>und</i> Fach. Alles andere – Stunden,
-        Übersicht, Excel – bezieht sich auf genau diese Kombination.<br><br>
-        <b>Planung:</b> Der Planungs-Tab zeigt die Reihen des gewählten Fachs. Reihen gehören zum Fach,
-        nicht zur Klasse – du planst eine Reihe einmal und setzt sie in jeder Klasse ein. Ob eine Einheit
-        „gehalten“ ist, wird je Klasse gemerkt: in 4a abgehakt, in 3b noch offen.<br><br>
-        <b>Teams:</b> Im Sport erscheint oben ein dritter Umschalter. Dort lost die App
-        Mannschaften aus – auf Wunsch nach Stärke ausgeglichen und Geschlecht gemischt. Unter
-        „Kinder einstufen“ trägst du Stärke und Geschlecht ein und setzt mit <b>K</b>, wer heute
-        nicht dabei ist; wer befreit ist, steht dort von allein. Die Angaben hängen an der Klasse
-        und bleiben auf dem Gerät.<br><br>
-        <b>Tests:</b> Oben im Stunden-Tab schaltest du auf <b>Tests</b>. Dort legst du eigene
-        Beobachtungskriterien fest und vergibst 1 bis 6. Bewertet wird kriterienweise – so tippst du
-        an einer Station die ganze Klasse durch. Der Test-Schnitt bleibt vom Mitarbeits-Schnitt
-        getrennt.<br><br>
-        <b>Bericht:</b> Im Verlauf eines Kindes auf „Als PDF sichern“ – oder in der Übersicht
-        unten „Alle Kinder als PDF“ für einen Satz mit einer Seite je Kind.<br><br>
-        <b>Verlauf eines Kindes:</b> In der Übersicht auf eine Zeile tippen. Dort steht auch
-        „Befreit bis“ – befreite Kinder werden in neuen Stunden automatisch auf k gesetzt.<br><br>
-        <b>Versehen:</b> Nach jedem Löschen erscheint unten sieben Sekunden lang
-        <b>Rückgängig</b>.<br><br>
-        <b>Ausfall:</b> Beim Anlegen einer Stunde gibt es neben „Stunde anlegen“ den Knopf
-        <b>Ausgefallen</b>. Der Grund kommt in „Was wurde gemacht“, die Stunde steht dann rot
-        in der Liste und hat keine Eintragungen.<br><br>
-        <b>Reihen teilen:</b> In einer Reihe unten auf „Reihe teilen“ – das ergibt eine eigene Datei
-        nur mit dieser Reihe. Wer sie bekommt, fügt sie im Planungs-Tab über „+ Neue Unterrichtsreihe“
-        → „Geteilte Reihe einfügen“ ein. Das ist kein Ersatz für die Sicherung.<br><br>
-        <b>Eintragen:</b> Klasse und Fach wählen, „+ Neue Stunde“, Datum und Thema, dann pro Kind antippen.
-        <b>k</b> schaltet die Mitarbeit ab (nicht da). <b>v</b> lässt sich mit + / o / – kombinieren –
-        genau wie „v+“ in der Excel-Liste.<br><br>
-        <b>Speichern:</b> passiert automatisch bei jedem Tipp – aber nur in diesem Browser auf diesem Gerät.<br><br>
-        <b>Sichern:</b> mindestens einmal pro Woche die Excel-Datei erstellen. Sie ist gleichzeitig dein Backup
-        und das, was in die Mappe wandert. Die App erinnert dich, wenn es sieben Tage her ist.
-      </p>
-    </details>
-  </div>
 </section>
 
 </main>
 
 <div class="dupscrim" id="dupScrim"></div>
 <div class="dropup" id="dropUp" role="dialog" aria-modal="false" aria-label="Klasse und Fach">
-  <div class="dupgriff"></div>
   <div class="duphead">
     <div class="duptitle">Klasse</div>
     <button class="iconbtn" id="dupEditK" aria-label="Klassen verwalten"></button>
@@ -1376,15 +1790,26 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
     <button class="iconbtn" id="dupEditF" aria-label="Fächer verwalten"></button>
   </div>
   <div class="chiprow" id="dupFaecher"></div>
+  <div class="dupgriff"></div>
 </div>
 
 <nav>
   <button class="on" data-view="stunde"><span class="ic"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>Plan</button>
-  <button id="navAuswahl" aria-haspopup="true" aria-expanded="false"><span class="ic"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/><circle cx="9" cy="6" r="2.2" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="8" cy="18" r="2.2" fill="currentColor" stroke="none"/></svg></span><span id="navPickLabel">Auswahl</span></button>
+  <button data-view="uebersicht"><span class="ic"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20a4 4 0 0 0-8 0"/><circle cx="12" cy="10" r="3.2"/><path d="M5 20a3 3 0 0 1 2.2-2.9M19 20a3 3 0 0 0-2.2-2.9"/><circle cx="5.5" cy="11.5" r="2"/><circle cx="18.5" cy="11.5" r="2"/></svg></span>Klassenliste</button>
+  <button data-view="organisation"><span class="ic"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5.5H6.5A1.5 1.5 0 0 0 5 7v12a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19V7a1.5 1.5 0 0 0-1.5-1.5H15"/><rect x="9" y="3.5" width="6" height="4" rx="1.3"/><path d="M8.5 12.5l1.7 1.7 3.4-3.4M8.5 17.2h7"/></svg></span>Organisation</button>
   <button data-view="planung"><span class="ic"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span>Planung</button>
-  <button data-view="uebersicht"><span class="ic"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg></span>Übersicht</button>
-  <button data-view="daten"><span class="ic"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="M8 4v5h7"/><path d="M8 21v-6h8v6"/></svg></span>Daten</button>
 </nav>
+
+<button class="fab" id="fab" type="button" aria-label="Neu anlegen" aria-expanded="false">
+  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor"
+    stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+<div class="fabscrim" id="fabScrim"></div>
+<div class="fabsheet" id="fabSheet" role="dialog" aria-modal="false" aria-label="Neu anlegen">
+  <div class="fabgriff"></div>
+  <div class="fabtitel">Was möchtest du anlegen?</div>
+  <div id="fabListe"></div>
+</div>
 
 <div class="lock" id="lock" hidden>
   <div class="lockbox">
@@ -1604,6 +2029,7 @@ const STD_RASTER = [
 ];
 let db = {version:2, klassen:[], stunden:[], tests:[], faecher:[], reihen:[], einheiten:[],
           plan:{raster:STD_RASTER.slice(), slots:[]},
+          frei:[], termine:[], todos:[], notizen:[],
           ui:{klasseId:null, fachId:null, stundeId:null, view:"stunde",
               stdView:"liste", plan:{ebene:"reihen"}}};
 let storageOk = true;
@@ -1835,6 +2261,10 @@ function load(){
         db.einheiten = db.einheiten || [];
         db.tests = db.tests || [];
         db.plan = db.plan || {};
+        db.frei = db.frei || [];
+        db.termine = db.termine || [];
+        db.todos = db.todos || [];
+        db.notizen = db.notizen || [];
         db.ui = db.ui || {};
         db.ui.plan = db.ui.plan || {ebene:"reihen"};
         db.ui.stdView = db.ui.stdView || "liste";
@@ -1888,10 +2318,29 @@ function migriere(){
     }
     delete e.status;
   });
+  sortiereStamm();
+  /* Ferien, Feiertage, To-dos und Termine kamen später dazu. */
+  if(!Array.isArray(db.frei)) db.frei = [];
+  if(!Array.isArray(db.termine)) db.termine = [];
+  if(!Array.isArray(db.todos)) db.todos = [];
+  if(!Array.isArray(db.notizen)) db.notizen = [];
+  /* Wer Sport oder Schwimmen unterrichtet, meint mit „vergessen“ etwas
+     Bestimmtes – das tragen wir einmal nach, änderbar bleibt es. */
+  db.faecher.forEach(f => {
+    if(f.vergessen !== undefined) return;
+    const s = String(f.name || "").toLowerCase();
+    if(s.indexOf("sport") === 0) f.vergessen = "Sportzeug";
+    else if(s.indexOf("schwimm") === 0) f.vergessen = "Schwimmsachen";
+    else if(s.indexOf("kunst") === 0) f.vergessen = "Malsachen";
+    else if(s.indexOf("musik") === 0) f.vergessen = "Instrument";
+    else f.vergessen = "Hausaufgaben";
+  });
   /* Der Stundenplan kam später dazu. */
   if(!db.plan || typeof db.plan !== "object") db.plan = {};
   if(!Array.isArray(db.plan.raster) || !db.plan.raster.length) db.plan.raster = STD_RASTER.slice();
   if(!Array.isArray(db.plan.slots)) db.plan.slots = [];
+  if(!Array.isArray(db.plan.dienste)) db.plan.dienste = [];
+  if(!Array.isArray(db.plan.aenderungen)) db.plan.aenderungen = [];
   /* Reihen trugen früher einen Zeitraum. Ein Jahrgang steckt darin nur,
      wenn dort schlicht „3“ oder „3/4“ stand – alles andere wird verworfen. */
   db.reihen.forEach(r => {
@@ -1931,20 +2380,16 @@ function saveSoon(){
   clearTimeout(saveTimer);
   saveTimer = setTimeout(save, 120);
 }
-function flagSaved(txt){
-  const el = document.getElementById("saveState");
-  if(!storageOk){
-    el.textContent = "nicht gespeichert!";
-    el.style.background = "var(--bad-soft)"; el.style.color = "var(--bad)";
-    return;
-  }
+/* Der Kopf trägt keinen Text mehr, nur noch einen Punkt am Profil, wenn etwas
+   nicht stimmt: rot, wenn der Browser nichts speichert, gelb bei fälliger Sicherung. */
+function flagSaved(){
+  const p = document.getElementById("profilPunkt");
+  if(!p) return;
+  if(!storageOk){ p.hidden = false; p.className = "punkt rot"; return; }
   if(typeof backupFaellig === "function" && backupFaellig()){
-    el.textContent = "Sicherung fällig";
-    el.style.background = "var(--warn-soft)"; el.style.color = "var(--warn)";
-    return;
+    p.hidden = false; p.className = "punkt gelb"; return;
   }
-  el.textContent = txt;
-  el.style.background = ""; el.style.color = "";
+  p.hidden = true;
 }
 
 /* ---------- Hilfen ---------- */
@@ -2016,7 +2461,29 @@ function macheRueckgaengig(){
   toast("Wiederhergestellt");
 }
 function disarmDelete(){ delArmedAt = 0; delArmedId = null; }
+/* „1a“ vor „2a“ vor „10b“: die Zahl zählt zuerst, dann der Buchstabe. */
+function natVergleich(a, b){
+  const A = String(a || ""), B = String(b || "");
+  const za = /^\s*(\d+)/.exec(A), zb = /^\s*(\d+)/.exec(B);
+  if(za && zb && Number(za[1]) !== Number(zb[1])) return Number(za[1]) - Number(zb[1]);
+  if(za && !zb) return -1;
+  if(!za && zb) return 1;
+  return A.localeCompare(B, "de", {numeric:true, sensitivity:"base"});
+}
+/* Klassen und Fächer stehen überall in derselben Reihenfolge – Listen,
+   Auswahl und Dialoge greifen alle auf dieselben Arrays zu. */
+function sortiereStamm(){
+  db.klassen.sort((a, b) => natVergleich(a.name, b.name));
+  db.faecher.sort((a, b) => natVergleich(a.name, b.name));
+}
 function klasse(id){ return db.klassen.find(k => k.id === id) || null; }
+/* Was in diesem Fach vergessen wird: in Sport das Sportzeug, in Deutsch die
+   Hausaufgaben. Der Name haengt am Fach und laesst sich dort aendern. */
+function vergessenWort(fid){
+  const f = fach(fid === undefined ? db.ui.fachId : fid);
+  const w = f && f.vergessen ? String(f.vergessen).trim() : "";
+  return w || "Material";
+}
 function stunde(id){ return db.stunden.find(s => s.id === id) || null; }
 function sortStd(list){
   return list.sort((a,b) =>
@@ -2057,9 +2524,13 @@ function code(e){
 }
 
 /* ---------- Navigation: vier Tabs, Klassen und Planung über das Drop-up ---------- */
-const NAV_TAB = {stunde:"stunde", planung:"planung", uebersicht:"uebersicht", daten:"daten"};
+const NAV_TAB = {stunde:"stunde", organisation:"organisation", planung:"planung",
+                 uebersicht:"uebersicht"};
 function goView(name){
   disarmDelete();
+  closeFab();
+  if(db.ui.vertretungModus){ db.ui.vertretungModus = false;
+    document.body.classList.remove("vertmodus"); }
   document.querySelectorAll(".view").forEach(v => v.classList.remove("on"));
   const sec = $("#v-" + name);
   if(sec) sec.classList.add("on");
@@ -2072,9 +2543,17 @@ function goView(name){
   /* Beim Aufruf über die Navigation immer bei der Klassenliste anfangen,
      nicht bei dem Kind, das man zuletzt offen hatte. */
   if(name === "uebersicht"){ db.ui.sumView = "liste"; renderUebersicht(); }
+  if(name === "organisation") renderOrganisation();
   if(name === "planung") renderPlan();
   if(name === "klassen") renderKlassen();
-  if(name === "daten") renderStoreInfo();
+  if(name === "daten"){
+    renderStoreInfo();
+    topbar($("#tbDaten"), {zurueck:profilZurueck, zurueckText:"Zurück",
+                           titel:"Daten und Sicherung"});
+  }
+  if(name === "faq"){
+    topbar($("#tbFaq"), {zurueck:profilZurueck, zurueckText:"Zurück"});
+  }
   window.scrollTo(0,0);
 }
 document.querySelectorAll("nav button[data-view]").forEach(b => {
@@ -2090,6 +2569,7 @@ function openDrop(){
   $("#dupScrim").classList.add("open");
   $("#navAuswahl").classList.add("offen");
   $("#navAuswahl").setAttribute("aria-expanded", "true");
+  window.scrollTo(0, 0);
 }
 function closeDrop(){
   if(!dropOffen) return;
@@ -2177,6 +2657,7 @@ $("#btnKlasseAdd").addEventListener("click", () => {
   if(!name){ toast("Bezeichnung fehlt"); return; }
   const k = {id:uid(), name:name, count:n, labels:{}, befreit:{}};
   db.klassen.push(k);
+  sortiereStamm();
   db.ui.klasseId = k.id;
   db.ui.stundeId = null; db.ui.stdView = "liste";
   $("#newKlasse").open = false;
@@ -2314,6 +2795,17 @@ function topbar(el, opt){
     el.appendChild(opt.aktion);
   }
 }
+/* Überschrift eines Bereichs – überall gleich aufgebaut. */
+function seitenkopf(el, titel, unter){
+  el.innerHTML = "";
+  el.classList.remove("topbar");
+  const karte = document.createElement("div");
+  karte.className = "card seitenkopf";
+  karte.innerHTML = '<div class="skopf"><h3>' + esc(titel) + "</h3>" +
+    (unter ? '<div class="mini">' + esc(unter) + "</div>" : "") + "</div>";
+  el.appendChild(karte);
+}
+
 /* kleiner Stift-Knopf für die Kopfzeile */
 function stiftBtn(label, fn){
   const b = document.createElement("button");
@@ -2326,17 +2818,13 @@ function stiftBtn(label, fn){
 /* ---------- Kopf: zeigt die aktive Kombination Klasse + Fach ---------- */
 function renderKopf(){
   const k = klasse(db.ui.klasseId), f = fach(db.ui.fachId);
+  /* Nur Klasse und Fach – alles Weitere steht dort, wo es gebraucht wird. */
   $("#hTitle").textContent = k ? ("Klasse " + k.name) : "Klasse wählen";
   if(k){
-    $("#hSub").textContent = (f ? f.name + " · " : "") + k.count + " Kinder · " +
-      stundenVon(k.id).length + (stundenVon(k.id).length === 1 ? " Stunde" : " Stunden");
+    $("#hSub").textContent = f ? f.name : "Fach wählen";
   }else{
-    $("#hSub").textContent = db.klassen.length ? "Unten über „Auswahl“ wählen"
+    $("#hSub").textContent = db.klassen.length ? "Hier tippen und Klasse wählen"
                                                : "Noch keine Klasse angelegt";
-  }
-  const lab = $("#navPickLabel");
-  if(lab){
-    lab.textContent = k ? (k.name + (f ? " · " + f.name : "")) : "Auswahl";
   }
 }
 
@@ -2389,25 +2877,130 @@ function renderStunde(){
   const k = klasse(db.ui.klasseId);
   let v = db.ui.stdView || "liste";
   const s = stunde(db.ui.stundeId);
-  if((v === "ansicht" || v === "erfassen") && (!s || !k)){ v = "liste"; db.ui.stdView = "liste"; }
+  if((v === "ansicht" || v === "erfassen" || v === "daten") && (!s || !k)){
+    v = "liste"; db.ui.stdView = "liste";
+  }
+  if(v === "neu" && !k){ v = "liste"; db.ui.stdView = "liste"; }
   $("#stdListe").style.display    = v === "liste" ? "" : "none";
+  $("#stdNeu").style.display      = v === "neu" ? "" : "none";
   $("#stdAnsicht").style.display  = v === "ansicht" ? "" : "none";
-  $("#stdErfassen").style.display = v === "erfassen" ? "" : "none";
+  $("#stdErfassen").style.display = (v === "erfassen" || v === "daten") ? "" : "none";
   if(v === "liste") renderStundenListe(k);
+  if(v === "neu") renderNeu(k);
   if(v === "ansicht") renderAnsicht(s, k);
-  if(v === "erfassen") renderErfassen(s, k);
+  if(v === "erfassen" || v === "daten") renderErfassen(s, k, v);
 }
+
+/* ---------- Ebene 0: der Assistent ----------
+   Schritt 1 klärt, was überhaupt war; Schritt 2 nimmt die Angaben auf; danach
+   geht es entweder in die Mitarbeit oder – bei Ausfall – gleich zur Übersicht. */
+function neuStarten(vorgabe){
+  const v = vorgabe || {};
+  db.ui.neu = {art:"", datum: v.datum || heute(),
+               klasseId: v.klasseId || db.ui.klasseId,
+               fachId: v.fachId === undefined ? db.ui.fachId : v.fachId,
+               thema:"", ha:"", notiz:"", einheitId:""};
+  db.ui.stdView = "neu";
+  db.ui.bereich = "stunden";
+  save(); goView("stunde"); window.scrollTo(0, 0);
+}
+function renderNeu(k){
+  const nu = db.ui.neu || (db.ui.neu = {art:"", datum:heute()});
+  topbar($("#tbNeu"), {zurueck: () => { if(nu.art){ nu.art = ""; save(); renderStunde(); }
+                                        else stdGo("liste"); },
+                       zurueckText: nu.art ? "Zurück" : "Stunden"});
+  const schritt = nu.art ? 2 : 1;
+  const leiste = $("#neuSchritte"); leiste.innerHTML = "";
+  const namen = nu.art === "ausgefallen" ? ["Was war?", "Grund"]
+                                         : ["Was war?", "Angaben", "Mitarbeit"];
+  namen.forEach((t, i) => {
+    const d = document.createElement("div");
+    d.className = "schritt" + (i + 1 === schritt ? " an" : (i + 1 < schritt ? " fertig" : ""));
+    d.innerHTML = "<b>" + (i + 1) + "</b><span>" + t + "</span>";
+    leiste.appendChild(d);
+  });
+
+  $("#neu1").style.display = nu.art ? "none" : "";
+  $("#neu2").style.display = nu.art ? "" : "none";
+  const kk = klasse(nu.klasseId) || k;
+  const ff = fach(nu.fachId);
+  $("#neuWer").textContent = (kk ? kk.name : "keine Klasse") + (ff ? " · " + ff.name : "") +
+    " · " + deDate(nu.datum);
+  document.querySelectorAll("#neuArt .wahlknopf").forEach(b => {
+    b.classList.toggle("on", b.dataset.a === nu.art);
+  });
+  if(!nu.art) return;
+
+  const aus = nu.art === "ausgefallen", vert = nu.art === "vertretung";
+  $("#neu2Titel").textContent = aus ? "Warum ist sie ausgefallen?"
+                                    : (vert ? "Wen und was vertrittst du?" : "Angaben zur Stunde");
+  $("#neu2Vertretung").style.display = vert ? "" : "none";
+  $("#nsEinheitFeld").style.display = aus ? "none" : "";
+  $("#nsHaFeld").style.display = aus ? "none" : "";
+  $("#nsThemaLabel").textContent = aus ? "Grund" : "Was wurde gemacht";
+  $("#nsThema").placeholder = aus ? "z. B. Halle gesperrt" : "z. B. Ballschule: Werfen und Fangen";
+  $("#btnNeuWeiter").textContent = aus ? "Als ausgefallen eintragen" : "Weiter zur Mitarbeit";
+  $("#nsDatum").value = nu.datum || heute();
+  $("#nsThema").value = nu.thema || "";
+  $("#nsHa").value = nu.ha || "";
+  $("#nsNotiz").value = nu.notiz || "";
+  if(vert){
+    fuelleAuswahl($("#nvKlasse"), db.klassen.map(x => [x.id, x.name]), nu.klasseId);
+    fuelleAuswahl($("#nvFach"), [["", "– kein Fach –"]].concat(
+      db.faecher.map(x => [x.id, x.name])), nu.fachId || "");
+  }
+  renderNeuPicker();
+}
+function fuelleAuswahl(sel, paare, wert){
+  sel.innerHTML = "";
+  paare.forEach(([v, t]) => {
+    const o = document.createElement("option");
+    o.value = v; o.textContent = t;
+    if(v === (wert || "")) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+document.querySelectorAll("#neuArt .wahlknopf").forEach(b => {
+  b.addEventListener("click", () => {
+    const nu = db.ui.neu || (db.ui.neu = {});
+    nu.art = b.dataset.a;
+    save(); renderStunde(); window.scrollTo(0, 0);
+  });
+});
+["nvKlasse", "nvFach"].forEach(id => {
+  const el = document.getElementById(id);
+  if(el) el.addEventListener("change", () => {
+    const nu = db.ui.neu;
+    if(id === "nvKlasse") nu.klasseId = el.value; else nu.fachId = el.value || null;
+    save(); renderNeu(klasse(db.ui.klasseId));
+  });
+});
+$("#btnNeuWeiter").addEventListener("click", () => {
+  const nu = db.ui.neu || {};
+  const k = klasse(nu.klasseId) || klasse(db.ui.klasseId);
+  if(!k){ toast("Erst eine Klasse wählen"); return; }
+  const aus = nu.art === "ausgefallen";
+  const eId = aus ? null : ($("#nsEinheit").value || null);
+  const e = einheit(eId);
+  const s = stundeErzeugen(k, nu.fachId, $("#nsDatum").value || heute(),
+    $("#nsThema").value.trim() || (e && e.titel ? e.titel : ""), eId, aus);
+  s.ha = aus ? "" : $("#nsHa").value.trim();
+  s.notiz = $("#nsNotiz").value.trim();
+  if(nu.art === "vertretung") s.vertretung = true;
+  setAuswahl(k.id, nu.fachId || null);
+  db.ui.neu = null;
+  save();
+  stdGo(aus ? "ansicht" : "erfassen", s.id);
+  toast(aus ? "Als ausgefallen eingetragen" : "Stunde " + s.nr + " angelegt");
+});
 
 /* --- Ebene 1: Liste --- */
 function renderStundenListe(k){
   const box = $("#stundenListe"); box.innerHTML = "";
-  const nb = $("#newStunde");
   if(!k){
-    nb.style.display = "none";
-    box.innerHTML = '<p class="hint">Erst unten über <b>Auswahl</b> eine Klasse wählen oder anlegen.</p>';
+    box.innerHTML = '<p class="hint">Erst oben eine Klasse wählen.</p>';
     return;
   }
-  nb.style.display = "";
   if(!$("#nsDatum").value) $("#nsDatum").value = heute();
   renderNeuPicker();
   const alle = stundenVon(k.id);
@@ -2418,7 +3011,8 @@ function renderStundenListe(k){
                         deDate(s.datum) + " Std. " + s.nr).toLowerCase().indexOf(frage) !== -1)
     : alle;
   if(!alle.length){
-    box.innerHTML = '<p class="hint">Noch keine Stunde erfasst. Oben auf „+ Neue Stunde“ tippen.</p>';
+    box.innerHTML = '<p class="hint">Noch keine Stunde erfasst. Stunden entstehen im Plan: ' +
+      'Tippe dort auf die Stunde, die du gehalten hast.</p>';
     return;
   }
   if(!list.length){
@@ -2506,49 +3100,29 @@ function stundeErzeugen(k, fachId, datum, thema, einheitId, ausgefallen){
   return s;
 }
 
-function neueStunde(ausgefallen){
-  const k = klasse(db.ui.klasseId);
-  if(!k){ toast("Erst eine Klasse wählen"); return; }
-  const eId = ausgefallen ? null : ($("#nsEinheit").value || null);
-  const e = einheit(eId);
-  const s = stundeErzeugen(k, db.ui.fachId, $("#nsDatum").value || heute(),
-                           $("#nsThema").value.trim() || (e && e.titel ? e.titel : ""),
-                           eId, ausgefallen);
-  $("#nsThema").value = ""; $("#nsEinheit").value = ""; $("#nsDatum").value = heute();
-  $("#newStunde").open = false;
-  save();
-  if(ausgefallen){
-    stdGo("liste");
-    toast("Stunde " + s.nr + " als ausgefallen eingetragen");
-  }else{
-    stdGo("erfassen", s.id);
-    toast("Stunde " + s.nr + " angelegt");
-  }
-}
-$("#btnStundeAnlegen").addEventListener("click", () => neueStunde(false));
-$("#btnStundeAusfall").addEventListener("click", () => neueStunde(true));
-
 /* --- Ebene 2: Ansehen --- */
 function renderAnsicht(s, k){
-  topbar($("#tbAnsicht"), {
-    zurueck: () => stdGo("liste"), zurueckText: "Stunden",
-    aktion: stiftBtn("Stunde bearbeiten", () => stdGo("erfassen"))
-  });
+  topbar($("#tbAnsicht"), {zurueck: () => stdGo("liste"), zurueckText: "Stunden"});
   const e = einheit(s.einheitId);
+
+  /* --- Status --- */
+  const stat = $("#stdStatus");
+  const art = s.aus ? "ausgefallen" : (s.vertretung ? "vertretung" : "gehalten");
+  const beschriftung = {gehalten:["Stattgefunden", "gut"],
+                        ausgefallen:["Ausgefallen", "bad"],
+                        vertretung:["Vertretung", "warn"]}[art];
+  stat.innerHTML = '<span class="statuschip ' + beschriftung[1] + '">' +
+    beschriftung[0] + "</span>";
+
+  /* --- Angaben: leere Felder bleiben weg --- */
   const kopf = $("#stdKopf"); kopf.innerHTML = "";
-  if(s.aus){
-    const bd = document.createElement("div");
-    bd.innerHTML = '<span class="badge aus">Ausgefallen</span>';
-    bd.style.marginBottom = "6px";
-    kopf.appendChild(bd);
-  }
-  const felder = s.aus
-    ? [["Datum", deDate(s.datum)], ["Grund", s.thema], ["Notiz zur Stunde", s.notiz]]
-    : [["Datum", deDate(s.datum)],
-       ["Was wurde gemacht", s.thema],
-       ["Aus der Planung", e ? (e.nr + " · " + (e.titel || "ohne Thema")) : ""],
-       ["Notiz zur Stunde", s.notiz]];
+  const felder = [["Datum", deDate(s.datum)],
+                  [s.aus ? "Grund" : "Was wurde gemacht", s.thema],
+                  ["Aus der Planung", e ? (e.nr + " · " + (e.titel || "ohne Thema")) : ""],
+                  ["Hausaufgabe", s.aus ? "" : (s.ha || "")],
+                  ["Notiz", s.notiz]];
   felder.forEach(([label, val]) => {
+    if(!val && label !== "Datum" && label !== (s.aus ? "Grund" : "Was wurde gemacht")) return;
     const blk = document.createElement("div"); blk.className = "blk";
     const h = document.createElement("h4"); h.textContent = label;
     const v = document.createElement("div");
@@ -2556,23 +3130,9 @@ function renderAnsicht(s, k){
     v.textContent = val || "nicht ausgefüllt";
     blk.appendChild(h); blk.appendChild(v); kopf.appendChild(blk);
   });
-  const btn = $("#btnZumErfassen");
-  btn.textContent = s.aus ? "Doch gehalten – jetzt eintragen" : "Eintragen & bearbeiten";
-  const st = stundenStats(s, k);
-  const tiles = $("#stdTiles");
-  const codes0 = $("#stdCodes");
-  $("#stdTiles").style.display = s.aus ? "none" : "";
-  if(codes0 && codes0.parentElement) codes0.parentElement.style.display = s.aus ? "none" : "";
+
+  $("#stdMitarbeitKarte").style.display = s.aus ? "none" : "";
   if(s.aus) return;
-  tiles.innerHTML = "";
-  [["erfasst", st.erf + "/" + (k ? k.count : 0)],
-   ["krank", st.kk],
-   ["Sportzeug", st.vv],
-   ["Ø Mitarbeit", st.avg === null ? "–" : String(st.avg).replace(".", ",")]].forEach(([lab, val]) => {
-    const d = document.createElement("div"); d.className = "tile";
-    d.innerHTML = "<b>" + val + "</b><span>" + lab + "</span>";
-    tiles.appendChild(d);
-  });
   const codes = $("#stdCodes"); codes.innerHTML = "";
   if(!k){ return; }
   for(let i = 1; i <= k.count; i++){
@@ -2588,14 +3148,27 @@ function renderAnsicht(s, k){
     codes.appendChild(row);
   }
 }
-$("#btnZumErfassen").addEventListener("click", () => {
-  const s = stunde(db.ui.stundeId);
-  if(s && s.aus){
-    s.aus = false; save();
-    toast("Ausfall zurückgenommen");
-  }
-  stdGo("erfassen");
+$("#btnStatusEdit").addEventListener("click", () => {
+  const s = stunde(db.ui.stundeId); if(!s) return;
+  const jetzt = s.aus ? "ausgefallen" : (s.vertretung ? "vertretung" : "gehalten");
+  openModal({
+    titel:"Status der Stunde",
+    felder:[{key:"art", label:"Was war?", typ:"select", wert:jetzt, optionen:[
+      {value:"gehalten", label:"Stattgefunden"},
+      {value:"ausgefallen", label:"Ausgefallen"},
+      {value:"vertretung", label:"Vertretung"}]}],
+    okText:"Übernehmen",
+    onOk: w => {
+      merkeStand();
+      s.aus = w.art === "ausgefallen";
+      s.vertretung = w.art === "vertretung";
+      save(); renderStunde(); toastUndo("Status geändert");
+    }
+  });
 });
+$("#btnDatenEdit").addEventListener("click", () => stdGo("daten"));
+$("#btnMitarbeitEdit").addEventListener("click", () => stdGo("erfassen"));
+
 $("#btnStundeDel").addEventListener("click", () => {
   const s = stunde(db.ui.stundeId);
   if(!s){ toast("Keine Stunde gewählt"); return; }
@@ -2614,19 +3187,34 @@ $("#btnStundeDel").addEventListener("click", () => {
 });
 
 /* --- Ebene 3: Erfassen --- */
-function renderErfassen(s, k){
+function renderErfassen(s, k, modus){
+  const nurDaten = modus === "daten";
+  $("#boxKopf").style.display = nurDaten ? "" : "none";
   topbar($("#tbErfassen"), {zurueck: () => stdGo("ansicht"), zurueckText: "Stunde"});
+  if(nurDaten){
+    $("#bkTitel").textContent = "Angaben";
+    $("#bkSub").textContent = stdLabel(s);
+  }
   $("#bkTitel").textContent = stdLabel(s) + (s.aus ? "  ·  ausgefallen" : "");
   const sub = $("#bkSub");
-  const txt = [s.thema, s.notiz].filter(Boolean).join("\n");
+  const txt = [s.thema, s.ha ? "HA: " + s.ha : "", s.notiz].filter(Boolean).join("\n");
   sub.textContent = txt || (s.aus ? "kein Grund notiert" : "Thema noch nicht notiert");
   sub.classList.toggle("empty", !txt);
   $("#inDatum").value = s.datum || "";
   $("#inThema").value = s.thema || "";
   $("#inStdNotiz").value = s.notiz || "";
+  $("#inHa").value = s.ha || "";
   const hat = pickerOptionen($("#selEinheit"), s.einheitId);
   $("#selEinheit").disabled = !hat;
-  $("#listCard").style.display = s.aus ? "none" : "";
+  $("#listCard").style.display = (s.aus || nurDaten || !k.count) ? "none" : "";
+  if(nurDaten){
+    const th0 = $("#tagHinweis"); if(th0) th0.innerHTML = "";
+    $("#ausHinweis").style.display = "none";
+  }
+  renderTagHinweis(s, k);
+  const leg = $("#erfLegende");
+  if(leg) leg.innerHTML = "<b>+</b>1–2 <b>o</b>3–4 <b>–</b>5–6 · <b>k</b>krank · <b>v</b>" +
+                          esc(vergessenWort());
   $("#ausHinweis").style.display = s.aus ? "" : "none";
   const box = $("#kidList"); box.innerHTML = "";
   if(s.aus || !k) return;
@@ -2655,19 +3243,6 @@ $("#btnRestPlus").addEventListener("click", () => {
   save(); renderErfassen(s, k);
   toastUndo(anz + (anz === 1 ? " Kind" : " Kinder") + " auf + gesetzt");
 });
-/* Die Kopfzeile ist zum Lesen da – geöffnet wird nur über den Stift. */
-$("#bkEdit").innerHTML = "";
-$("#boxKopfSum").addEventListener("click", ev => ev.preventDefault());
-function bkToggle(ev){
-  ev.preventDefault(); ev.stopPropagation();
-  const d = $("#boxKopf");
-  d.open = !d.open;
-  if(d.open) setTimeout(() => $("#inDatum").focus(), 80);
-}
-$("#bkEdit").addEventListener("click", bkToggle);
-$("#bkEdit").addEventListener("keydown", ev => {
-  if(ev.key === "Enter" || ev.key === " ") bkToggle(ev);
-});
 $("#inDatum").addEventListener("change", ev => {
   const s = stunde(db.ui.stundeId); if(!s) return;
   s.datum = ev.target.value; renumber(s.klasseId, s.fachId || null); save(); renderStunde();
@@ -2686,6 +3261,10 @@ $("#inThema").addEventListener("input", ev => {
 $("#inStdNotiz").addEventListener("input", ev => {
   const s = stunde(db.ui.stundeId); if(!s) return;
   s.notiz = ev.target.value; bkAuffrischen(); saveSoon();
+});
+$("#inHa").addEventListener("input", ev => {
+  const s = stunde(db.ui.stundeId); if(!s) return;
+  s.ha = ev.target.value; saveSoon();
 });
 
 function updateProgress(){
@@ -2773,9 +3352,56 @@ function planRaster(){
   if(!db.plan) db.plan = {};
   if(!Array.isArray(db.plan.raster) || !db.plan.raster.length) db.plan.raster = STD_RASTER.slice();
   if(!Array.isArray(db.plan.slots)) db.plan.slots = [];
+  if(!Array.isArray(db.plan.dienste)) db.plan.dienste = [];
+  if(!Array.isArray(db.plan.aenderungen)) db.plan.aenderungen = [];
   return db.plan.raster;
 }
 function planSlots(){ planRaster(); return db.plan.slots; }
+/* Aufsichten und Dienste hängen wie die Stunden am Wochentag; „nr“ sagt,
+   nach welcher Stunde sie liegen (0 = vor der ersten). */
+function planDienste(){
+  planRaster();
+  if(!Array.isArray(db.plan.dienste)) db.plan.dienste = [];
+  return db.plan.dienste;
+}
+/* Einmalige Abweichungen: gelten nur an einem Datum und legen sich über den Plan.
+   art: "vertretung" (andere Klasse/Fach), "extra" (zusätzliche Stunde),
+        "entfaellt" (fällt an diesem Tag aus). */
+function planAenderungen(){
+  planRaster();
+  if(!Array.isArray(db.plan.aenderungen)) db.plan.aenderungen = [];
+  return db.plan.aenderungen;
+}
+function aenderungAn(datum, nr){
+  return planAenderungen().find(a => a.datum === datum && a.nr === nr) || null;
+}
+/* Der Tagesplan: Grundplan plus Abweichungen dieses Datums. */
+function tagesPlan(tag, datum){
+  const grund = planSlots().filter(s => s.tag === tag);
+  const raus = [];
+  grund.forEach(s => {
+    const a = aenderungAn(datum, s.nr);
+    if(!a){ raus.push(s); return; }
+    if(a.art === "entfaellt"){ raus.push(Object.assign({}, s, {_weg:a})); return; }
+    if(a.art === "vertretung"){
+      raus.push(Object.assign({}, s, {klasseId:a.klasseId, fachId:a.fachId,
+        raum:a.raum || s.raum, _vertretung:a}));
+      return;
+    }
+    raus.push(s);
+  });
+  /* Vertretung oder Zusatzstunde in einer freien Stunde: eigener Eintrag. */
+  planAenderungen().filter(a => a.datum === datum &&
+                                (a.art === "extra" || a.art === "vertretung")).forEach(a => {
+    if(raus.some(s => s.nr === a.nr)) return;
+    const zus = {id:"x" + a.id, tag:tag, nr:a.nr, klasseId:a.klasseId, fachId:a.fachId,
+                 raum:a.raum || ""};
+    if(a.art === "vertretung") zus._vertretung = a; else zus._extra = a;
+    raus.push(zus);
+  });
+  return raus.sort((a, b) => a.nr - b.nr);
+}
+
 function slotAn(tag, nr){
   return planSlots().find(s => s.tag === tag && s.nr === nr) || null;
 }
@@ -2818,6 +3444,64 @@ function planWoche(){
 }
 function datumFuer(tag){ return plusTage(planWoche(), tag - 1); }
 
+/* ---------- Freie Tage ----------
+   Ferien sind Zeiträume, Feiertage einzelne Tage; beides steckt in derselben
+   Liste, ein Feiertag hat einfach von = bis. */
+function freieZeiten(){
+  if(!Array.isArray(db.frei)) db.frei = [];
+  return db.frei;
+}
+function freierTag(datum){
+  const d = String(datum || "");
+  if(!d) return null;
+  const wt = isoZuDatum(d).getDay();
+  if(wt === 0 || wt === 6) return {art:"wochenende", titel:"Wochenende"};
+  const t = freieZeiten().find(x => d >= x.von && d <= (x.bis || x.von));
+  if(!t) return null;
+  return {art: (t.bis && t.bis !== t.von) ? "ferien" : "feiertag",
+          titel: t.titel || "frei", eintrag: t};
+}
+function istSchultag(datum){ return !freierTag(datum); }
+/* Der nächste Schultag ab einem Datum – höchstens ein Vierteljahr voraus. */
+function naechsterSchultag(ab){
+  let d = ab || heute();
+  for(let i = 0; i < 120; i++){
+    if(istSchultag(d)) return d;
+    d = plusTage(d, 1);
+  }
+  return null;
+}
+function freiSortiert(){
+  return freieZeiten().slice().sort((a, b) => String(a.von).localeCompare(String(b.von)));
+}
+
+/* Wo stehen wir gerade im Zeitraster? Gibt die laufende Stundennummer zurück,
+   sonst die nächste, die heute noch kommt – jeweils mit dem Wie-lange-noch. */
+function jetztMinuten(){
+  const d = new Date();
+  return d.getHours() * 60 + d.getMinutes();
+}
+function rasterStand(){
+  const jetzt = jetztMinuten();
+  const r = planRaster();
+  for(let i = 0; i < r.length; i++){
+    const a = minuten(r[i].von), b = minuten(r[i].bis);
+    if(a === null || b === null || b <= a) continue;
+    if(jetzt >= a && jetzt < b){
+      return {art:"laeuft", nr:r[i].nr, rest:b - jetzt, zeile:r[i]};
+    }
+  }
+  for(let i = 0; i < r.length; i++){
+    const a = minuten(r[i].von);
+    if(a !== null && a > jetzt) return {art:"gleich", nr:r[i].nr, in:a - jetzt, zeile:r[i]};
+  }
+  return null;
+}
+/* Nur am heutigen Tag hat „jetzt“ eine Bedeutung. */
+function standFuer(datum){
+  return datum === heute() ? rasterStand() : null;
+}
+
 /* Welche Stunde gehört zu diesem Planeintrag an diesem Tag? */
 function stundeZuSlot(slot, datum){
   return db.stunden.find(s => s.klasseId === slot.klasseId &&
@@ -2831,53 +3515,16 @@ function slotStand(slot, datum){
   const st = stundenStats(s, k);
   return {art:"erfasst", txt:st.erf + "/" + (k ? k.count : 0) + " erfasst", stunde:s};
 }
-/* Nächste noch nicht gehaltene Einheit des Fachs – als Themenvorschlag. */
-function naechsteEinheit(klasseId, fachId){
-  if(!db.ui.planVorschlag) return null;
-  const rs = db.reihen.filter(r => r.fachId === fachId);
-  for(let i = 0; i < rs.length; i++){
-    const es = einheitenVon(rs[i].id);
-    for(let j = 0; j < es.length; j++){
-      if(estat(es[j], klasseId) !== "gehalten") return es[j];
-    }
-  }
-  return null;
-}
-
 /* Antippen: Auswahl setzen, Stunde holen oder anlegen, ins Eintragen springen. */
 function planOeffnen(slot, datum){
   const k = klasse(slot.klasseId);
   if(!k){ toast("Diese Klasse gibt es nicht mehr"); return; }
   setAuswahl(slot.klasseId, slot.fachId || null);
-  let s = stundeZuSlot(slot, datum);
-  let neu = false;
-  if(!s){
-    const e = naechsteEinheit(slot.klasseId, slot.fachId || null);
-    s = stundeErzeugen(k, slot.fachId, datum, e ? e.titel : "", e ? e.id : null, false);
-    neu = true;
-  }
+  const s = stundeZuSlot(slot, datum);
   db.ui.bereich = "stunden";
-  save();
-  stdGo(s.aus ? "ansicht" : "erfassen", s.id);
-  if(neu) toast("Stunde " + s.nr + " angelegt");
-}
-function planAusfall(slot, datum){
-  const k = klasse(slot.klasseId);
-  if(!k) return;
-  const vorhanden = stundeZuSlot(slot, datum);
-  if(vorhanden){ toast("Für diesen Tag ist schon eine Stunde erfasst"); return; }
-  openModal({
-    titel:"Stunde ausgefallen?",
-    text: TAGE_LANG[slot.tag - 1] + ", " + deDate(datum) + " · Klasse " + k.name +
-          ((fach(slot.fachId) ? " · " + fach(slot.fachId).name : "")),
-    felder:[{key:"grund", label:"Grund", wert:"", platzhalter:"z. B. Halle gesperrt"}],
-    okText:"Als ausgefallen eintragen",
-    onOk: w => {
-      const s = stundeErzeugen(k, slot.fachId, datum, (w.grund || "").trim(), null, true);
-      save(); renderStunde();
-      toast("Als ausgefallen eingetragen");
-    }
-  });
+  if(s){ save(); stdGo("ansicht", s.id); return; }
+  /* Noch nichts erfasst – also von vorn, mit der Frage nach dem Was. */
+  neuStarten({datum:datum, klasseId:slot.klasseId, fachId:slot.fachId || null});
 }
 
 /* --- Zeichnen --- */
@@ -2885,11 +3532,21 @@ function renderPlanTab(){
   planRaster();
   const woche = planWoche();
   $("#planKW").textContent = "KW " + kalenderwoche(woche);
+  const ferienDerWoche = [];
+  for(let t = 1; t <= 5; t++){
+    const fr = freierTag(plusTage(woche, t - 1));
+    if(fr && ferienDerWoche.indexOf(fr.titel) === -1) ferienDerWoche.push(fr.titel);
+  }
+  const fz = $("#planFrei");
+  if(fz){
+    fz.textContent = ferienDerWoche.join(" · ");
+    fz.style.display = ferienDerWoche.length ? "" : "none";
+  }
   $("#planSpanne").textContent = kurzDatum(woche) + " – " + kurzDatum(plusTage(woche, 4)) +
     isoZuDatum(woche).getFullYear().toString().replace(/^\d{2}/, "");
-  $("#swVorschlag").classList.toggle("an", !!db.ui.planVorschlag);
   $("#planHeute").style.display = woche === montagVon(heute()) ? "none" : "";
 
+  document.body.classList.toggle("vertmodus", !!db.ui.vertretungModus);
   const ansicht = db.ui.planAnsicht === "woche" ? "woche" : "tag";
   document.querySelectorAll("#planAnsicht button").forEach(b => {
     b.classList.toggle("on", b.dataset.a === ansicht);
@@ -2900,6 +3557,8 @@ function renderPlanTab(){
   $("#planWoche").style.display = ansicht === "woche" ? "" : "none";
 
   renderRasterListe();
+  renderDienstListe();
+  renderFreiListe();
   const rz = planRaster();
   const von = rz[0] && rz[0].von, bis = rz[rz.length - 1] && rz[rz.length - 1].bis;
   $("#rasterInfo").textContent = rz.length + " Stunden" +
@@ -2925,8 +3584,11 @@ function renderPlanTag(){
   const chips = $("#planTage"); chips.innerHTML = "";
   for(let t = 1; t <= 5; t++){
     const datum = datumFuer(t);
+    const frei = freierTag(datum);
     const b = document.createElement("button");
-    b.className = "tagchip" + (t === tag ? " on" : "") + (datum === heuteIso ? " heute" : "");
+    b.className = "tagchip" + (t === tag ? " on" : "") + (datum === heuteIso ? " heute" : "") +
+                  (frei ? " frei" : "");
+    if(frei) b.title = frei.titel;
     b.innerHTML = "<b>" + TAGE_KURZ[t - 1] + "</b><span>" + kurzDatum(datum) + "</span>";
     b.addEventListener("click", () => { db.ui.planTag = t; save(); renderPlanTab(); });
     chips.appendChild(b);
@@ -2934,54 +3596,278 @@ function renderPlanTag(){
 
   const box = $("#planTag"); box.innerHTML = "";
   const datum = datumFuer(tag);
-  const liste = planSlots().filter(s => s.tag === tag)
-    .sort((a, b) => a.nr - b.nr);
+  const liste = tagesPlan(tag, datum);
   if(!planSlots().length){
     box.appendChild(planLeer());
     return;
   }
-  if(!liste.length){
+
+  /* Ein freier Tag braucht keinen Stundenplan. */
+  const freiHeute = freierTag(datum);
+  if(freiHeute){
+    const karte = document.createElement("div");
+    karte.className = "card freitag";
+    const naechst = naechsterSchultag(plusTage(datum, 1));
+    karte.innerHTML = "<h3>" + esc(freiHeute.titel) + "</h3>" +
+      '<p class="hint" style="margin:4px 0 0">' +
+      (naechst ? "Weiter geht es am " + deDate(naechst) + "." : "Kein Unterricht.") + "</p>";
+    box.appendChild(karte);
+    if(!liste.length) return;
+    const trotzdem = document.createElement("p");
+    trotzdem.className = "hint";
+    trotzdem.style.margin = "0 0 8px";
+    trotzdem.textContent = "Laut Plan stünde an:";
+    box.appendChild(trotzdem);
+  }
+
+  /* Der Streifen sagt in einem Satz, wo im Tag wir stehen. */
+  const stand = freiHeute ? null : standFuer(datum);
+  if(stand && liste.length){
+    const hier = liste.find(s => s.nr === stand.nr);
+    const spaeter = liste.filter(s => s.nr > stand.nr).sort((a, b) => a.nr - b.nr)[0];
+    const zeigen = stand.art === "laeuft" ? hier : (hier || spaeter);
+    const streifen = document.createElement("div");
+    streifen.className = "jetztstreifen " + (stand.art === "laeuft" && hier ? "an" : "");
+    let txt;
+    if(stand.art === "laeuft" && hier){
+      const k2 = klasse(hier.klasseId), f2 = fach(hier.fachId);
+      txt = "<b>Läuft gerade</b><span>" + stand.nr + ". Stunde · " +
+            (k2 ? esc(k2.name) : "?") + (f2 ? " · " + esc(f2.name) : "") +
+            " · noch " + stand.rest + " min</span>";
+    }else if(stand.art === "laeuft"){
+      txt = "<b>" + stand.nr + ". Stunde läuft</b><span>" +
+            (spaeter ? "frei – weiter in der " + spaeter.nr + ". Stunde" : "frei") + "</span>";
+    }else if(zeigen && stand.nr === zeigen.nr){
+      const k2 = klasse(zeigen.klasseId), f2 = fach(zeigen.fachId);
+      txt = "<b>Gleich</b><span>" + stand.nr + ". Stunde · " +
+            (k2 ? esc(k2.name) : "?") + (f2 ? " · " + esc(f2.name) : "") +
+            " · in " + stand["in"] + " min</span>";
+    }else if(spaeter){
+      const k2 = klasse(spaeter.klasseId), f2 = fach(spaeter.fachId);
+      txt = "<b>Als Nächstes</b><span>" + spaeter.nr + ". Stunde · " +
+            (k2 ? esc(k2.name) : "?") + (f2 ? " · " + esc(f2.name) : "") + "</span>";
+    }else{
+      txt = "<b>Für heute durch</b><span>keine Stunde mehr im Plan</span>";
+    }
+    streifen.innerHTML = txt;
+    box.appendChild(streifen);
+  }else if(datum === heute() && liste.length && !freiHeute){
+    const streifen = document.createElement("div");
+    streifen.className = "jetztstreifen";
+    streifen.innerHTML = "<b>Heute</b><span>Uhrzeiten im Zeitraster eintragen, " +
+      "dann steht hier die laufende Stunde.</span>";
+    box.appendChild(streifen);
+  }
+  if(!liste.length && !db.ui.vertretungModus){
     const p = document.createElement("div");
     p.className = "card";
     p.innerHTML = '<p class="hint" style="margin:0">Am ' + TAGE_LANG[tag - 1] +
       " steht nichts im Plan.</p>";
     box.appendChild(p);
+    box.appendChild(vertretungLeiste(datum, tag));
     return;
   }
-  liste.forEach(slot => box.appendChild(stundenKarte(slot, datum)));
+  const stand2 = freiHeute ? null : standFuer(datum);
+  const dienste = planDienste().filter(d => d.tag === tag);
+  let laufend = null;
+  const dienstVor = nr => dienste.filter(d => d.nr === nr - 1);
+  dienstVor(1).forEach(d => box.appendChild(dienstStreifen(d)));
+  const gezeigt = {};
+  liste.forEach(s2 => { gezeigt[s2.nr] = true; });
+  const freieReihen = db.ui.vertretungModus
+    ? planRaster().filter(r => !gezeigt[r.nr]) : [];
+  const alle = liste.concat(freieReihen.map(r => ({_frei:true, tag:tag, nr:r.nr})))
+                    .sort((a, b) => a.nr - b.nr);
+  alle.forEach(slot => {
+    if(slot._frei){
+      box.appendChild(freieKarte(slot, datum));
+      dienste.filter(d => d.nr === slot.nr).forEach(d => box.appendChild(dienstStreifen(d)));
+      return;
+    }
+    const karte = stundenKarte(slot, datum);
+    if(freiHeute) karte.classList.add("gedimmt");
+    if(stand2 && slot.nr === stand2.nr){
+      karte.classList.add(stand2.art === "laeuft" ? "jetzt" : "gleich");
+      if(stand2.art === "laeuft") laufend = karte;
+    }
+    box.appendChild(karte);
+    dienste.filter(d => d.nr === slot.nr).forEach(d => box.appendChild(dienstStreifen(d)));
+  });
+  /* Dienste nach der letzten geplanten Stunde nicht verschlucken */
+  const letzte = liste.length ? liste[liste.length - 1].nr : 0;
+  dienste.filter(d => d.nr > letzte).forEach(d => box.appendChild(dienstStreifen(d)));
+
+  box.appendChild(vertretungLeiste(datum, tag));
+  /* Am Schultag soll die laufende Stunde ohne Suchen im Blick sein. */
+  if(laufend && !db.ui.planEdit){
+    setTimeout(() => { try{ laufend.scrollIntoView({block:"center", behavior:"smooth"}); }
+                       catch(e){} }, 60);
+  }
 }
 
 function stundenKarte(slot, datum){
   const k = klasse(slot.klasseId), f = fach(slot.fachId);
-  const stand = slotStand(slot, datum);
+  const weg = !!slot._weg;
+  const stand = weg ? {art:"ausgef", txt:"fällt heute aus", stunde:null} : slotStand(slot, datum);
   const zeit = planRaster().find(r => r.nr === slot.nr);
   const karte = document.createElement("div");
-  karte.className = "card stundenkarte " + stand.art;
+  karte.className = "card stundenkarte " + stand.art +
+    (slot._vertretung ? " vertretung" : "") + (slot._extra ? " extra" : "");
+  const marke = slot._vertretung ? '<span class="marke">Vertretung</span>'
+              : (slot._extra ? '<span class="marke">nur heute</span>' : "");
   karte.innerHTML =
     '<div class="zeit"><b>' + slot.nr + ".</b><span>" +
       (zeit && zeit.von ? esc(zeit.von) + "<br>" + esc(zeit.bis || "") : "Stunde") + "</span></div>" +
     '<div class="was"><h3>' + (k ? esc(k.name) : "Klasse weg") +
-      (f ? " · " + esc(f.name) : "") + "</h3>" +
-      '<div class="sub">' + esc(stand.txt) + (slot.raum ? " · Raum " + esc(slot.raum) : "") +
+      (f ? " · " + esc(f.name) : "") + marke + "</h3>" +
+      '<div class="sub">' + esc(stand.txt) + (slot.raum ? " · " + esc(slot.raum) : "") +
       "</div></div>" +
     '<div class="chev">›</div>';
-  karte.addEventListener("click", () => planOeffnen(slot, datum));
-  if(stand.art === "offen"){
-    const aus = document.createElement("button");
-    aus.className = "ausfallchip";
-    aus.type = "button";
-    aus.textContent = "Ausfall";
-    aus.addEventListener("click", ev => { ev.stopPropagation(); planAusfall(slot, datum); });
-    karte.insertBefore(aus, karte.lastChild);
+  karte.addEventListener("click", () => {
+    if(db.ui.vertretungModus){ vertretungWaehlen(slot, datum); return; }
+    if(!weg) planOeffnen(slot, datum);
+  });
+  if(weg || slot._vertretung || slot._extra){
+    const zurueck = document.createElement("button");
+    zurueck.className = "ausfallchip";
+    zurueck.type = "button";
+    zurueck.textContent = "Zurücksetzen";
+    zurueck.addEventListener("click", ev => {
+      ev.stopPropagation();
+      merkeStand();
+      const a = slot._weg || slot._vertretung || slot._extra;
+      db.plan.aenderungen = planAenderungen().filter(x => x.id !== a.id);
+      save(); renderPlanTab(); toastUndo("Zurückgesetzt");
+    });
+    karte.insertBefore(zurueck, karte.lastChild);
   }
   return karte;
+}
+
+/* Im Vertretungsmodus soll auch eine Freistunde antippbar sein. */
+function freieKarte(slot, datum){
+  const zeit = planRaster().find(r => r.nr === slot.nr);
+  const karte = document.createElement("div");
+  karte.className = "card stundenkarte freikarte";
+  karte.innerHTML =
+    '<div class="zeit"><b>' + slot.nr + ".</b><span>" +
+      (zeit && zeit.von ? esc(zeit.von) + "<br>" + esc(zeit.bis || "") : "Stunde") + "</span></div>" +
+    '<div class="was"><h3>frei</h3><div class="sub">antippen für eine Vertretung</div></div>' +
+    '<div class="chev">›</div>';
+  karte.addEventListener("click", () => vertretungWaehlen(slot, datum));
+  return karte;
+}
+
+/* Ein Dienst ist keine Stunde – er bekommt einen schmalen Streifen. */
+function dienstStreifen(d){
+  const z = document.createElement("div");
+  z.className = "dienststreifen";
+  z.innerHTML = '<span class="di"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" ' +
+    'stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/>' +
+    '<circle cx="12" cy="12" r="2.6"/></svg></span>' +
+    "<b>" + esc(d.titel) + "</b>" + (d.ort ? '<span class="mini">' + esc(d.ort) + "</span>" : "");
+  return z;
+}
+
+/* Vertretung, Zusatzstunde oder Ausfall – aber nur an diesem einen Tag. */
+function aenderungDialog(vorhanden, datum, tag, slot){
+  if(!db.klassen.length && !slot){ toast("Erst eine Klasse anlegen"); return; }
+  const kOpt = db.klassen.map(k => ({value:k.id, label:k.name}));
+  const fOpt = [{value:"", label:"– kein Fach –"}].concat(
+    db.faecher.map(f => ({value:f.id, label:f.name})));
+  const nrOpt = planRaster().map(r => ({value:String(r.nr),
+    label: r.nr + ". Stunde" + (r.von ? " · " + r.von : "")}));
+  const felder = [];
+  if(!slot) felder.push({key:"nr", label:"Stunde", typ:"select",
+                         wert: String(nrOpt[0] ? nrOpt[0].value : "1"), optionen:nrOpt});
+  felder.push({key:"klasseId", label:"Klasse", typ:"select",
+    wert: vorhanden ? vorhanden.klasseId : (db.ui.klasseId || (kOpt[0] || {}).value),
+    optionen:kOpt});
+  felder.push({key:"fachId", label:"Fach", typ:"select",
+    wert: vorhanden ? (vorhanden.fachId || "") : "", optionen:fOpt});
+  felder.push({key:"raum", label:"Raum (optional)",
+    wert: vorhanden ? (vorhanden.raum || "") : (slot ? (slot.raum || "") : "")});
+  felder.push({key:"notiz", label:"Notiz (optional)",
+    wert: vorhanden ? (vorhanden.notiz || "") : "", platzhalter:"z. B. für Frau M."});
+  openModal({
+    titel: slot ? "Vertretung nur heute" : "Zusätzliche Stunde nur heute",
+    text: deDate(datum),
+    felder: felder,
+    okText:"Eintragen",
+    onOk: w => {
+      const kid = w.klasseId;
+      if(!kid){ toast("Klasse fehlt"); return false; }
+      const nr = slot ? slot.nr : parseInt(w.nr, 10);
+      merkeStand();
+      db.plan.aenderungen = planAenderungen().filter(a => !(a.datum === datum && a.nr === nr));
+      planAenderungen().push({id:uid(), datum:datum, nr:nr,
+        art: slot ? "vertretung" : "extra", klasseId:kid, fachId:w.fachId || null,
+        raum:(w.raum || "").trim(), notiz:(w.notiz || "").trim()});
+      save(); renderAlles(); renderPlanTab();
+      toast("Eingetragen");
+    }
+  });
+}
+
+/* ---- Dienste pflegen ---- */
+function renderDienstListe(){
+  const box = $("#dienstListe");
+  if(!box) return;
+  box.innerHTML = "";
+  const liste = planDienste().slice().sort((a, b) => a.tag - b.tag || a.nr - b.nr);
+  if(!liste.length){
+    box.innerHTML = '<p class="hint" style="margin:0">Noch nichts eingetragen.</p>';
+    return;
+  }
+  liste.forEach(d => {
+    const z = document.createElement("button");
+    z.className = "freizeile";
+    z.type = "button";
+    z.innerHTML = "<span><b>" + esc(d.titel) + "</b><span class=\"mini\">" +
+      TAGE_LANG[d.tag - 1] + " · " + (d.nr === 0 ? "vor der 1. Stunde"
+        : "nach der " + d.nr + ". Stunde") +
+      (d.ort ? " · " + esc(d.ort) : "") + "</span></span>" +
+      '<span class="bchev">›</span>';
+    z.addEventListener("click", () => dienstDialog(d));
+    box.appendChild(z);
+  });
+}
+function dienstDialog(d){
+  const neu = !d;
+  const tagOpt = TAGE_LANG.map((t, i) => ({value:String(i + 1), label:t}));
+  const nrOpt = [{value:"0", label:"vor der 1. Stunde"}].concat(
+    planRaster().map(r => ({value:String(r.nr), label:"nach der " + r.nr + ". Stunde"})));
+  openModal({
+    titel: neu ? "Dienst eintragen" : "Dienst",
+    felder:[
+      {key:"titel", label:"Was", wert: d ? d.titel : "", platzhalter:"z. B. Hofaufsicht"},
+      {key:"tag", label:"Tag", typ:"select", wert: d ? String(d.tag) : "1", optionen:tagOpt},
+      {key:"nr", label:"Wann", typ:"select", wert: d ? String(d.nr) : "1", optionen:nrOpt},
+      {key:"ort", label:"Wo (optional)", wert: d ? (d.ort || "") : "", platzhalter:"Schulhof"}
+    ],
+    okText: neu ? "Eintragen" : "Übernehmen",
+    onOk: w => {
+      const titel = (w.titel || "").trim();
+      if(!titel){ toast("Bezeichnung fehlt"); return false; }
+      const daten = {titel:titel, tag:parseInt(w.tag, 10), nr:parseInt(w.nr, 10),
+                     ort:(w.ort || "").trim()};
+      if(neu) planDienste().push(Object.assign({id:uid()}, daten));
+      else Object.assign(d, daten);
+      save(); renderPlanTab(); toast("Gespeichert");
+    }
+  });
+  if(!neu) modalLoeschen("Dienst löschen", () => {
+    merkeStand();
+    db.plan.dienste = planDienste().filter(x => x.id !== d.id);
+    save(); renderPlanTab(); toastUndo("Dienst gelöscht");
+  });
 }
 
 function planLeer(){
   const d = document.createElement("div");
   d.className = "card planleer";
-  d.innerHTML = "<p>Noch kein Stundenplan. Trage ihn einmal ein – danach genügt ein Tippen, " +
-    "um eine Stunde zu erfassen.</p>";
+  d.innerHTML = "<p>Noch kein Stundenplan.</p>";
   const b = document.createElement("button");
   b.className = "act primary";
   b.style.width = "100%";
@@ -3008,65 +3894,158 @@ function renderPlanWoche(){
   kopf.innerHTML = '<div class="mini">' +
     (db.ui.planEdit ? "Tippe auf eine Stelle" : "Woche vom " + kurzDatum(planWoche())) + "</div>";
   const stift = document.createElement("button");
-  stift.className = "iconbtn" + (db.ui.planEdit ? " on" : "");
+  stift.className = "iconbtn stiftbtn" + (db.ui.planEdit ? " on" : "");
   stift.innerHTML = STIFT_SVG;
   stift.setAttribute("aria-label", "Stundenplan bearbeiten");
   stift.addEventListener("click", () => {
     db.ui.planEdit = !db.ui.planEdit; save(); renderPlanTab();
     toast(db.ui.planEdit ? "Bearbeiten an" : "Bearbeiten aus");
   });
+  /* Kleiner Uhr-Knopf: blendet die Zeiten links ein und wieder aus. */
+  const uhr = document.createElement("button");
+  uhr.className = "iconbtn uhrbtn" + (db.ui.planZeiten ? " on" : "");
+  uhr.type = "button";
+  uhr.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" ' +
+    'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+    '<circle cx="12" cy="12" r="8.4"/><path d="M12 7.6V12l2.8 1.8"/></svg>';
+  uhr.setAttribute("aria-label", "Uhrzeiten ein- oder ausblenden");
+  uhr.title = "Uhrzeiten ein- oder ausblenden";
+  uhr.addEventListener("click", () => {
+    db.ui.planZeiten = !db.ui.planZeiten;
+    save();
+    uhr.classList.toggle("on", !!db.ui.planZeiten);
+    const t = $("#planWoche table.raster");
+    if(t) t.classList.toggle("mitzeit", !!db.ui.planZeiten);
+  });
+  kopf.appendChild(uhr);
   kopf.appendChild(stift);
   karte.appendChild(kopf);
 
   const tab = document.createElement("table");
-  tab.className = "raster";
+  tab.className = "raster" + (db.ui.planZeiten ? " mitzeit" : "");
   let kopfZeile = '<tr><th class="nrspalte"></th>';
   for(let t = 1; t <= 5; t++){
     const datum = datumFuer(t);
-    kopfZeile += '<th class="' + (datum === heuteIso ? "heute" : "") + '">' +
+    const fr = freierTag(datum);
+    kopfZeile += '<th class="' + (datum === heuteIso ? "heute " : "") +
+      (fr ? "freispalte" : "") + '" title="' + (fr ? esc(fr.titel) : "") + '">' +
       TAGE_KURZ[t - 1] + "<br>" + kurzDatum(datum) + "</th>";
   }
   tab.innerHTML = kopfZeile + "</tr>";
 
+  const jetzt = rasterStand();
+  const dienste = planDienste();
+  const dienstZeile = nr => {
+    const heutigeDienste = dienste.filter(d => d.nr === nr);
+    if(!heutigeDienste.length) return;
+    const tr = document.createElement("tr");
+    tr.className = "dienstzeile";
+    const leer = document.createElement("td");
+    leer.className = "nrspalte";
+    tr.appendChild(leer);
+    for(let t = 1; t <= 5; t++){
+      const td = document.createElement("td");
+      const d = heutigeDienste.find(x => x.tag === t);
+      if(d){
+        const s = document.createElement("span");
+        s.className = "dienstband";
+        s.title = d.titel + (d.ort ? " · " + d.ort : "");
+        s.textContent = d.titel;
+        td.appendChild(s);
+      }
+      tr.appendChild(td);
+    }
+    tab.appendChild(tr);
+  };
+
+  dienstZeile(0);
   planRaster().forEach(r => {
     const tr = document.createElement("tr");
     const nrTd = document.createElement("td");
     nrTd.className = "nrspalte";
-    nrTd.textContent = r.nr;
+    /* Beginn und Ende vollständig – die Stundenzahl steht dann darunter. */
+    nrTd.innerHTML = '<span class="zt">' +
+      (r.von ? "<b>" + esc(r.von) + "</b><i>" + esc(r.bis || "") + "</i>"
+             : "<b>" + r.nr + ".</b>") + "</span>";
     tr.appendChild(nrTd);
     for(let t = 1; t <= 5; t++){
       const td = document.createElement("td");
-      if(datumFuer(t) === heuteIso) td.className = "heute";
-      td.appendChild(planZelle(t, r.nr, datumFuer(t) === heuteIso));
+      const istHeute = datumFuer(t) === heuteIso;
+      td.className = (istHeute ? "heute" : "") + (freierTag(datumFuer(t)) ? " freispalte" : "");
+      const z = planZelle(t, r.nr, istHeute);
+      if(istHeute && jetzt && jetzt.art === "laeuft" && jetzt.nr === r.nr)
+        z.classList.add("jetzt");
+      td.appendChild(z);
       tr.appendChild(td);
     }
     tab.appendChild(tr);
+    dienstZeile(r.nr);
   });
   karte.appendChild(tab);
   box.appendChild(karte);
   if(!planSlots().length && !db.ui.planEdit) box.appendChild(planLeer());
+  if(!db.ui.planEdit) box.appendChild(vertretungLeiste(null, null));
+}
+
+/* Der Vertretungsmodus: einmal drücken, dann eine Stunde antippen. */
+function vertretungLeiste(datum, tag){
+  const wrap = document.createElement("div");
+  wrap.className = "vertleiste" + (db.ui.vertretungModus ? " an" : "");
+  const b = document.createElement("button");
+  b.className = "act " + (db.ui.vertretungModus ? "warnout" : "neutral");
+  b.style.width = "100%";
+  b.textContent = db.ui.vertretungModus ? "Abbrechen" : "Vertretung eintragen";
+  b.addEventListener("click", () => {
+    db.ui.vertretungModus = !db.ui.vertretungModus;
+    save(); renderPlanTab();
+    if(db.ui.vertretungModus) toast("Stunde antippen, die du vertrittst");
+  });
+  wrap.appendChild(b);
+  if(db.ui.vertretungModus){
+    const p = document.createElement("p");
+    p.className = "hint";
+    p.style.cssText = "text-align:center;margin:8px 0 0";
+    p.textContent = "Tippe die Stunde an, die zur Vertretung wird.";
+    wrap.appendChild(p);
+  }
+  return wrap;
+}
+function vertretungWaehlen(slot, datum){
+  db.ui.vertretungModus = false;
+  save();
+  aenderungDialog(aenderungAn(datum, slot.nr), datum, slot.tag, slot);
 }
 
 function planZelle(tag, nr, istHeute){
-  const slot = slotAn(tag, nr);
   const datum = datumFuer(tag);
+  /* Der Tagesplan kennt auch die einmaligen Änderungen dieses Datums. */
+  const slot = tagesPlan(tag, datum).find(s => s.nr === nr) || null;
   const b = document.createElement("button");
   if(!slot){
     b.className = "zelle leer" + (istHeute ? " heute" : "");
-    b.innerHTML = db.ui.planEdit ? '<b style="color:var(--muted)">+</b>' : "";
+    b.innerHTML = (db.ui.planEdit || db.ui.vertretungModus)
+      ? '<b style="color:var(--muted)">+</b>' : "";
     if(db.ui.planEdit) b.addEventListener("click", () => slotDialog(tag, nr));
+    else if(db.ui.vertretungModus)
+      b.addEventListener("click", () => vertretungWaehlen({_frei:true, tag:tag, nr:nr}, datum));
     return b;
   }
   const k = klasse(slot.klasseId), f = fach(slot.fachId);
-  const stand = db.ui.planEdit ? {art:""} : slotStand(slot, datum);
-  b.className = "zelle " + stand.art + (istHeute ? " heute" : "");
+  const weg = !!slot._weg;
+  const stand = (db.ui.planEdit || weg) ? {art: weg ? "ausgef" : ""} : slotStand(slot, datum);
+  b.className = "zelle " + stand.art + (istHeute ? " heute" : "") +
+    (slot._vertretung || slot._extra ? " vertretung" : "");
   b.type = "button";
   b.title = (k ? k.name : "?") + (f ? " · " + f.name : "") +
-            (slot.raum ? " · Raum " + slot.raum : "");
+            (slot.raum ? " · Raum " + slot.raum : "") +
+            (slot._vertretung ? " · Vertretung" : "");
   b.innerHTML = "<b>" + (k ? esc(k.name) : "?") + "</b><span>" +
-    (f ? esc(f.name) : "") + "</span>";
+    (f ? esc(f.name) : "") + "</span>" +
+    (stand.art === "erfasst" ? '<i class="zpunkt"></i>' : "");
   b.addEventListener("click", () => {
-    if(db.ui.planEdit) slotDialog(tag, nr); else planOeffnen(slot, datum);
+    if(db.ui.planEdit){ slotDialog(tag, nr); return; }
+    if(db.ui.vertretungModus){ vertretungWaehlen(slot, datum); return; }
+    planOeffnen(slot, datum);
   });
   return b;
 }
@@ -3242,16 +4221,6 @@ document.querySelectorAll("#planAnsicht button").forEach(b => {
     save(); renderPlanTab();
   });
 });
-$("#planBearbeiten").addEventListener("click", () => {
-  db.ui.planAnsicht = "woche";
-  db.ui.planEdit = true;
-  $("#planBox").open = false;
-  save(); renderPlanTab(); window.scrollTo(0, 0);
-  toast("Tippe auf eine Stelle im Raster");
-});
-$("#swVorschlag").addEventListener("click", () => {
-  db.ui.planVorschlag = !db.ui.planVorschlag; save(); renderPlanTab();
-});
 $("#rasterPlus").addEventListener("click", () => {
   const r = planRaster();
   if(r.length >= 12){ toast("Zwölf Stunden sind genug"); return; }
@@ -3267,6 +4236,778 @@ $("#rasterMinus").addEventListener("click", () => {
   r.pop(); save(); renderPlanTab();
 });
 window.addEventListener("resize", planPille);
+/* Jede Minute nachsehen, ob eine andere Stunde dran ist – aber nur, wenn der
+   Plan überhaupt zu sehen ist und niemand gerade etwas bearbeitet. */
+let letzteMinute = -1;
+setInterval(() => {
+  const m = jetztMinuten();
+  if(m === letzteMinute) return;
+  letzteMinute = m;
+  if(db.ui.view !== "stunde" || db.ui.bereich !== "plan") return;
+  if(!$("#ovl").hidden || dropOffen) return;
+  if(document.activeElement && document.activeElement.tagName === "INPUT") return;
+  renderPlanTab();
+}, 20000);
+document.addEventListener("visibilitychange", () => {
+  if(document.visibilityState === "visible" &&
+     db.ui.view === "stunde" && db.ui.bereich === "plan") renderPlanTab();
+});
+
+/* ---------- Organisation ----------
+   Ein Ort für alles, was nicht am Unterricht selbst hängt: was heute ansteht,
+   Termine, Aufgaben und das Schuljahr mit seinen freien Tagen. */
+
+function termine(){ if(!Array.isArray(db.termine)) db.termine = []; return db.termine; }
+function todos(){ if(!Array.isArray(db.todos)) db.todos = []; return db.todos; }
+
+function termineSortiert(){
+  return termine().slice().sort((a, b) =>
+    String(a.datum).localeCompare(String(b.datum)) ||
+    String(a.zeit || "").localeCompare(String(b.zeit || "")));
+}
+function todosSortiert(){
+  return todos().slice().sort((a, b) => {
+    if(!!a.erledigt !== !!b.erledigt) return a.erledigt ? 1 : -1;
+    const af = a.faellig || "9999-99-99", bf = b.faellig || "9999-99-99";
+    return af.localeCompare(bf) || (a.t || 0) - (b.t || 0);
+  });
+}
+function offeneTodos(){ return todos().filter(t => !t.erledigt); }
+function faelligBis(datum){
+  return offeneTodos().filter(t => t.faellig && t.faellig <= datum);
+}
+
+/* Vormittags will man wissen, was kommt; nachmittags, was liegen blieb. */
+function tagesAbschnitt(){
+  const r = planRaster();
+  const letzte = r.length ? minuten(r[r.length - 1].bis) : null;
+  const grenze = (letzte !== null ? letzte : 13 * 60) - 20;
+  return jetztMinuten() >= grenze ? "abschluss" : "start";
+}
+
+/* Was steht heute laut Stundenplan an? */
+function stundenHeute(datum){
+  const wt = (isoZuDatum(datum).getDay() + 6) % 7;
+  if(wt > 4) return [];
+  return planSlots().filter(s => s.tag === wt + 1).sort((a, b) => a.nr - b.nr);
+}
+
+function notizen(){ if(!Array.isArray(db.notizen)) db.notizen = []; return db.notizen; }
+
+function renderOrganisation(){
+  renderOrgHeute();
+  const seg = db.ui.orgSeg || "kalender";
+  document.querySelectorAll("#orgSeg button").forEach(b => {
+    b.classList.toggle("on", b.dataset.o === seg);
+  });
+  orgPille();
+  $("#orgKalender").style.display   = seg === "kalender" ? "" : "none";
+  $("#orgTermineBox").style.display = seg === "termine" ? "" : "none";
+  $("#orgTodosBox").style.display   = seg === "todos" ? "" : "none";
+  $("#orgNotizenBox").style.display = seg === "notizen" ? "" : "none";
+  if(seg === "kalender") renderKalender();
+  if(seg === "termine") renderTermine();
+  if(seg === "todos"){ renderTodos(); todoPille(); }
+  if(seg === "notizen") renderNotizen();
+}
+function orgPille(){
+  const leiste = $("#orgSeg"), pille = $("#orgPille");
+  if(!leiste || !pille) return;
+  const aktiv = leiste.querySelector("button.on");
+  if(!aktiv || !aktiv.offsetWidth) return;
+  pille.style.width = aktiv.offsetWidth + "px";
+  pille.style.transform = "translateX(" + (aktiv.offsetLeft - 4) + "px)";
+}
+document.querySelectorAll("#orgSeg button").forEach(b => {
+  b.addEventListener("click", () => {
+    db.ui.orgSeg = b.dataset.o; save(); renderOrganisation();
+  });
+});
+window.addEventListener("resize", orgPille);
+
+/* ---- Monatskalender ---- */
+const MONAT_LANG = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli",
+                    "August", "September", "Oktober", "November", "Dezember"];
+function kalMonatIso(){
+  if(!db.ui.kalMonat) db.ui.kalMonat = heute().slice(0, 7);
+  return db.ui.kalMonat;
+}
+function monatSchieben(schritte){
+  const p = kalMonatIso().split("-");
+  const d = new Date(Number(p[0]), Number(p[1]) - 1 + schritte, 1);
+  db.ui.kalMonat = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+  save(); renderKalender();
+}
+function renderKalender(){
+  const iso = kalMonatIso();
+  const jahr = Number(iso.slice(0, 4)), monat = Number(iso.slice(5, 7)) - 1;
+  $("#kalMonat").textContent = MONAT_LANG[monat];
+  $("#kalJahr").textContent = jahr;
+
+  const gitter = $("#kalGitter"); gitter.innerHTML = "";
+  ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].forEach(t => {
+    const z = document.createElement("div");
+    z.className = "kalkopf"; z.textContent = t;
+    gitter.appendChild(z);
+  });
+  const erster = new Date(jahr, monat, 1);
+  const start = plusTage(datumZuIso(erster), -((erster.getDay() + 6) % 7));
+  const hIso = heute();
+  const gewaehlt = db.ui.kalTag && db.ui.kalTag.slice(0, 7) === iso ? db.ui.kalTag : null;
+  for(let i = 0; i < 42; i++){
+    const d = plusTage(start, i);
+    const imMonat = d.slice(0, 7) === iso;
+    if(i >= 35 && !imMonat) break;
+    const frei = freierTag(d);
+    const anz = termine().filter(t => t.datum === d).length;
+    const auf = todos().filter(t => !t.erledigt && t.faellig === d).length;
+    const b = document.createElement("button");
+    b.className = "kaltag" + (imMonat ? "" : " fremd") + (d === hIso ? " heute" : "") +
+      (frei && frei.art !== "wochenende" ? " ferien" : "") +
+      (frei && frei.art === "wochenende" ? " we" : "") +
+      (d === gewaehlt ? " gewaehlt" : "");
+    b.type = "button";
+    b.innerHTML = "<b>" + Number(d.slice(8)) + "</b>" +
+      '<span class="kalpunkte">' +
+      (anz ? '<i class="kp termin"></i>' : "") +
+      (auf ? '<i class="kp todo"></i>' : "") + "</span>";
+    b.addEventListener("click", () => { db.ui.kalTag = d; save(); renderKalender(); });
+    gitter.appendChild(b);
+  }
+  renderKalTag(gewaehlt || hIso);
+}
+function renderKalTag(d){
+  const box = $("#kalTag"); box.innerHTML = "";
+  const kopf = document.createElement("div");
+  kopf.className = "rowline";
+  kopf.style.cssText = "padding-top:0";
+  kopf.innerHTML = "<div><h3 style=\"font-size:15px\">" +
+    WOCHENTAG[isoZuDatum(d).getDay()] + ", " + deDate(d) + "</h3></div>";
+  const plus = document.createElement("button");
+  plus.className = "act neutral mini";
+  plus.textContent = "+ Termin";
+  plus.addEventListener("click", () => terminDialog(null, d));
+  kopf.appendChild(plus);
+  box.appendChild(kopf);
+
+  const frei = freierTag(d);
+  const zeilen = [];
+  if(frei && frei.art !== "wochenende") zeilen.push({art:"frei", txt:frei.titel});
+  termine().filter(t => t.datum === d)
+    .sort((a, b) => String(a.zeit || "").localeCompare(String(b.zeit || "")))
+    .forEach(t => zeilen.push({art:"termin", txt:(t.zeit ? t.zeit + " · " : "") + t.titel +
+      (t.ort ? " · " + t.ort : ""), tap:() => terminDialog(t)}));
+  todos().filter(t => !t.erledigt && t.faellig === d)
+    .forEach(t => zeilen.push({art:"todo", txt:t.titel, tap:() => todoDialog(t)}));
+
+  if(!zeilen.length){
+    const p = document.createElement("p");
+    p.className = "hint"; p.style.margin = "6px 0 0";
+    p.textContent = "Nichts eingetragen.";
+    box.appendChild(p);
+    return;
+  }
+  zeilen.forEach(z => {
+    const el = document.createElement(z.tap ? "button" : "div");
+    el.className = "hpunkt " + z.art;
+    el.style.paddingLeft = "0"; el.style.paddingRight = "0";
+    if(z.tap){ el.type = "button"; el.addEventListener("click", z.tap); }
+    el.innerHTML = '<span class="hicon"></span><span class="htxt">' + esc(z.txt) + "</span>" +
+                   (z.tap ? '<span class="hchev">›</span>' : "");
+    box.appendChild(el);
+  });
+}
+$("#kalZurueck").addEventListener("click", () => monatSchieben(-1));
+$("#kalVor").addEventListener("click", () => monatSchieben(1));
+
+/* ---- Notizen und Mitschriften ---- */
+function renderNotizen(){
+  const box = $("#orgNotizen"); box.innerHTML = "";
+  const liste = notizen().slice().sort((a, b) =>
+    String(b.datum).localeCompare(String(a.datum)) || (b.t || 0) - (a.t || 0));
+  if(!liste.length){
+    box.innerHTML = '<p class="hint" style="margin:10px 0 0">Noch nichts notiert.</p>';
+    return;
+  }
+  liste.forEach(nz => {
+    const z = document.createElement("button");
+    z.className = "terminzeile";
+    z.type = "button";
+    const dd = isoZuDatum(nz.datum);
+    const kurz = String(nz.text || "").replace(/\s+/g, " ").slice(0, 60);
+    z.innerHTML = '<span class="tdatum"><b>' + dd.getDate() + "</b><span>" +
+      MONAT_KURZ[dd.getMonth()] + "</span></span>" +
+      '<span class="ttxt"><b>' + esc(nz.titel) + "</b><span>" + esc(kurz) +
+      (String(nz.text || "").length > 60 ? " …" : "") + "</span></span>" +
+      '<span class="bchev">›</span>';
+    z.addEventListener("click", () => notizDialog(nz));
+    box.appendChild(z);
+  });
+}
+function notizDialog(nz){
+  const neu = !nz;
+  openModal({
+    titel: neu ? "Neue Notiz" : "Notiz",
+    felder:[
+      {key:"titel", label:"Worum geht es", wert: nz ? nz.titel : "",
+       platzhalter:"z. B. Fachkonferenz Sport"},
+      {key:"datum", label:"Datum", typ:"datum", wert: nz ? nz.datum : heute()},
+      {key:"text", label:"Mitschrift", typ:"text2", wert: nz ? (nz.text || "") : ""}
+    ],
+    okText: neu ? "Anlegen" : "Übernehmen",
+    onOk: w => {
+      const titel = (w.titel || "").trim();
+      if(!titel){ toast("Bezeichnung fehlt"); return false; }
+      if(neu) notizen().push({id:uid(), titel:titel, datum:w.datum || heute(),
+                              text:w.text || "", t:Date.now()});
+      else { nz.titel = titel; nz.datum = w.datum || nz.datum; nz.text = w.text || ""; }
+      save(); renderOrganisation(); toast("Gespeichert");
+    }
+  });
+  if(!neu) modalLoeschen("Notiz löschen", () => {
+    merkeStand();
+    db.notizen = notizen().filter(x => x.id !== nz.id);
+    save(); renderOrganisation(); toastUndo("Notiz gelöscht");
+  });
+}
+$("#btnNotizNeu").addEventListener("click", () => notizDialog(null));
+
+/* ---- Die Karte für heute ---- */
+function renderOrgHeute(){
+  const box = $("#orgHeute"); box.innerHTML = "";
+  const hIso = heute();
+  const frei = freierTag(hIso);
+  const abschnitt = tagesAbschnitt();
+  const karte = document.createElement("div");
+  karte.className = "card heutekarte";
+
+  const kopf = document.createElement("div");
+  kopf.className = "hkopf";
+  kopf.innerHTML = "<h3>" + (frei ? esc(frei.titel)
+                     : (abschnitt === "start" ? "Was steht heute an?" : "Was ist noch offen?")) +
+    "</h3><div class=\"mini\">" + WOCHENTAG[isoZuDatum(hIso).getDay()] + ", " +
+    deDate(hIso) + "</div>";
+  karte.appendChild(kopf);
+
+  const punkte = [];
+
+  const morgen = naechsterSchultag(plusTage(hIso, 1));
+
+  if(frei){
+    const naechst = naechsterSchultag(plusTage(hIso, 1));
+    punkte.push({art:"frei", txt:"Kein Unterricht" +
+      (naechst ? " · weiter am " + deDate(naechst) : "")});
+  }else if(abschnitt === "abschluss"){
+    const offen = stundenHeute(hIso).filter(s => {
+      const st = stundeZuSlot(s, hIso);
+      if(!st) return true;
+      if(st.aus) return false;
+      const k = klasse(s.klasseId);
+      return stundenStats(st, k).erf < (k ? k.count : 0);
+    });
+    if(offen.length) punkte.push({art:"warn", tap:() => goView("stunde"),
+      txt:offen.length + (offen.length === 1 ? " Stunde noch nicht fertig erfasst"
+                                             : " Stunden noch nicht fertig erfasst")});
+    else if(stundenHeute(hIso).length) punkte.push({art:"gut", txt:"Alle Stunden erfasst"});
+  }
+
+  /* Termine – dieselbe Schreibweise wie in der Terminliste */
+  const wannTermine = abschnitt === "abschluss" && morgen ? morgen : hIso;
+  termine().filter(t => t.datum === wannTermine).forEach(t => punkte.push({art:"termin",
+    txt:(wannTermine === hIso ? "" : "Morgen · ") + (t.zeit ? t.zeit + " · " : "") +
+        t.titel + (t.ort ? " · " + t.ort : "")}));
+
+  /* Aufgaben, jede für sich */
+  const faellig = faelligBis(hIso);
+  faellig.slice(0, 6).forEach(t => punkte.push({
+    art: t.faellig < hIso ? "warn" : "todo",
+    txt: t.titel + (t.faellig < hIso ? " · überfällig" : ""),
+    tap: () => { db.ui.orgSeg = "todos"; save(); renderOrganisation(); }}));
+  if(faellig.length > 6) punkte.push({art:"todo",
+    txt:"… und " + (faellig.length - 6) + " weitere Aufgaben"});
+
+  if(!punkte.length) punkte.push({art:"gut", txt:"Nichts Offenes"});
+
+  punkte.forEach(p => {
+    const z = document.createElement(p.tap ? "button" : "div");
+    z.className = "hpunkt " + p.art;
+    if(p.tap){ z.type = "button"; z.addEventListener("click", p.tap); }
+    z.innerHTML = '<span class="hicon"></span><span class="htxt">' + esc(p.txt) + "</span>" +
+                  (p.tap ? '<span class="hchev">›</span>' : "");
+    karte.appendChild(z);
+  });
+
+  box.appendChild(karte);
+}
+
+/* ---- Termine ---- */
+function renderTermine(){
+  const box = $("#orgTermine"); box.innerHTML = "";
+  const hIso = heute();
+  const kommend = termineSortiert().filter(t => t.datum >= hIso);
+  if(!kommend.length){
+    box.innerHTML = '<p class="hint" style="margin:6px 0 0">Keine Termine eingetragen.</p>';
+    return;
+  }
+  kommend.slice(0, 12).forEach(t => {
+    const z = document.createElement("button");
+    z.className = "terminzeile" + (t.datum === hIso ? " heute" : "");
+    z.type = "button";
+    const d = isoZuDatum(t.datum);
+    z.innerHTML = '<span class="tdatum"><b>' + d.getDate() + "</b><span>" +
+        MONAT_KURZ[d.getMonth()] + "</span></span>" +
+      '<span class="ttxt"><b>' + esc(t.titel) + "</b><span>" +
+        WOCHENTAG_KURZ[d.getDay()] + (t.zeit ? " · " + esc(t.zeit) : "") +
+        (t.ort ? " · " + esc(t.ort) : "") + "</span></span>" +
+      '<span class="bchev">›</span>';
+    z.addEventListener("click", () => terminDialog(t));
+    box.appendChild(z);
+  });
+  const alt = termine().filter(t => t.datum < hIso).length;
+  if(alt){
+    const p = document.createElement("p");
+    p.className = "hint";
+    p.textContent = alt + (alt === 1 ? " vergangener Termin" : " vergangene Termine") +
+      " – aufräumen über den Eintrag selbst.";
+    box.appendChild(p);
+  }
+}
+
+function terminDialog(t, vorgabe){
+  const neu = !t;
+  openModal({
+    titel: neu ? "Neuer Termin" : "Termin",
+    felder:[
+      {key:"titel", label:"Was", wert: t ? t.titel : "", platzhalter:"z. B. Zeugniskonferenz"},
+      {key:"datum", label:"Datum", typ:"datum", wert: t ? t.datum : (vorgabe || heute())},
+      {key:"zeit", label:"Uhrzeit (optional)", wert: t ? (t.zeit || "") : "", platzhalter:"14:00"},
+      {key:"ort", label:"Wo (optional)", wert: t ? (t.ort || "") : "", platzhalter:"Lehrerzimmer"}
+    ],
+    okText: neu ? "Eintragen" : "Übernehmen",
+    onOk: w => {
+      const titel = (w.titel || "").trim();
+      if(!titel){ toast("Ohne Bezeichnung geht es nicht"); return false; }
+      if(!w.datum){ toast("Datum fehlt"); return false; }
+      const zeit = (w.zeit || "").trim() ? uhrLesen(w.zeit) : "";
+      if((w.zeit || "").trim() && !zeit){ toast("Uhrzeit bitte wie 14:00"); return false; }
+      if(neu){
+        termine().push({id:uid(), titel:titel, datum:w.datum, zeit:zeit,
+                        ort:(w.ort || "").trim(), t:Date.now()});
+      }else{
+        t.titel = titel; t.datum = w.datum; t.zeit = zeit; t.ort = (w.ort || "").trim();
+      }
+      save(); renderOrganisation(); toast(neu ? "Termin eingetragen" : "Gespeichert");
+    }
+  });
+  if(!neu) modalLoeschen("Termin löschen", () => {
+    merkeStand();
+    db.termine = termine().filter(x => x.id !== t.id);
+    save(); renderOrganisation(); toastUndo("Termin gelöscht");
+  });
+}
+
+/* ---- Aufgaben ---- */
+function todoPille(){
+  const leiste = $("#todoFilter"), pille = $("#todoPille");
+  if(!leiste || !pille) return;
+  const aktiv = leiste.querySelector("button.on");
+  if(!aktiv || !aktiv.offsetWidth) return;
+  pille.style.width = aktiv.offsetWidth + "px";
+  pille.style.transform = "translateX(" + (aktiv.offsetLeft - 4) + "px)";
+}
+function renderTodos(){
+  const box = $("#orgTodos"); box.innerHTML = "";
+  const modus = db.ui.todoFilter || "offen";
+  document.querySelectorAll("#todoFilter button").forEach(b => {
+    b.classList.toggle("on", b.dataset.t === modus);
+  });
+  let liste = todosSortiert();
+  if(modus === "offen") liste = liste.filter(t => !t.erledigt);
+  if(modus === "fertig") liste = liste.filter(t => t.erledigt);
+  if(!liste.length){
+    box.innerHTML = '<p class="hint" style="margin:6px 0 0">' +
+      (modus === "fertig" ? "Noch nichts abgehakt." : "Keine offenen Aufgaben.") + "</p>";
+    return;
+  }
+  const hIso = heute();
+  liste.forEach(t => {
+    const z = document.createElement("div");
+    z.className = "todozeile" + (t.erledigt ? " fertig" : "") +
+      (!t.erledigt && t.faellig && t.faellig < hIso ? " ueber" : "");
+    const haken = document.createElement("button");
+    haken.className = "haken" + (t.erledigt ? " an" : "");
+    haken.type = "button";
+    haken.setAttribute("aria-label", t.erledigt ? "Wieder öffnen" : "Erledigt");
+    haken.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" ' +
+      'stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+    haken.addEventListener("click", () => {
+      t.erledigt = !t.erledigt;
+      t.fertigAm = t.erledigt ? heute() : "";
+      save(); renderOrganisation();
+      if(t.erledigt) toast("Erledigt");
+    });
+    z.appendChild(haken);
+
+    const txt = document.createElement("button");
+    txt.className = "ttext";
+    txt.type = "button";
+    txt.innerHTML = "<b>" + esc(t.titel) + "</b>" +
+      (t.faellig ? '<span class="mini">' +
+        (t.faellig < hIso ? "überfällig seit " : (t.faellig === hIso ? "heute fällig" : "bis ")) +
+        (t.faellig === hIso ? "" : deDate(t.faellig)) + "</span>" : "");
+    txt.addEventListener("click", () => todoDialog(t));
+    z.appendChild(txt);
+    box.appendChild(z);
+  });
+}
+
+function todoDialog(t){
+  const neu = !t;
+  openModal({
+    titel: neu ? "Neue Aufgabe" : "Aufgabe",
+    felder:[
+      {key:"titel", label:"Was", wert: t ? t.titel : "", platzhalter:"z. B. Elternbrief kopieren"},
+      {key:"faellig", label:"Bis wann (optional)", typ:"datum", wert: t ? (t.faellig || "") : ""}
+    ],
+    okText: neu ? "Eintragen" : "Übernehmen",
+    onOk: w => {
+      const titel = (w.titel || "").trim();
+      if(!titel){ toast("Ohne Bezeichnung geht es nicht"); return false; }
+      if(neu){
+        todos().push({id:uid(), titel:titel, faellig:w.faellig || "",
+                      erledigt:false, t:Date.now()});
+      }else{
+        t.titel = titel; t.faellig = w.faellig || "";
+      }
+      save(); renderOrganisation(); toast(neu ? "Aufgabe eingetragen" : "Gespeichert");
+    }
+  });
+  if(!neu) modalLoeschen("Aufgabe löschen", () => {
+    merkeStand();
+    db.todos = todos().filter(x => x.id !== t.id);
+    save(); renderOrganisation(); toastUndo("Aufgabe gelöscht");
+  });
+}
+
+/* ---- Ferien und freie Tage ---- */
+function renderFreiListe(){
+  const box = $("#orgFreiListe"); box.innerHTML = "";
+  const liste = freiSortiert();
+  if(!liste.length){
+    box.innerHTML = '<p class="hint" style="margin:0">Noch nichts eingetragen.</p>';
+    return;
+  }
+  const hIso = heute();
+  liste.forEach(f => {
+    const z = document.createElement("button");
+    const vorbei = (f.bis || f.von) < hIso;
+    z.className = "freizeile" + (vorbei ? " vorbei" : "");
+    z.type = "button";
+    const einTag = !f.bis || f.bis === f.von;
+    z.innerHTML = "<span><b>" + esc(f.titel || "frei") + "</b><span class=\"mini\">" +
+      (einTag ? deDate(f.von) : deDate(f.von) + " – " + deDate(f.bis)) + "</span></span>" +
+      '<span class="bchev">›</span>';
+    z.addEventListener("click", () => freiDialog(f));
+    box.appendChild(z);
+  });
+}
+
+function freiDialog(f, alsSpanne){
+  const neu = !f;
+  const spanne = neu ? !!alsSpanne : !(!f.bis || f.bis === f.von);
+  const felder = [
+    {key:"titel", label:"Bezeichnung", wert: f ? (f.titel || "") : "",
+     platzhalter: spanne ? "z. B. Herbstferien" : "z. B. Beweglicher Ferientag"},
+    {key:"von", label: spanne ? "Erster Tag" : "Datum", typ:"datum",
+     wert: f ? f.von : heute()}
+  ];
+  if(spanne) felder.push({key:"bis", label:"Letzter Tag", typ:"datum",
+                          wert: f ? (f.bis || f.von) : heute()});
+  openModal({
+    titel: neu ? (spanne ? "Ferien eintragen" : "Freien Tag eintragen") : "Freie Zeit",
+    felder: felder,
+    okText: neu ? "Eintragen" : "Übernehmen",
+    onOk: w => {
+      const titel = (w.titel || "").trim();
+      if(!titel){ toast("Bezeichnung fehlt"); return false; }
+      if(!w.von){ toast("Datum fehlt"); return false; }
+      const bis = spanne ? (w.bis || w.von) : w.von;
+      if(bis < w.von){ toast("Der letzte Tag liegt vor dem ersten"); return false; }
+      if(neu) freieZeiten().push({id:uid(), titel:titel, von:w.von, bis:bis});
+      else { f.titel = titel; f.von = w.von; f.bis = bis; }
+      save(); renderAlles(); renderPlanTab(); toast("Gespeichert");
+    }
+  });
+  if(!neu) modalLoeschen("Eintrag löschen", () => {
+    merkeStand();
+    db.frei = freieZeiten().filter(x => x.id !== f.id);
+    save(); renderAlles(); renderPlanTab(); toastUndo("Gelöscht");
+  });
+}
+
+/* Ein Löschknopf unter dem Dialog – dieselbe Geste an allen Stellen. */
+function modalLoeschen(text, aktion){
+  const weg = document.createElement("button");
+  weg.className = "act quiet";
+  weg.style.marginTop = "10px";
+  weg.textContent = text;
+  weg.addEventListener("click", () => { closeModal(); aktion(); });
+  const wrap = document.createElement("div");
+  wrap.style.textAlign = "center";
+  wrap.appendChild(weg);
+  $("#modalBox").appendChild(wrap);
+}
+
+const WOCHENTAG = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+const WOCHENTAG_KURZ = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+const MONAT_KURZ = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun",
+                    "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+
+$("#btnTerminNeu").addEventListener("click", () => terminDialog(null));
+$("#btnTodoNeu").addEventListener("click", () => todoDialog(null));
+$("#btnDienstNeu").addEventListener("click", () => dienstDialog(null));
+$("#btnFerienNeu").addEventListener("click", () => freiDialog(null, true));
+$("#btnFeiertagNeu").addEventListener("click", () => freiDialog(null, false));
+document.querySelectorAll("#todoFilter button").forEach(b => {
+  b.addEventListener("click", () => {
+    db.ui.todoFilter = b.dataset.t; save(); renderTodos(); todoPille();
+  });
+});
+window.addEventListener("resize", todoPille);
+
+/* Wer am selben Tag schon in einer anderen Stunde gefehlt hat, fehlt meistens
+   auch hier. Loewi trägt das nicht von selbst ein, sondern bietet es an. */
+function schonGefehlt(s, k){
+  if(!s || !k || s.aus) return [];
+  const andere = db.stunden.filter(x => x.klasseId === k.id && x.datum === s.datum &&
+                                        x.id !== s.id && !x.aus);
+  const raus = [];
+  for(let i = 1; i <= k.count; i++){
+    const hier = s.eintraege[i];
+    if(hier && (hier.k || hier.m || hier.v)) continue;          // schon bearbeitet
+    const wo = andere.filter(x => x.eintraege[i] && x.eintraege[i].k);
+    if(wo.length){
+      const f2 = fach(wo[0].fachId);
+      raus.push({nr:i, fach: f2 ? f2.name : "einer anderen Stunde"});
+    }
+  }
+  return raus;
+}
+function renderTagHinweis(s, k){
+  const box = $("#tagHinweis");
+  if(!box) return;
+  box.innerHTML = "";
+  const offen = schonGefehlt(s, k);
+  if(!offen.length) return;
+  const karte = document.createElement("div");
+  karte.className = "card taghinweis";
+  const wer = offen.map(x => "Nr. " + x.nr).join(", ");
+  karte.innerHTML = "<div><b>" + offen.length +
+    (offen.length === 1 ? " Kind hat" : " Kinder haben") + " heute schon gefehlt</b>" +
+    '<div class="mini">' + esc(wer) + " · zuletzt in " + esc(offen[0].fach) + "</div></div>";
+  const b = document.createElement("button");
+  b.className = "act neutral mini";
+  b.textContent = "Auch hier auf k";
+  b.addEventListener("click", () => {
+    merkeStand();
+    offen.forEach(x => {
+      const e = s.eintraege[x.nr] || (s.eintraege[x.nr] = {m:null, k:false, v:false, n:""});
+      e.k = true; e.m = null; e.v = false;
+    });
+    save(); renderErfassen(s, k);
+    toastUndo(offen.length + (offen.length === 1 ? " Kind" : " Kinder") + " auf k gesetzt");
+  });
+  karte.appendChild(b);
+  box.appendChild(karte);
+}
+
+/* ---------- Der Plus-Knopf ----------
+   Ein Weg zu allem, was man im Schulalltag zwischendurch anlegt – ohne vorher
+   den richtigen Tab suchen zu müssen. */
+let fabOffen = false;
+function laufenderSlot(){
+  const hIso = heute();
+  if(freierTag(hIso)) return null;
+  const st = rasterStand();
+  if(!st || st.art !== "laeuft") return null;
+  const wt = (isoZuDatum(hIso).getDay() + 6) % 7;
+  if(wt > 4) return null;
+  return tagesPlan(wt + 1, hIso).find(s => s.nr === st.nr) || null;
+}
+function fabEintraege(){
+  const k = klasse(db.ui.klasseId), f = fach(db.ui.fachId);
+  const jetzt = laufenderSlot();
+  const jk = jetzt ? klasse(jetzt.klasseId) : null, jf = jetzt ? fach(jetzt.fachId) : null;
+  const wer = jetzt
+    ? ("Jetzt: " + jetzt.nr + ". Std · " + (jk ? jk.name : "?") + (jf ? " · " + jf.name : ""))
+    : (k ? ("Heute · " + k.name + (f ? " · " + f.name : "")) : "erst Klasse wählen");
+  return [
+    {icon:"stunde", titel:"Stunde erfassen",
+     sub:wer, tap:schnellStunde},
+    {icon:"ha", titel:"Hausaufgabe",
+     sub:"Was bis zum nächsten Mal auf ist", tap:hausaufgabeDialog},
+    {icon:"auge", titel:"Beobachtung",
+     sub:"Bemerkung zu einer Nummer", tap:beobachtungDialog},
+    {icon:"haken", titel:"Aufgabe",
+     sub:"Für deine To-do-Liste", tap:() => todoDialog(null)},
+    {icon:"kalender", titel:"Termin",
+     sub:"Konferenz, Elternabend, Ausflug", tap:() => terminDialog(null)},
+    {icon:"test", titel:"Test",
+     sub:"Beobachtungsbogen anlegen", tap:schnellTest}
+  ];
+}
+const FAB_ICON = {
+  stunde:'<path d="M5 4h11l3 3v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="M8 12h8M8 16h5"/>',
+  ha:'<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5Z"/><path d="M11 4h7.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H11"/>',
+  auge:'<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/>',
+  haken:'<path d="M4 12.5l4.5 4.5L20 6"/>',
+  kalender:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  test:'<path d="M9 4h6v3H9z"/><path d="M6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1Z"/><path d="M9.5 13h5M12 10.5v5"/>'
+};
+function renderFab(){
+  const box = $("#fabListe"); box.innerHTML = "";
+  fabEintraege().forEach(e => {
+    const b = document.createElement("button");
+    b.className = "fabzeile";
+    b.type = "button";
+    b.innerHTML = '<span class="fi"><svg viewBox="0 0 24 24" width="20" height="20" ' +
+      'fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" ' +
+      'stroke-linejoin="round">' + FAB_ICON[e.icon] + "</svg></span>" +
+      '<span class="fw"><b>' + esc(e.titel) + "</b><span>" + esc(e.sub) + "</span></span>";
+    b.addEventListener("click", () => { closeFab(); setTimeout(e.tap, 80); });
+    box.appendChild(b);
+  });
+}
+function openFab(){
+  fabOffen = true;
+  renderFab();
+  $("#fabSheet").classList.add("open");
+  $("#fabScrim").classList.add("open");
+  $("#fab").classList.add("offen");
+  $("#fab").setAttribute("aria-expanded", "true");
+}
+function closeFab(){
+  if(!fabOffen) return;
+  fabOffen = false;
+  $("#fabSheet").classList.remove("open");
+  $("#fabScrim").classList.remove("open");
+  $("#fab").classList.remove("offen");
+  $("#fab").setAttribute("aria-expanded", "false");
+}
+$("#fab").addEventListener("click", () => fabOffen ? closeFab() : openFab());
+$("#fabScrim").addEventListener("click", closeFab);
+document.addEventListener("keydown", ev => { if(ev.key === "Escape") closeFab(); });
+
+/* Eine Stunde für heute – vorhandene wird geöffnet, sonst neu angelegt. */
+function schnellStunde(){
+  /* Läuft gerade eine Stunde, ist die gemeint. */
+  const jetzt = laufenderSlot();
+  if(jetzt){ planOeffnen(jetzt, heute()); return; }
+  const k = klasse(db.ui.klasseId);
+  if(!k){ toast("Erst oben eine Klasse wählen"); return; }
+  const hIso = heute();
+  const s = db.stunden.find(x => x.klasseId === k.id &&
+    (x.fachId || null) === (db.ui.fachId || null) && x.datum === hIso);
+  db.ui.bereich = "stunden"; db.ui.view = "stunde";
+  if(s){ save(); goView("stunde"); stdGo("ansicht", s.id); return; }
+  neuStarten({datum:hIso});
+}
+
+/* Klasse und Fach frei wählbar, damit man auch für eine andere Gruppe eintragen kann. */
+function klasseFachFelder(mitFach){
+  const kOpt = db.klassen.map(k => ({value:k.id, label:k.name}));
+  const fOpt = [{value:"", label:"– kein Fach –"}].concat(
+    db.faecher.map(f => ({value:f.id, label:f.name})));
+  const felder = [{key:"klasseId", label:"Klasse", typ:"select",
+                   wert: db.ui.klasseId || (kOpt[0] ? kOpt[0].value : ""), optionen:kOpt}];
+  if(mitFach) felder.push({key:"fachId", label:"Fach", typ:"select",
+                           wert: db.ui.fachId || "", optionen:fOpt});
+  return felder;
+}
+
+function hausaufgabeDialog(){
+  if(!db.klassen.length){ toast("Erst eine Klasse anlegen"); return; }
+  openModal({
+    titel:"Hausaufgabe",
+    text:"Wird an der Stunde dieses Tages gespeichert.",
+    felder: klasseFachFelder(true).concat([
+      {key:"datum", label:"Für welche Stunde", typ:"datum", wert:heute()},
+      {key:"text", label:"Aufgabe", wert:"", platzhalter:"z. B. AB Nr. 3, Seite 12"}
+    ]),
+    okText:"Eintragen",
+    onOk: w => {
+      const k = klasse(w.klasseId);
+      if(!k){ toast("Klasse fehlt"); return false; }
+      const txt = (w.text || "").trim();
+      if(!txt){ toast("Ohne Aufgabe geht es nicht"); return false; }
+      let s = db.stunden.find(x => x.klasseId === k.id &&
+        (x.fachId || null) === (w.fachId || null) && x.datum === w.datum);
+      if(!s) s = stundeErzeugen(k, w.fachId || null, w.datum, "", null, false);
+      s.ha = s.ha ? (s.ha + "\n" + txt) : txt;
+      save(); renderAlles();
+      toast("Hausaufgabe bei " + k.name + " eingetragen");
+    }
+  });
+}
+
+function beobachtungDialog(){
+  if(!db.klassen.length){ toast("Erst eine Klasse anlegen"); return; }
+  const k0 = klasse(db.ui.klasseId) || db.klassen[0];
+  const nrOpt = [];
+  for(let i = 1; i <= k0.count; i++){
+    nrOpt.push({value:String(i), label:"Nr. " + i + (k0.labels[i] ? " · " + k0.labels[i] : "")});
+  }
+  openModal({
+    titel:"Beobachtung",
+    text:"Wird als Bemerkung beim Kind in der Stunde gespeichert.",
+    felder: klasseFachFelder(true).concat([
+      {key:"nr", label:"Nummer", typ:"select", wert:"1", optionen:nrOpt},
+      {key:"datum", label:"Für welche Stunde", typ:"datum", wert:heute()},
+      {key:"text", label:"Beobachtung", wert:"", platzhalter:"z. B. hilft anderen von sich aus"}
+    ]),
+    okText:"Eintragen",
+    onOk: w => {
+      const k = klasse(w.klasseId);
+      const nr = parseInt(w.nr, 10);
+      const txt = (w.text || "").trim();
+      if(!k || !(nr >= 1 && nr <= k.count)){ toast("Nummer passt nicht zur Klasse"); return false; }
+      if(!txt){ toast("Ohne Text geht es nicht"); return false; }
+      let s = db.stunden.find(x => x.klasseId === k.id &&
+        (x.fachId || null) === (w.fachId || null) && x.datum === w.datum);
+      if(!s) s = stundeErzeugen(k, w.fachId || null, w.datum, "", null, false);
+      const e = s.eintraege[nr] || (s.eintraege[nr] = {m:null, k:false, v:false, n:""});
+      e.n = e.n ? (e.n + " · " + txt) : txt;
+      save(); renderAlles();
+      toast("Bei Nr. " + nr + " eingetragen");
+    }
+  });
+  /* Beim Wechsel der Klasse müssen auch die Nummern wechseln. */
+  const sel = $("#modalBox").querySelector("select");
+  if(sel) sel.addEventListener("change", () => {
+    const k = klasse(sel.value);
+    const nrSel = $("#modalBox").querySelectorAll("select")[2];
+    if(!k || !nrSel) return;
+    nrSel.innerHTML = "";
+    for(let i = 1; i <= k.count; i++){
+      const o = document.createElement("option");
+      o.value = String(i);
+      o.textContent = "Nr. " + i + (k.labels[i] ? " · " + k.labels[i] : "");
+      nrSel.appendChild(o);
+    }
+  });
+}
+
+function schnellTest(){
+  const k = klasse(db.ui.klasseId);
+  if(!k){ toast("Erst oben eine Klasse wählen"); return; }
+  db.ui.bereich = "tests"; db.ui.tstView = "liste"; db.ui.view = "stunde";
+  save(); goView("stunde");
+  setTimeout(() => {
+    const b = $("#newTest");
+    if(b){ b.open = true; b.scrollIntoView({block:"center", behavior:"smooth"}); }
+  }, 120);
+}
 
 /* ---------- Teams auslosen („Teamshake“) ----------
    Sichtbar, sobald das gewählte Fach Sport ist. Stärke und Geschlecht liegen an
@@ -4013,72 +5754,35 @@ function renderUebersicht(){
   $("#sumListe").style.display = v === "liste" ? "" : "none";
   $("#sumKind").style.display  = v === "kind" ? "" : "none";
   if(v === "kind"){ renderKind(k, db.ui.kindNr); return; }
-  const tiles = $("#sumTiles");
   const tb = $("#tblSum").querySelector("tbody");
-  const sl = $("#stdList");
-  tiles.innerHTML = ""; tb.innerHTML = ""; sl.innerHTML = "";
+  tb.innerHTML = "";
   if(!k){
-    tiles.innerHTML = '<p class="hint">Keine Klasse gewählt – unten über <b>Auswahl</b>.</p>';
+    $("#sumWer").textContent = "Keine Klasse gewählt";
+    $("#sumLegende").innerHTML = "";
     return;
   }
+  const f = fach(db.ui.fachId);
   const st = statsFor(k.id, db.ui.fachId);
-  const sumK = st.rows.reduce((a,r)=>a+r.k,0);
-  const sumV = st.rows.reduce((a,r)=>a+r.v,0);
-  const avgs = st.rows.filter(r=>r.avg!==null).map(r=>r.avg);
-  const avg = avgs.length ? Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length*10)/10 : null;
+  const wort = vergessenWort();
 
-  const ausgef = st.list.filter(s => s.aus).length;
-  const kacheln = [["Fehlstunden", sumK], ["Sportzeug", sumV],
-   ["Ø Mitarbeit", avg===null ? "–" : avg.toString().replace(".",",")],
-   ["Stunden", st.list.length], ["Kinder", k.count]];
-  if(ausgef) kacheln.push(["ausgefallen", ausgef]);
-  const tst = testsVon(k.id);
-  if(tst.length){
-    const alle = [];
-    for(let i = 1; i <= k.count; i++){
-      const w = testGesamt(k.id, db.ui.fachId, i);
-      if(w !== null) alle.push(w);
-    }
-    kacheln.push(["Tests", tst.length]);
-    if(alle.length){
-      kacheln.push(["Ø Test", kommaZahl(
-        Math.round(alle.reduce((a,b) => a + b, 0) / alle.length * 10) / 10)]);
-    }
-  }
-  kacheln.forEach(t => {
-    const d = document.createElement("div");
-    d.className = "tile";
-    d.innerHTML = "<b>" + t[1] + "</b><span>" + t[0] + "</span>";
-    tiles.appendChild(d);
-  });
+  $("#sumWer").textContent = k.name + (f ? " · " + f.name : "") +
+    " · " + k.count + " Kinder";
+  $("#sumLegende").innerHTML =
+    "<b>Fehlt</b> gefehlt · <b>" + esc(wort) + "</b> vergessen · " +
+    "<b>Ø</b> Mitarbeit · <b>Test</b> Schnitt der Tests";
 
+  $("#thVerg").textContent = wort.length > 8 ? wort.slice(0, 7) + "." : wort;
   st.rows.forEach(r => {
     const tr = document.createElement("tr");
     tr.addEventListener("click", () => sumGo("kind", r.nr));
     tr.innerHTML =
       '<td><span class="kindzelle"><span class="kindnr">' + r.nr + "</span>" +
         (r.label ? '<span class="kindname">' + esc(r.label) + "</span>" : "") + "</span></td>" +
-      "<td>" + (r.k||"") + "</td><td>" + (r.v||"") + "</td>" +
-      "<td>" + (r.p||"") + "</td><td>" + (r.o||"") + "</td><td>" + (r.m||"") + "</td>" +
-      '<td class="strong">' + (r.avg===null ? "" : String(r.avg).replace(".",",")) + "</td>" +
-      '<td class="strong">' + kommaZahl(testGesamt(k.id, db.ui.fachId, r.nr)).replace("–","") + "</td>" +
+      "<td>" + (r.k || "") + "</td><td>" + (r.v || "") + "</td>" +
+      '<td class="strong">' + (r.avg === null ? "" : String(r.avg).replace(".", ",")) + "</td>" +
+      '<td class="strong">' + kommaZahl(testGesamt(k.id, db.ui.fachId, r.nr)).replace("–", "") + "</td>" +
       '<td class="chevzelle"><span>›</span></td>';
     tb.appendChild(tr);
-  });
-
-  if(!st.list.length){
-    sl.innerHTML = '<p class="hint">In dieser Kombination (' + esc(stdKontext(null)) +
-      ') ist noch keine Stunde erfasst.</p>';
-  }
-  st.list.forEach(s => {
-    const anwesend = Object.keys(s.eintraege).filter(i => s.eintraege[i].k).length;
-    const div = document.createElement("div");
-    div.className = "rowline" + (s.aus ? " aus" : "");
-    div.innerHTML = '<div><b>Std. ' + s.nr + '</b> <span class="mini">' + deDate(s.datum) + '</span>' +
-      '<div class="mini">' + (s.aus ? "ausgefallen" + (s.thema ? " · " + esc(s.thema) : "")
-                                    : (s.thema ? esc(s.thema) : "– kein Thema –")) + '</div></div>' +
-      '<div class="mini">' + (s.aus ? "–" : anwesend + " × k") + '</div>';
-    sl.appendChild(div);
   });
 }
 
@@ -4107,7 +5811,7 @@ function renderKind(k, nr){
   const schnitt = anz ? Math.round(summe / anz * 10) / 10 : null;
 
   const tiles = $("#kindTiles"); tiles.innerHTML = "";
-  [["Fehlstunden", kk], ["Sportzeug", vv],
+  [["Fehlstunden", kk], [vergessenWort() + " vergessen", vv],
    ["Ø Mitarbeit", schnitt === null ? "–" : String(schnitt).replace(".", ",")],
    ["+ / o / –", p + " / " + o + " / " + m],
    ["Ø Test", kommaZahl(testGesamt(k.id, db.ui.fachId, nr))]].forEach(t => {
@@ -4195,7 +5899,12 @@ function openModal(opt){
     const l = document.createElement("label"); l.className = "lbl"; l.textContent = f.label;
     wrap.appendChild(l);
     let inp;
-    if(f.typ === "select"){
+    if(f.typ === "datum"){
+      inp = document.createElement("input"); inp.type = "date"; inp.value = f.wert || "";
+    }else if(f.typ === "text2"){
+      inp = document.createElement("textarea"); inp.rows = 6; inp.value = f.wert || "";
+      if(f.platzhalter) inp.placeholder = f.platzhalter;
+    }else if(f.typ === "select"){
       inp = document.createElement("select");
       (f.optionen || []).forEach(o => {
         const op = document.createElement("option");
@@ -4324,8 +6033,8 @@ function renderPlan(){
   $("#planEdit").style.display      = p.ebene === "edit" ? "" : "none";
 
   if(p.ebene === "reihen"){
-    topbar($("#tbReihen"), {umbruch:true,
-      titel: f ? ("Unterrichtsreihen für das Fach: " + f.name) : "Unterrichtsplanung"});
+    seitenkopf($("#tbReihen"), "Planung",
+      f ? ("Unterrichtsreihen für das Fach: " + f.name) : "Noch kein Fach gewählt");
   }
   if(p.ebene === "einheiten"){
     topbar($("#tbEinheiten"), {zurueck:() => planGo("reihen"),
@@ -4382,11 +6091,18 @@ function renderFachList(){
 function fachDialog(f){
   openModal({
     titel:"Fach bearbeiten",
-    felder:[{key:"name", label:"Name", wert:f.name}],
+    felder:[
+      {key:"name", label:"Name", wert:f.name},
+      {key:"vergessen", label:"Was hier vergessen wird",
+       wert: f.vergessen || "", platzhalter:"z. B. Sportzeug oder Hausaufgaben"}
+    ],
     onOk: w => {
       const n = (w.name || "").trim();
       if(!n){ toast("Name fehlt"); return false; }
-      f.name = n; save(); renderAlles(); toast("Gespeichert");
+      f.name = n;
+      const v = (w.vergessen || "").trim();
+      if(v) f.vergessen = v; else delete f.vergessen;
+      sortiereStamm(); save(); renderAlles(); toast("Gespeichert");
     }
   });
   const box = $("#modalBox");
@@ -4420,12 +6136,21 @@ function fachDialog(f){
   wrap.style.textAlign = "center"; wrap.appendChild(del);
   box.appendChild(wrap);
 }
+const VERGESSEN_VORSCHLAG = {sport:"Sportzeug", schwimmen:"Schwimmsachen",
+  kunst:"Malsachen", musik:"Instrument", werken:"Werkzeug"};
 $("#btnFachAdd").addEventListener("click", () => {
   const name = $("#nfName").value.trim();
   if(!name){ toast("Name fehlt"); return; }
   const erstes = db.faecher.length === 0;
   const f = {id:uid(), name:name};
+  /* Bei den üblichen Fächern gleich einen sinnvollen Namen für „vergessen“
+     mitgeben – änderbar bleibt er ohnehin. */
+  const schl = name.toLowerCase().replace(/[^a-zäöüß]/g, "");
+  Object.keys(VERGESSEN_VORSCHLAG).forEach(kk => {
+    if(!f.vergessen && schl.indexOf(kk) === 0) f.vergessen = VERGESSEN_VORSCHLAG[kk];
+  });
   db.faecher.push(f);
+  sortiereStamm();
   /* Beim allerersten Fach: bisher fachlose Stunden bekommen es, damit nichts verschwindet. */
   if(erstes){
     db.stunden.forEach(s => { if(!s.fachId) s.fachId = f.id; });
@@ -4975,7 +6700,7 @@ function berichtSeiten(nummern, gesamtSeiten){
     kacheln([
       ["Stunden", daten.stunden.length],
       ["Fehlend", daten.kk],
-      ["Sportzeug", daten.vv],
+      [vergessenWort(), daten.vv],
       ["Ø Mitarbeit", kommaZahl(daten.schnitt)],
       ["Ø Test", kommaZahl(daten.testSchnitt)]
     ]);
@@ -4994,7 +6719,8 @@ function berichtSeiten(nummern, gesamtSeiten){
     }
     platz(44);
     d.linie(P_M + 2, d.y + 8, P_M + P_INNEN - 2, d.y + 8, F_LINIE, 0.6);
-    d.text("+ = Note 1–2   ·   o = 3–4   ·   – = 5–6   ·   k = gefehlt   ·   v = Sportzeug vergessen",
+    d.text("+ = Note 1–2   ·   o = 3–4   ·   – = 5–6   ·   k = gefehlt   ·   v = " +
+           vergessenWort() + " vergessen",
            P_M + 2, d.y - 6, 7.5, F_MUTED, false);
     d.text("Diese Übersicht arbeitet mit Nummern. Wer welche Nummer hat, steht nur in deiner Klassenliste.",
            P_M + 2, d.y - 18, 7.5, F_MUTED, false);
@@ -5204,14 +6930,15 @@ function excelSheets(){
 
   // Blatt 3: Stundendoku
   const r3 = [[B("Stunde"), B("Datum"), B("Status"), B("Was wurde gemacht"),
-               B("Notiz zur Stunde"), B("k"), B("v")]];
+               B("Hausaufgabe"), B("Notiz zur Stunde"), B("k"), B(vergessenWort())]];
   list.forEach(s2 => {
     let kk = 0, vv = 0;
     Object.keys(s2.eintraege).forEach(i => { if(s2.eintraege[i].k) kk++; if(s2.eintraege[i].v) vv++; });
     r3.push([s2.nr, deDate(s2.datum), s2.aus ? "ausgefallen" : "gehalten",
-             s2.thema || "", s2.notiz || "", s2.aus ? "" : kk, s2.aus ? "" : vv]);
+             s2.thema || "", s2.ha || "", s2.notiz || "",
+             s2.aus ? "" : kk, s2.aus ? "" : vv]);
   });
-  const cols3 = [8, 11, 13, 46, 34, 5, 5];
+  const cols3 = [8, 11, 13, 42, 34, 30, 5, 8];
 
   // Blatt 4: Planung (alle Fächer und Reihen)
   const r4 = [[B("Fach"), B("Reihe"), B("Jahrgang"), B("Nr."), B("Thema"), B("Stundenziel"),
@@ -5251,6 +6978,29 @@ function excelSheets(){
   });
   const cols5 = [11, 24, 6, 12, 24, 10, 14, 14, 32];
 
+  /* Blatt: Organisation – Termine, Aufgaben und freie Tage */
+  const r6 = [];
+  if(termine().length){
+    r6.push([B("Termine")]);
+    r6.push([B("Datum"), B("Zeit"), B("Was"), B("Wo")]);
+    termineSortiert().forEach(t => r6.push([deDate(t.datum), t.zeit || "", t.titel, t.ort || ""]));
+    r6.push([]);
+  }
+  if(todos().length){
+    r6.push([B("Aufgaben")]);
+    r6.push([B("Status"), B("Fällig"), B("Was")]);
+    todosSortiert().forEach(t => r6.push([t.erledigt ? "erledigt" : "offen",
+      t.faellig ? deDate(t.faellig) : "", t.titel]));
+    r6.push([]);
+  }
+  if(freieZeiten().length){
+    r6.push([B("Freie Tage")]);
+    r6.push([B("Von"), B("Bis"), B("Was")]);
+    freiSortiert().forEach(f2 => r6.push([deDate(f2.von),
+      (f2.bis && f2.bis !== f2.von) ? deDate(f2.bis) : "", f2.titel || ""]));
+  }
+  const cols6 = [13, 10, 46, 22];
+
   const sheets = [
     {name:"Klassenliste", rows:r1, cols:cols1},
     {name:"Einzelliste",  rows:r2, cols:cols2},
@@ -5258,6 +7008,7 @@ function excelSheets(){
   ];
   if(r5.length > 1) sheets.push({name:"Tests", rows:r5, cols:cols5});
   if(r4.length > 1) sheets.push({name:"Planung", rows:r4, cols:cols4});
+  if(r6.length) sheets.push({name:"Organisation", rows:r6, cols:cols6});
   return sheets;
 }
 
@@ -5274,22 +7025,124 @@ $("#btnExcel").addEventListener("click", () => {
 });
 
 /* ---------- Sicherung ---------- */
+/* ---------- Verschlüsselte Sicherung ----------
+   AES-256-GCM, der Schlüssel wird aus dem Kennwort abgeleitet (PBKDF2, 250 000
+   Runden, zufälliges Salz). Alles im Browser, nichts verlässt das Gerät. Ohne
+   Kennwort ist die Datei nicht mehr zu öffnen – auch nicht von mir. */
+const KRYPT_KOPF = "LOEWI1";
+function kryptDa(){
+  return !!(window.crypto && window.crypto.subtle && window.crypto.getRandomValues);
+}
+function b64(bytes){
+  let s = "";
+  const u = new Uint8Array(bytes);
+  for(let i = 0; i < u.length; i++) s += String.fromCharCode(u[i]);
+  return btoa(s);
+}
+function unb64(text){
+  const s = atob(text);
+  const u = new Uint8Array(s.length);
+  for(let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i);
+  return u;
+}
+async function schluessel(kennwort, salz){
+  const roh = await crypto.subtle.importKey("raw", new TextEncoder().encode(kennwort),
+    "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    {name:"PBKDF2", salt:salz, iterations:250000, hash:"SHA-256"},
+    roh, {name:"AES-GCM", length:256}, false, ["encrypt", "decrypt"]);
+}
+async function verschluesseln(text, kennwort){
+  const salz = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const k = await schluessel(kennwort, salz);
+  const roh = await crypto.subtle.encrypt({name:"AES-GCM", iv:iv}, k,
+    new TextEncoder().encode(text));
+  return JSON.stringify({loewi:KRYPT_KOPF, v:1, salz:b64(salz), iv:b64(iv),
+                         daten:b64(roh)}, null, 0);
+}
+async function entschluesseln(obj, kennwort){
+  const k = await schluessel(kennwort, unb64(obj.salz));
+  const roh = await crypto.subtle.decrypt({name:"AES-GCM", iv:unb64(obj.iv)}, k,
+    unb64(obj.daten));
+  return new TextDecoder().decode(roh);
+}
+
+function sicherungAusgeben(text, verschluesselt){
+  const name = "Loewi_Sicherung_" + heute() + (verschluesselt ? "_geschuetzt" : "") + ".json";
+  dateiDialog(new TextEncoder().encode(text), name, "application/json",
+              {titel: verschluesselt ? "Verschlüsselte Sicherung ist fertig"
+                                     : "Sicherung ist fertig", alsSicherung:true});
+}
 $("#btnBackup").addEventListener("click", () => {
-  const name = "Loewi_Sicherung_" + heute() + ".json";
-  dateiDialog(new TextEncoder().encode(JSON.stringify(db)), name, "application/json",
-              {titel:"Sicherung ist fertig", alsSicherung:true});
+  const roh = JSON.stringify(db);
+  if(!kryptDa()){ sicherungAusgeben(roh, false); return; }
+  openModal({
+    titel:"Sicherung",
+    text:"Mit Kennwort kann die Datei nur mit diesem Kennwort geöffnet werden.",
+    felder:[{key:"pw", label:"Kennwort (leer = ohne Schutz)", wert:"",
+             platzhalter:"mindestens 6 Zeichen"}],
+    okText:"Erstellen",
+    onOk: w => {
+      const pw = (w.pw || "").trim();
+      if(pw && pw.length < 6){ toast("Mindestens 6 Zeichen"); return false; }
+      /* Erst diesen Dialog schließen, sonst schluckt er gleich den nächsten. */
+      closeModal();
+      if(!pw){ setTimeout(() => sicherungAusgeben(roh, false), 60); return false; }
+      toast("Wird verschlüsselt …");
+      verschluesseln(roh, pw)
+        .then(txt => sicherungAusgeben(txt, true))
+        .catch(() => toast("Verschlüsselung fehlgeschlagen"));
+      return false;
+    }
+  });
+  const feld = $("#modalBox").querySelector("input");
+  if(feld) feld.type = "password";
 });
 $("#btnRestore").addEventListener("click", () => $("#fileRestore").click());
 $("#fileRestore").addEventListener("change", e => {
   const f = e.target.files && e.target.files[0]; if(!f) return;
   const fr = new FileReader();
   fr.onload = () => {
+    let obj;
+    try{ obj = JSON.parse(fr.result); }
+    catch(err){ toast("Datei nicht lesbar"); return; }
+    if(obj && obj.loewi === KRYPT_KOPF){ sicherungEntsperren(obj); return; }
+    sicherungUebernehmen(obj);
+  };
+  fr.readAsText(f);
+  e.target.value = "";
+});
+
+/* Eine geschützte Datei fragt nach dem Kennwort – dreimal daneben, dann Schluss. */
+function sicherungEntsperren(obj, versuch){
+  openModal({
+    titel:"Geschützte Sicherung",
+    text: versuch ? "Kennwort stimmt nicht. Noch einmal?" : "Bitte das Kennwort eingeben.",
+    felder:[{key:"pw", label:"Kennwort", wert:""}],
+    okText:"Einlesen",
+    onOk: w => {
+      const pw = (w.pw || "").trim();
+      if(!pw) return false;
+      entschluesseln(obj, pw)
+        .then(txt => { try{ sicherungUebernehmen(JSON.parse(txt)); }
+                       catch(e2){ toast("Datei beschädigt"); } })
+        .catch(() => { if((versuch || 0) < 2) setTimeout(
+                         () => sicherungEntsperren(obj, (versuch || 0) + 1), 250);
+                       else toast("Kennwort stimmt nicht"); });
+    }
+  });
+  const feld = $("#modalBox").querySelector("input");
+  if(feld) feld.type = "password";
+}
+
+function sicherungUebernehmen(obj){
     try{
-      const obj = JSON.parse(fr.result);
       if(!obj || !Array.isArray(obj.klassen)) throw new Error("Format");
       const pin0 = db.ui && db.ui.pin;
       db = Object.assign({version:2, klassen:[], stunden:[], tests:[], faecher:[], reihen:[],
-                          einheiten:[], plan:{}, ui:{}}, obj);
+                          einheiten:[], plan:{}, frei:[], termine:[], todos:[],
+                          notizen:[], ui:{}}, obj);
       db.faecher = db.faecher || []; db.reihen = db.reihen || []; db.einheiten = db.einheiten || [];
       db.tests = db.tests || [];
       db.ui = db.ui || {}; db.ui.plan = db.ui.plan || {ebene:"reihen"};
@@ -5298,10 +7151,7 @@ $("#fileRestore").addEventListener("change", e => {
       save(); renderAlles(); renderPin();
       toast("Sicherung eingelesen");
     }catch(err){ toast("Datei nicht lesbar"); }
-  };
-  fr.readAsText(f);
-  e.target.value = "";
-});
+}
 $("#btnWipe").addEventListener("click", () => {
   frageLoeschen("Wirklich alle Daten löschen?",
     "Klassen, Stunden und die komplette Planung auf diesem Gerät werden entfernt. " +
@@ -5309,6 +7159,7 @@ $("#btnWipe").addEventListener("click", () => {
     () => {
       db = {version:2, klassen:[], stunden:[], tests:[], faecher:[], reihen:[], einheiten:[],
             plan:{raster:STD_RASTER.slice(), slots:[]},
+            frei:[], termine:[], todos:[], notizen:[],
             ui:{klasseId:null, fachId:null, stundeId:null, view:"stunde", bereich:"plan",
                 stdView:"liste", tstView:"liste", plan:{ebene:"reihen"}}};
       save(); renderAlles(); renderPin();
@@ -5357,7 +7208,56 @@ function renderStoreInfo(){
   }
 }
 
-$("#saveState").addEventListener("click", () => { closeDrop(); goView("daten"); });
+$("#btnProfil").addEventListener("click", profilOeffnen);
+
+/* Profil-Seiten haben keinen Tab mehr – sie brauchen einen Rückweg. */
+function profilSeite(name){
+  db.ui.profilBack = (db.ui.view === "faq" || db.ui.view === "daten")
+    ? (db.ui.profilBack || "stunde") : (db.ui.view || "stunde");
+  save(); goView(name);
+}
+function profilZurueck(){
+  goView(db.ui.profilBack || "stunde");
+}
+
+/* ---------- Profil ----------
+   Noch ohne Anmeldung: ein Name fürs Gerät und die Wege, die man von hier aus
+   sucht. Der Platz für ein späteres Konto ist damit vorbereitet. */
+function profilOeffnen(){
+  closeDrop(); closeFab();
+  const p = db.profil || (db.profil = {});
+  openModal({
+    titel:"Profil",
+    felder:[
+      {key:"name", label:"Name", wert:p.name || "", platzhalter:"wie du angesprochen wirst"},
+      {key:"schule", label:"Schule (optional)", wert:p.schule || ""}
+    ],
+    okText:"Speichern",
+    onOk: w => {
+      p.name = (w.name || "").trim();
+      p.schule = (w.schule || "").trim();
+      save(); renderKopf(); toast("Gespeichert");
+    }
+  });
+  const box = $("#modalBox");
+  const wrap = document.createElement("div");
+  wrap.className = "profilwege";
+  [["Häufige Fragen", () => { closeModal(); profilSeite("faq"); }],
+   ["Daten und Sicherung", () => { closeModal(); profilSeite("daten"); }]
+  ].forEach(([txt, tap]) => {
+    const b = document.createElement("button");
+    b.className = "profilweg"; b.type = "button";
+    b.innerHTML = "<span>" + txt + '</span><span class="bchev">›</span>';
+    b.addEventListener("click", tap);
+    wrap.appendChild(b);
+  });
+  const hin = document.createElement("p");
+  hin.className = "hint";
+  hin.style.margin = "12px 0 0";
+  hin.textContent = "Anmeldung und Abgleich zwischen Geräten kommen später.";
+  wrap.appendChild(hin);
+  box.appendChild(wrap);
+}
 
 /* ---------- Zahlencode ----------
    Reiner Sichtschutz. Der Code steht im Klartext neben den Daten – er hält
@@ -5422,14 +7322,34 @@ load();
 db.ui.view = "stunde";
 pruefeAuswahl();
 renumberAll();
+$("#btnStatusEdit").innerHTML = STIFT_SVG;
+$("#btnDatenEdit").innerHTML = STIFT_SVG;
+$("#btnMitarbeitEdit").innerHTML = STIFT_SVG;
 $("#dupEditK").innerHTML = STIFT_SVG;
 $("#dupEditF").innerHTML = STIFT_SVG;
-$("#bkEdit").innerHTML = STIFT_SVG;
 renderAlles();
 renderPin();
 sperren();
 flagSaved("gespeichert");
-if(backupFaellig()) setTimeout(()=>toast("Sicherung fällig – bitte Excel-Datei erstellen"), 900);
+/* Einmal beim Öffnen fragen, nicht dauernd im Kopf stehen. */
+setTimeout(() => {
+  if(!backupFaellig() || !$("#lock").hidden) return;
+  /* Höchstens einmal am Tag nachfragen. */
+  try{
+    if(localStorage.getItem("loewi.hinweisTag") === heute()) return;
+    localStorage.setItem("loewi.hinweisTag", heute());
+  }catch(e){}
+  const t = tageSeitBackup();
+  openModal({
+    titel:"Sicherung fällig",
+    text: t === null ? "Diese Daten wurden noch nie gesichert."
+                     : "Die letzte Sicherung ist " + t + " Tage her.",
+    okText:"Jetzt sichern",
+    onOk: () => { goView("daten"); setTimeout(() => $("#btnBackup").click(), 250); }
+  });
+  const ab = $("#modalBox").querySelector(".actions .act.neutral");
+  if(ab) ab.textContent = "Später";
+}, 1200);
 window.addEventListener("beforeunload", () => { try{ save(); }catch(e){} });
 /* ---------- Helles und dunkles Design ----------
    Drei Zustände: dem Gerät folgen, hell, dunkel. Der Knopf schaltet zwischen
@@ -5479,7 +7399,7 @@ if("serviceWorker" in navigator && location.protocol.indexOf("http") === 0){
 }
 document.addEventListener("visibilitychange", () => {
   if(document.visibilityState === "hidden"){
-    disarmDelete(); closeDrop();
+    disarmDelete(); closeDrop(); closeFab();
     versteckSeit = Date.now();
     try{ save(); }catch(e){}
   }else if(pinAktiv() && versteckSeit && Date.now() - versteckSeit > 120000){
