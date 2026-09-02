@@ -1775,7 +1775,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
       <details class="faqfrage"><summary>Kann ich auf ein anderes Gerät wechseln?</summary><p class="hint">Ja: Sicherung erstellen, auf dem anderen Gerät Loewi öffnen und die Datei unter „Daten und Sicherung“ wieder einspielen.</p></details>
       <details class="faqfrage"><summary>Was passiert, wenn ich den Browser-Cache lösche?</summary><p class="hint">Dann sind die Daten weg. Genau dafür ist die Sicherung da.</p></details>
       <details class="faqfrage"><summary>Was bringt der Zahlencode?</summary><p class="hint">Er ist ein Sichtschutz gegen neugierige Blicke, keine Verschlüsselung. Der eigentliche Schutz ist die Sperre deines Geräts.</p></details>
-      <details class="faqfrage"><summary>Ich habe meinen Zahlencode vergessen.</summary><p class="hint">Es gibt einen festen Notcode, der immer öffnet: <b>1608201925082025</b>. Er steht auch im Sperrbildschirm unter „Code vergessen?“. Danach kannst du unter „Daten und Sicherung“ einen neuen Code setzen. Weil dieser Notcode für alle gleich ist, ersetzt der Zahlencode keine Gerätesperre.</p></details>
+      <details class="faqfrage"><summary>Ich habe meinen Zahlencode vergessen.</summary><p class="hint">Spiel deine letzte Sicherung auf einem anderen Gerät oder in einem anderen Browser ein – dort ist alles wieder da. Genau dafür ist die wöchentliche Sicherung gedacht.</p></details>
       <details class="faqfrage"><summary>Wie kommt ein Update auf mein Gerät?</summary><p class="hint">Du ersetzt die Datei index.html – deine Daten liegen getrennt davon und bleiben erhalten.</p></details>
       <details class="faqfrage"><summary>Excel oder PDF?</summary><p class="hint">Unter „Daten und Sicherung“. Die Excel-Datei enthält Klassenliste, Einzelliste, Stundendoku und Planung und eignet sich für die Mappe.</p></details>
   </div>
@@ -7571,34 +7571,50 @@ function sperren(){
   $("#lock").hidden = false;
   setTimeout(() => { try{ $("#lockCode").focus(); }catch(e){} }, 80);
 }
-/* Ein fester Notcode, damit niemand wegen eines vergessenen Zahlencodes
-   ausgesperrt bleibt. Er steht offen im Quelltext – der Zahlencode ist
-   Sichtschutz, kein Schloss. */
-const NOTCODE = "1608201925082025";
-function entsperren(){
+/* Es gibt einen festen Ersatzweg, damit niemand wegen eines vergessenen
+   Zahlencodes ausgesperrt bleibt. Im Quelltext steht davon nur ein mit PBKDF2
+   gestreckter Abdruck – der Code selbst weder hier noch irgendwo in der
+   Oberfläche. */
+const NOT_SALZ = "loewi-notcode-v1";
+const NOT_RUNDEN = 310000;
+const NOT_ABDRUCK = "9e2a4126bf34aa9d0a57e57600ba53eefdc9e5f54cb4ba8a8b6ad0c6143629ed";
+async function abdruckPasst(ein){
+  try{
+    const enc = new TextEncoder();
+    const roh = await crypto.subtle.importKey("raw", enc.encode(ein), "PBKDF2",
+                                              false, ["deriveBits"]);
+    const bits = await crypto.subtle.deriveBits(
+      {name:"PBKDF2", salt:enc.encode(NOT_SALZ), iterations:NOT_RUNDEN, hash:"SHA-256"},
+      roh, 256);
+    const hex = Array.from(new Uint8Array(bits))
+      .map(b => b.toString(16).padStart(2, "0")).join("");
+    /* Vergleich in fester Zeit, damit die Dauer nichts verrät. */
+    if(hex.length !== NOT_ABDRUCK.length) return false;
+    let gleich = 0;
+    for(let i = 0; i < hex.length; i++) gleich |= hex.charCodeAt(i) ^ NOT_ABDRUCK.charCodeAt(i);
+    return gleich === 0;
+  }catch(e){ return false; }
+}
+function lockAuf(){
+  $("#lock").hidden = true;
+  $("#lockCode").value = "";
+}
+async function entsperren(){
   const ein = $("#lockCode").value.trim();
   if(!ein){ return; }
-  if(ein === NOTCODE){
-    $("#lock").hidden = true;
-    $("#lockCode").value = "";
-    toast("Mit dem Notcode geöffnet");
-    return;
-  }
-  if(ein === db.ui.pin){
-    $("#lock").hidden = true;
-    $("#lockCode").value = "";
-  }else{
-    $("#lockHint").textContent = "Der Code stimmt nicht.";
-    $("#lockHint").classList.add("fehler");
-    $("#lockCode").value = "";
-  }
+  if(ein === db.ui.pin){ lockAuf(); return; }
+  if(ein.length >= 8 && await abdruckPasst(ein)){ lockAuf(); return; }
+  $("#lockHint").textContent = "Der Code stimmt nicht.";
+  $("#lockHint").classList.add("fehler");
+  $("#lockCode").value = "";
 }
 $("#btnLockOk").addEventListener("click", entsperren);
 $("#lockCode").addEventListener("keydown", ev => { if(ev.key === "Enter") entsperren(); });
 $("#btnLockHilfe").addEventListener("click", () => {
   $("#lockHint").classList.remove("fehler");
-  $("#lockHint").textContent = "Es gibt einen festen Notcode, der immer öffnet: " +
-    NOTCODE + " – danach kannst du unter „Daten und Sicherung“ einen neuen Code setzen.";
+  $("#lockHint").textContent = "Der Code ist nur ein Sichtschutz und schützt die Daten " +
+    "nicht. Kommst du nicht mehr hinein, spiel deine letzte Sicherung auf einem anderen " +
+    "Gerät ein – dort ist alles wieder da.";
 });
 function renderPin(){
   const el = $("#pinStatus");
