@@ -465,9 +465,24 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 .seitenkopf{padding:0;overflow:hidden}
 .seitenkopf .skopf{padding:14px 15px 12px;background:var(--surface);
   border-bottom:1px solid var(--line)}
+.seitenkopf .skopf.mitknopf{display:flex;align-items:center;gap:10px}
+.seitenkopf .skopf .stitel{flex:1;min-width:0}
 .seitenkopf .skopf h3{font-size:16.5px}
+.item.tapbar{cursor:pointer}
+.item .chev{flex:0 0 auto;color:var(--muted);font-size:18px;padding-left:4px}
+.unterkopf .topbar{margin-bottom:10px}
 .seitenkopf .skopf .mini{margin-top:2px}
 .seitenkopf .sinhalt{padding:12px 14px 14px}
+.profilkopf{display:flex;align-items:center;gap:12px;padding:12px 14px;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:4px}
+.profilkopf .pwer{flex:1;min-width:0}
+.profilkopf .pwer b{display:block;font-size:16px}
+.profilkopf .pwer span{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.beobzeile{display:flex;align-items:flex-start;gap:10px;padding:10px 0;
+  border-top:1px solid var(--line)}
+.beobzeile:first-child{border-top:0;padding-top:0}
+.beobzeile .bwas{flex:1;min-width:0}
+.beobzeile .bwas p{margin:2px 0 0;font-size:14px;line-height:1.45}
 .faqgruppe h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;
   color:var(--muted);margin-bottom:2px}
 .faqfrage{border-top:1px solid var(--line)}
@@ -565,6 +580,7 @@ button.hpunkt:active{background:var(--surface)}
 .raster .nrspalte .zt b{display:block;font-weight:700;color:var(--ink)}
 .raster .nrspalte .zt i{display:block;font-style:normal}
 .uhrbtn.on{background:var(--soft);color:var(--accent-dk);border-color:var(--soft)}
+.kopfknoepfe{display:flex;align-items:center;gap:8px;flex:0 0 auto;margin-left:auto}
 .raster tr.dienstzeile td{padding:1px 1px 4px}
 .dienstband{display:block;font-size:9.5px;font-weight:650;color:var(--dienst);
   background:var(--dienst-soft);border-radius:6px;padding:2px 3px;text-align:center;
@@ -1316,14 +1332,10 @@ body.vertmodus .stundenkarte{cursor:pointer}
     <summary>Kinder einstufen</summary>
     <div class="inner">
       <p class="hint" style="margin-top:0">Ohne Einstufung wird zufällig gelost.</p>
-      <div class="actions" style="margin-top:12px">
-        <button class="act neutral mini" id="btnKrankAusStunde">K aus der letzten Stunde</button>
-        <button class="act quiet" id="btnKrankWeg">Alle K entfernen</button>
-      </div>
       <div class="rowline" style="padding-top:12px">
         <div class="mini" style="flex:0 0 76px">Kind</div>
         <div class="mini" style="flex:1">Stärke</div>
-        <div class="mini" style="flex:0 0 104px;text-align:center">w / m / K</div>
+        <div class="mini" style="flex:0 0 104px;text-align:center">w / m / k</div>
       </div>
       <div id="einstufListe"></div>
     </div>
@@ -1536,6 +1548,15 @@ body.vertmodus .stundenkarte{cursor:pointer}
       <p class="hint">Setzt das Kind in neuen Stunden auf <b>k</b>, einzeln überschreibbar.</p>
     </div>
     <div class="card">
+      <div class="rowline" style="padding-top:0;border-bottom:0;padding-bottom:0">
+        <h3 style="font-size:15px">Beobachtungen</h3>
+        <button class="act neutral mini" id="btnBeobNeu">+ Notieren</button>
+      </div>
+      <p class="hint" style="margin:6px 0 10px">Alltägliche pädagogische und
+        erzieherische Beobachtungen zum Kind – unabhängig von Fach und Mitarbeit.</p>
+      <div id="kindBeob"></div>
+    </div>
+    <div class="card">
       <h3 style="font-size:15px;margin-bottom:6px">Verlauf</h3>
       <div id="kindVerlauf"></div>
     </div>
@@ -1610,6 +1631,15 @@ body.vertmodus .stundenkarte{cursor:pointer}
 
 <!-- ============ KLASSEN ============ -->
 <section class="view" id="v-klassen">
+
+<div id="klListe">
+  <div class="card seitenkopf">
+    <div class="skopf">
+      <h3>Klassen und Fächer</h3>
+      <div class="mini">Klasse antippen, um die Kinder zu bearbeiten.</div>
+    </div>
+  </div>
+
   <details class="newbox" id="newKlasse">
     <summary>+ Neue Klasse</summary>
     <div class="inner">
@@ -1640,10 +1670,15 @@ body.vertmodus .stundenkarte{cursor:pointer}
     <div class="inner">
       <label class="lbl" for="nfName">Bezeichnung</label>
       <input type="text" id="nfName" placeholder="z. B. Sport">
+      <div style="margin-top:10px">
+        <label class="lbl" for="nfVergessen">Was hier vergessen wird</label>
+        <input type="text" id="nfVergessen" placeholder="z. B. Sportzeug oder Hausaufgaben">
+      </div>
       <div class="actions" style="margin-top:12px">
         <button class="act primary" id="btnFachAdd" style="width:100%">Fach anlegen</button>
       </div>
-      <p class="hint">Ein Fach bündelt seine Unterrichtsreihen.</p>
+      <p class="hint">Ein Fach bündelt seine Unterrichtsreihen. Leer gelassen, schlägt
+        Loewi bei bekannten Fächern selbst etwas vor.</p>
     </div>
   </details>
 
@@ -1652,11 +1687,23 @@ body.vertmodus .stundenkarte{cursor:pointer}
     <div id="fachList"></div>
   </div>
 
-  <div class="card" id="kuerzelCard">
-    <h3 style="font-size:15px;margin-bottom:4px">Kürzel (optional)</h3>
-    <p class="hint" style="margin-top:0">Am besten Initialen wie „M.K.“, keine vollen Namen.</p>
-    <div id="kuerzelList" style="margin-top:8px"></div>
+</div>
+
+<div id="klKinder" style="display:none">
+  <div class="topbar" id="tbKlKinder"></div>
+  <div id="klKinderKopf"></div>
+
+  <div class="card">
+    <div class="rowline" style="padding-top:0;border-bottom:0;padding-bottom:0">
+      <h3 style="font-size:15px">Kinder</h3>
+      <div class="mini" id="klAnzahl"></div>
+    </div>
+    <p class="hint" style="margin:6px 0 0">Trage die Kürzel ein – am besten Initialen
+      wie „M.K.“, keine vollen Namen. Leere Felder bleiben schlicht Nummern.</p>
+    <div id="kuerzelList" style="margin-top:10px"></div>
   </div>
+</div>
+
 </section>
 
 <!-- ============ DATEN ============ -->
@@ -1672,7 +1719,8 @@ body.vertmodus .stundenkarte{cursor:pointer}
 
   <div class="card faqgruppe">
     <h3>Anfangen</h3>
-      <details class="faqfrage"><summary>Womit fange ich an?</summary><p class="hint">Tippe oben auf die Kopfzeile: dort legst du über die Stifte deine Klassen und Fächer an. Danach trägst du im Plan einmal deinen Stundenplan ein – ab dann läuft alles über den Plan.</p></details>
+      <details class="faqfrage"><summary>Womit fange ich an?</summary><p class="hint">Tippe oben auf die Kopfzeile und dort auf den Stift: das führt in die Verwaltung. Erst die Klassen anlegen, dann eine Klasse antippen, um die Kinder einzutragen, dann die Fächer. Danach trägst du im Plan einmal deinen Stundenplan ein – ab dann läuft alles über den Plan.</p></details>
+      <details class="faqfrage"><summary>Wo trage ich die Kinder einer Klasse ein?</summary><p class="hint">In der Klassenverwaltung auf die Klasse tippen – der Pfeil rechts führt eine Ebene tiefer. Dort stehen alle Nummern der Klasse mit einem Feld für das Kürzel. Über den Stift oben änderst du Bezeichnung und Anzahl der Kinder.</p></details>
       <details class="faqfrage"><summary>Warum stehen dort Nummern und keine Namen?</summary><p class="hint">Loewi arbeitet mit den Nummern der Klassenliste. Das ist der datenschutzfreundliche Weg: ohne Namen sind die Daten auf dem Gerät für Fremde wertlos. Namen kannst du je Klasse hinterlegen, wenn deine Schule das erlaubt hat.</p></details>
       <details class="faqfrage"><summary>Brauche ich eine Genehmigung?</summary><p class="hint">In NRW brauchst du für die Verarbeitung von Schülerdaten auf einem privaten Gerät die Genehmigung der Schulleitung (VO-DV I). Mit bloßen Nummern bewegst du dich auf der sicheren Seite; mit Namen brauchst du die Genehmigung.</p></details>
       <details class="faqfrage"><summary>Muss ich online sein?</summary><p class="hint">Nein. Loewi läuft vollständig im Browser und braucht kein Netz. Es wird auch nichts hochgeladen – es gibt keinen Server, auf den etwas gehen könnte.</p></details>
@@ -1684,6 +1732,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
       <details class="faqfrage"><summary>Was bedeuten + o – k v?</summary><p class="hint">+ über dem Erwartbaren, o wie erwartet, – darunter. k heißt: heute nicht da – dann zählt die Stunde für dieses Kind nicht mit. v steht für vergessen (Sportzeug, Hausaufgaben, Material – je Fach benennbar) und lässt sich mit + o – kombinieren.</p></details>
       <details class="faqfrage"><summary>Ich habe mich vertippt – wie ändere ich das?</summary><p class="hint">In der Stundenübersicht hat jede der drei Karten – Status, Angaben, Mitarbeit – einen eigenen Stift. Du änderst also genau das, was falsch ist.</p></details>
       <details class="faqfrage"><summary>Eine Stunde ist ausgefallen.</summary><p class="hint">Im ersten Schritt „Ausgefallen“ wählen und den Grund eintragen. Die Stunde steht dann rot in der Liste, hat keine Eintragungen und zählt in keiner Auswertung mit.</p></details>
+      <details class="faqfrage"><summary>Was macht die Zurück-Taste meines Handys?</summary><p class="hint">Sie geht eine Ebene zurück, so wie der Zurück-Knopf in der App: ein offener Dialog schließt sich, aus einer Unterseite kommst du in die Übersicht, aus einem Tab in den Plan. Erst ganz oben schließt sie die App.</p></details>
       <details class="faqfrage"><summary>Kann ich etwas rückgängig machen?</summary><p class="hint">Nach jedem Löschen erscheint unten sieben Sekunden lang „Rückgängig“.</p></details>
   </div>
   <div class="card faqgruppe">
@@ -1699,6 +1748,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
   <div class="card faqgruppe">
     <h3>Klassenliste</h3>
       <details class="faqfrage"><summary>Was zeigt die Klassenliste?</summary><p class="hint">Je Kind: Fehltage, wie oft etwas vergessen wurde, den Mitarbeits-Schnitt und den Test-Schnitt. Tippst du auf eine Zeile, siehst du den Verlauf dieses Kindes.</p></details>
+      <details class="faqfrage"><summary>Wo notiere ich Beobachtungen zu einem Kind?</summary><p class="hint">In der Klassenliste auf das Kind tippen – dort gibt es die Karte „Beobachtungen“ mit Datum. Gemeint sind alltägliche pädagogische und erzieherische Beobachtungen, unabhängig von Fach und Mitarbeit. Unterwegs geht es auch über den Plus-Knopf unten links.</p></details>
       <details class="faqfrage"><summary>Ein Kind ist längerfristig befreit.</summary><p class="hint">Im Verlauf des Kindes „Befreit bis“ setzen. In neuen Stunden wird es dann automatisch auf k gesetzt.</p></details>
       <details class="faqfrage"><summary>Kann ich einen Bericht ausdrucken?</summary><p class="hint">Im Verlauf eines Kindes „Als PDF sichern“, oder unten in der Klassenliste „Alle Kinder als PDF“ – eine Seite je Kind.</p></details>
   </div>
@@ -1710,7 +1760,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
   <div class="card faqgruppe">
     <h3>Organisation</h3>
       <details class="faqfrage"><summary>Was steckt im Organisations-Tab?</summary><p class="hint">Ganz oben „Was steht heute an?“ – morgens der Ausblick, nachmittags das, was noch offen ist. Darunter Kalender, Termine, Aufgaben und Notizen.</p></details>
-      <details class="faqfrage"><summary>Wofür ist der Plus-Knopf unten links?</summary><p class="hint">Er liegt über allem und legt von jeder Stelle aus an, was du brauchst: Termin, Aufgabe, Notiz, Hausaufgabe oder Test.</p></details>
+      <details class="faqfrage"><summary>Wofür ist der Plus-Knopf unten links?</summary><p class="hint">Er liegt über allem und legt von jeder Stelle aus an, was du brauchst: eine Stunde, eine Beobachtung, eine Aufgabe oder einen Termin. Hausaufgaben gehören zur Stunde, Tests in den Tests-Bereich – deshalb stehen sie nicht mehr im Plus-Menü.</p></details>
   </div>
   <div class="card faqgruppe">
     <h3>Tests und Teams</h3>
@@ -1725,6 +1775,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
       <details class="faqfrage"><summary>Kann ich auf ein anderes Gerät wechseln?</summary><p class="hint">Ja: Sicherung erstellen, auf dem anderen Gerät Loewi öffnen und die Datei unter „Daten und Sicherung“ wieder einspielen.</p></details>
       <details class="faqfrage"><summary>Was passiert, wenn ich den Browser-Cache lösche?</summary><p class="hint">Dann sind die Daten weg. Genau dafür ist die Sicherung da.</p></details>
       <details class="faqfrage"><summary>Was bringt der Zahlencode?</summary><p class="hint">Er ist ein Sichtschutz gegen neugierige Blicke, keine Verschlüsselung. Der eigentliche Schutz ist die Sperre deines Geräts.</p></details>
+      <details class="faqfrage"><summary>Ich habe meinen Zahlencode vergessen.</summary><p class="hint">Es gibt einen festen Notcode, der immer öffnet: <b>1608201925082025</b>. Er steht auch im Sperrbildschirm unter „Code vergessen?“. Danach kannst du unter „Daten und Sicherung“ einen neuen Code setzen. Weil dieser Notcode für alle gleich ist, ersetzt der Zahlencode keine Gerätesperre.</p></details>
       <details class="faqfrage"><summary>Wie kommt ein Update auf mein Gerät?</summary><p class="hint">Du ersetzt die Datei index.html – deine Daten liegen getrennt davon und bleiben erhalten.</p></details>
       <details class="faqfrage"><summary>Excel oder PDF?</summary><p class="hint">Unter „Daten und Sicherung“. Die Excel-Datei enthält Klassenliste, Einzelliste, Stundendoku und Planung und eignet sich für die Mappe.</p></details>
   </div>
@@ -1817,7 +1868,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
     <h2>Loewi</h2>
     <p>Zahlencode eingeben</p>
     <input type="password" id="lockCode" inputmode="numeric" pattern="[0-9]*"
-      maxlength="8" autocomplete="off" aria-label="Zahlencode">
+      maxlength="16" autocomplete="off" aria-label="Zahlencode">
     <div class="actions" style="margin-top:14px">
       <button class="act primary" id="btnLockOk" style="width:100%">Öffnen</button>
     </div>
@@ -2351,6 +2402,7 @@ function uebernehmen(raw){
         db.termine = db.termine || [];
         db.todos = db.todos || [];
         db.notizen = db.notizen || [];
+  db.beobachtungen = db.beobachtungen || [];
         db.ui = db.ui || {};
         db.ui.plan = db.ui.plan || {ebene:"reihen"};
         db.ui.stdView = db.ui.stdView || "liste";
@@ -2639,6 +2691,50 @@ function code(e){
   return (e.v ? "v" : "") + (e.m || "");
 }
 
+/* ---------- Zurück-Taste des Geräts ----------
+   Ohne Zutun schließt die Zurück-Taste auf dem Handy die ganze Seite. Damit sie
+   sich wie in einer App verhält, halten wir immer einen Eintrag in der
+   Verlaufsliste vor: Drückt jemand zurück, gehen wir eine Ebene hoch und legen
+   den Eintrag neu an. Erst wenn es nichts mehr zu schließen gibt, lassen wir
+   den Schritt durch – dann schließt die Seite wie erwartet. */
+let wacheSteht = false;
+function zurueckWache(){
+  if(wacheSteht) return;
+  try{ history.pushState({loewi:1}, ""); wacheSteht = true; }catch(e){}
+}
+function zurueckSchritt(){
+  /* Gesperrt: die Zurück-Taste darf nicht am Code vorbeiführen. */
+  if(!$("#lock").hidden) return true;
+  if(!$("#ovl").hidden){ closeModal(); return true; }
+  if(typeof fabOffen !== "undefined" && fabOffen){ closeFab(); return true; }
+  if(typeof dropOffen !== "undefined" && dropOffen){ closeDrop(); return true; }
+  if(db.ui.vertretungModus){
+    db.ui.vertretungModus = false;
+    document.body.classList.remove("vertmodus");
+    save(); renderPlanTab(); return true;
+  }
+  const v = db.ui.view;
+  if(v === "faq" || v === "daten"){ profilZurueck(); return true; }
+  if(v === "stunde"){
+    if(db.ui.bereich === "stunden" && db.ui.stdView !== "liste"){ stdGo("liste"); return true; }
+    if(db.ui.bereich === "tests" && db.ui.tstView !== "liste"){ tstGo("liste"); return true; }
+    if(db.ui.bereich === "plan" && db.ui.planEdit){
+      db.ui.planEdit = false; save(); renderPlanTab(); return true;
+    }
+  }
+  if(v === "uebersicht" && db.ui.sumView !== "liste"){ sumGo("liste"); return true; }
+  if(v === "planung" && db.ui.plan && db.ui.plan.ebene !== "reihen"){ planGo("reihen"); return true; }
+  if(v === "klassen" && db.ui.klView === "kinder"){ klGo("liste"); return true; }
+  if(v !== "stunde" || db.ui.bereich !== "plan"){
+    db.ui.bereich = "plan"; save(); goView("stunde"); return true;
+  }
+  return false;   /* ganz oben – jetzt darf die Seite schließen */
+}
+window.addEventListener("popstate", () => {
+  wacheSteht = false;
+  if(zurueckSchritt()) zurueckWache();
+});
+
 /* ---------- Navigation: vier Tabs, Klassen und Planung über das Drop-up ---------- */
 const NAV_TAB = {stunde:"stunde", organisation:"organisation", planung:"planung",
                  uebersicht:"uebersicht"};
@@ -2661,15 +2757,17 @@ function goView(name){
   if(name === "uebersicht"){ db.ui.sumView = "liste"; renderUebersicht(); }
   if(name === "organisation") renderOrganisation();
   if(name === "planung") renderPlan();
-  if(name === "klassen") renderKlassen();
+  if(name === "klassen"){ db.ui.klView = "liste"; renderKlassen(); }
   if(name === "daten"){
     renderStoreInfo();
-    topbar($("#tbDaten"), {zurueck:profilZurueck, zurueckText:"Zurück",
-                           titel:"Daten und Sicherung"});
+    unterkopf($("#tbDaten"), {zurueck:profilZurueck, zurueckText:"Profil",
+      titel:"Daten und Sicherung",
+      sub:"Sicherung, Export und Zahlencode"});
   }
   if(name === "faq"){
-    topbar($("#tbFaq"), {zurueck:profilZurueck, zurueckText:"Zurück"});
+    topbar($("#tbFaq"), {zurueck:profilZurueck, zurueckText:"Profil"});
   }
+  zurueckWache();
   window.scrollTo(0,0);
 }
 document.querySelectorAll("nav button[data-view]").forEach(b => {
@@ -2679,6 +2777,7 @@ document.querySelectorAll("nav button[data-view]").forEach(b => {
 /* ---------- Drop-up: Klasse + Fach ---------- */
 let dropOffen = false;
 function openDrop(){
+  zurueckWache();
   dropOffen = true;
   renderDrop();
   $("#dropUp").classList.add("open");
@@ -2782,7 +2881,29 @@ $("#btnKlasseAdd").addEventListener("click", () => {
   toast("Klasse „" + name + "“ angelegt");
 });
 
+/* Zwei Ebenen: die Liste aller Klassen und die Kinder einer Klasse. */
+function klGo(ebene, klasseId){
+  zurueckWache();
+  db.ui.klView = ebene;
+  if(klasseId) db.ui.klBearbeitet = klasseId;
+  save(); renderKlassen(); window.scrollTo(0, 0);
+}
+
 function renderKlassen(){
+  const ebene = db.ui.klView === "kinder" ? "kinder" : "liste";
+  $("#klListe").style.display  = ebene === "liste" ? "" : "none";
+  $("#klKinder").style.display = ebene === "kinder" ? "" : "none";
+  if(ebene === "kinder"){
+    const k = klasse(db.ui.klBearbeitet);
+    if(!k){ db.ui.klView = "liste"; renderKlassen(); return; }
+    topbar($("#tbKlKinder"), {zurueck:() => klGo("liste"), zurueckText:"Klassen"});
+    seitenkopf($("#klKinderKopf"), "Klasse " + k.name,
+      k.count + (k.count === 1 ? " Kind" : " Kinder"),
+      stiftBtn("Klasse bearbeiten", () => klasseDialog(k)));
+    $("#klAnzahl").textContent = "Nr. 1 bis " + k.count;
+    renderKuerzel(k);
+    return;
+  }
   const box = $("#klassenList");
   box.innerHTML = "";
   if(!db.klassen.length){
@@ -2799,18 +2920,15 @@ function renderKlassen(){
       '<div class="sub">' + k.count + " Kinder · " + anzStd +
       (anzStd === 1 ? " Stunde" : " Stunden") + " erfasst" +
       (k.id === db.ui.klasseId ? " · <b>ausgewählt</b>" : "") + "</div>";
-    info.addEventListener("click", () => {
-      setAuswahl(k.id, db.ui.fachId);
-      toast(k.name + " ausgewählt");
-    });
-    const edit = document.createElement("button");
-    edit.className = "iconbtn"; edit.innerHTML = STIFT_SVG;
-    edit.setAttribute("aria-label", "Klasse bearbeiten");
-    edit.addEventListener("click", ev => { ev.stopPropagation(); klasseDialog(k); });
-    row.appendChild(info); row.appendChild(edit);
+    info.addEventListener("click", () => klGo("kinder", k.id));
+    const chev = document.createElement("span");
+    chev.className = "chev";
+    chev.textContent = "›";
+    row.appendChild(info); row.appendChild(chev);
+    row.classList.add("tapbar");
+    row.addEventListener("click", () => klGo("kinder", k.id));
     box.appendChild(row);
   });
-  renderKuerzel();
 }
 
 function klasseDialog(k){
@@ -2856,15 +2974,12 @@ function klasseDialog(k){
   $("#modalBox").appendChild(wrap);
 }
 
-function renderKuerzel(){
+function renderKuerzel(kIn){
   const box = $("#kuerzelList");
-  const k = klasse(db.ui.klasseId);
+  if(!box) return;
+  const k = kIn || klasse(db.ui.klBearbeitet);
   box.innerHTML = "";
   if(!k){ box.innerHTML = '<p class="hint">Erst eine Klasse wählen.</p>'; return; }
-  const head = document.createElement("p");
-  head.className = "hint"; head.style.marginTop = "0";
-  head.textContent = "Klasse " + k.name;
-  box.appendChild(head);
   const grid = document.createElement("div");
   grid.className = "grid3";
   for(let i=1;i<=k.count;i++){
@@ -2912,14 +3027,39 @@ function topbar(el, opt){
   }
 }
 /* Überschrift eines Bereichs – überall gleich aufgebaut. */
-function seitenkopf(el, titel, unter){
+function seitenkopf(el, titel, unter, aktion){
   el.innerHTML = "";
   el.classList.remove("topbar");
   const karte = document.createElement("div");
   karte.className = "card seitenkopf";
-  karte.innerHTML = '<div class="skopf"><h3>' + esc(titel) + "</h3>" +
+  const kopf = document.createElement("div");
+  kopf.className = "skopf" + (aktion ? " mitknopf" : "");
+  kopf.innerHTML = '<div class="stitel"><h3>' + esc(titel) + "</h3>" +
     (unter ? '<div class="mini">' + esc(unter) + "</div>" : "") + "</div>";
+  if(aktion) kopf.appendChild(aktion);
+  karte.appendChild(kopf);
   el.appendChild(karte);
+}
+
+/* Eine Unterseite: Rückweg plus dieselbe Überschrift wie in den Hauptansichten. */
+function unterkopf(el, opt){
+  el.innerHTML = "";
+  el.classList.remove("topbar", "umbruch");
+  el.classList.add("unterkopf");
+  if(opt.zurueck){
+    const leiste = document.createElement("div");
+    leiste.className = "topbar";
+    const b = document.createElement("button");
+    b.className = "backbtn";
+    b.innerHTML = '<span style="font-size:15px;line-height:1">‹</span>' +
+                  esc(opt.zurueckText || "Zurück");
+    b.addEventListener("click", opt.zurueck);
+    leiste.appendChild(b);
+    el.appendChild(leiste);
+  }
+  const halter = document.createElement("div");
+  el.appendChild(halter);
+  seitenkopf(halter, opt.titel || "", opt.sub || "", opt.aktion);
 }
 
 /* kleiner Stift-Knopf für die Kopfzeile */
@@ -2946,6 +3086,7 @@ function renderKopf(){
 
 /* ---------- Stunden: Ebenen ---------- */
 function stdGo(view, stundeId){
+  zurueckWache();
   db.ui.stdView = view;
   if(stundeId !== undefined) db.ui.stundeId = stundeId;
   save(); renderStunde(); window.scrollTo(0,0);
@@ -4033,8 +4174,11 @@ function renderPlanWoche(){
     const t = $("#planWoche table.raster");
     if(t) t.classList.toggle("mitzeit", !!db.ui.planZeiten);
   });
-  kopf.appendChild(uhr);
-  kopf.appendChild(stift);
+  const knoepfe = document.createElement("div");
+  knoepfe.className = "kopfknoepfe";
+  knoepfe.appendChild(uhr);
+  knoepfe.appendChild(stift);
+  kopf.appendChild(knoepfe);
   karte.appendChild(kopf);
 
   const tab = document.createElement("table");
@@ -4961,16 +5105,12 @@ function fabEintraege(){
   return [
     {icon:"stunde", titel:"Stunde erfassen",
      sub:wer, tap:schnellStunde},
-    {icon:"ha", titel:"Hausaufgabe",
-     sub:"Was bis zum nächsten Mal auf ist", tap:hausaufgabeDialog},
     {icon:"auge", titel:"Beobachtung",
-     sub:"Bemerkung zu einer Nummer", tap:beobachtungDialog},
+     sub:"Pädagogisch oder erzieherisch, zu einem Kind", tap:() => beobDialog(null)},
     {icon:"haken", titel:"Aufgabe",
      sub:"Für deine To-do-Liste", tap:() => todoDialog(null)},
     {icon:"kalender", titel:"Termin",
-     sub:"Konferenz, Elternabend, Ausflug", tap:() => terminDialog(null)},
-    {icon:"test", titel:"Test",
-     sub:"Beobachtungsbogen anlegen", tap:schnellTest}
+     sub:"Konferenz, Elternabend, Ausflug", tap:() => terminDialog(null)}
   ];
 }
 const FAB_ICON = {
@@ -4996,6 +5136,7 @@ function renderFab(){
   });
 }
 function openFab(){
+  zurueckWache();
   fabOffen = true;
   renderFab();
   $("#fabSheet").classList.add("open");
@@ -5028,101 +5169,6 @@ function schnellStunde(){
   db.ui.bereich = "stunden"; db.ui.view = "stunde";
   if(s){ save(); goView("stunde"); stdGo("ansicht", s.id); return; }
   neuStarten({datum:hIso});
-}
-
-/* Klasse und Fach frei wählbar, damit man auch für eine andere Gruppe eintragen kann. */
-function klasseFachFelder(mitFach){
-  const kOpt = db.klassen.map(k => ({value:k.id, label:k.name}));
-  const fOpt = [{value:"", label:"– kein Fach –"}].concat(
-    db.faecher.map(f => ({value:f.id, label:f.name})));
-  const felder = [{key:"klasseId", label:"Klasse", typ:"select",
-                   wert: db.ui.klasseId || (kOpt[0] ? kOpt[0].value : ""), optionen:kOpt}];
-  if(mitFach) felder.push({key:"fachId", label:"Fach", typ:"select",
-                           wert: db.ui.fachId || "", optionen:fOpt});
-  return felder;
-}
-
-function hausaufgabeDialog(){
-  if(!db.klassen.length){ toast("Erst eine Klasse anlegen"); return; }
-  openModal({
-    titel:"Hausaufgabe",
-    text:"Wird an der Stunde dieses Tages gespeichert.",
-    felder: klasseFachFelder(true).concat([
-      {key:"datum", label:"Für welche Stunde", typ:"datum", wert:heute()},
-      {key:"text", label:"Aufgabe", wert:"", platzhalter:"z. B. AB Nr. 3, Seite 12"}
-    ]),
-    okText:"Eintragen",
-    onOk: w => {
-      const k = klasse(w.klasseId);
-      if(!k){ toast("Klasse fehlt"); return false; }
-      const txt = (w.text || "").trim();
-      if(!txt){ toast("Ohne Aufgabe geht es nicht"); return false; }
-      let s = db.stunden.find(x => x.klasseId === k.id &&
-        (x.fachId || null) === (w.fachId || null) && x.datum === w.datum);
-      if(!s) s = stundeErzeugen(k, w.fachId || null, w.datum, "", null, false);
-      s.ha = s.ha ? (s.ha + "\n" + txt) : txt;
-      save(); renderAlles();
-      toast("Hausaufgabe bei " + k.name + " eingetragen");
-    }
-  });
-}
-
-function beobachtungDialog(){
-  if(!db.klassen.length){ toast("Erst eine Klasse anlegen"); return; }
-  const k0 = klasse(db.ui.klasseId) || db.klassen[0];
-  const nrOpt = [];
-  for(let i = 1; i <= k0.count; i++){
-    nrOpt.push({value:String(i), label:"Nr. " + i + (k0.labels[i] ? " · " + k0.labels[i] : "")});
-  }
-  openModal({
-    titel:"Beobachtung",
-    text:"Wird als Bemerkung beim Kind in der Stunde gespeichert.",
-    felder: klasseFachFelder(true).concat([
-      {key:"nr", label:"Nummer", typ:"select", wert:"1", optionen:nrOpt},
-      {key:"datum", label:"Für welche Stunde", typ:"datum", wert:heute()},
-      {key:"text", label:"Beobachtung", wert:"", platzhalter:"z. B. hilft anderen von sich aus"}
-    ]),
-    okText:"Eintragen",
-    onOk: w => {
-      const k = klasse(w.klasseId);
-      const nr = parseInt(w.nr, 10);
-      const txt = (w.text || "").trim();
-      if(!k || !(nr >= 1 && nr <= k.count)){ toast("Nummer passt nicht zur Klasse"); return false; }
-      if(!txt){ toast("Ohne Text geht es nicht"); return false; }
-      let s = db.stunden.find(x => x.klasseId === k.id &&
-        (x.fachId || null) === (w.fachId || null) && x.datum === w.datum);
-      if(!s) s = stundeErzeugen(k, w.fachId || null, w.datum, "", null, false);
-      const e = s.eintraege[nr] || (s.eintraege[nr] = {m:null, k:false, v:false, n:""});
-      e.n = e.n ? (e.n + " · " + txt) : txt;
-      save(); renderAlles();
-      toast("Bei Nr. " + nr + " eingetragen");
-    }
-  });
-  /* Beim Wechsel der Klasse müssen auch die Nummern wechseln. */
-  const sel = $("#modalBox").querySelector("select");
-  if(sel) sel.addEventListener("change", () => {
-    const k = klasse(sel.value);
-    const nrSel = $("#modalBox").querySelectorAll("select")[2];
-    if(!k || !nrSel) return;
-    nrSel.innerHTML = "";
-    for(let i = 1; i <= k.count; i++){
-      const o = document.createElement("option");
-      o.value = String(i);
-      o.textContent = "Nr. " + i + (k.labels[i] ? " · " + k.labels[i] : "");
-      nrSel.appendChild(o);
-    }
-  });
-}
-
-function schnellTest(){
-  const k = klasse(db.ui.klasseId);
-  if(!k){ toast("Erst oben eine Klasse wählen"); return; }
-  db.ui.bereich = "tests"; db.ui.tstView = "liste"; db.ui.view = "stunde";
-  save(); goView("stunde");
-  setTimeout(() => {
-    const b = $("#newTest");
-    if(b){ b.open = true; b.scrollIntoView({block:"center", behavior:"smooth"}); }
-  }, 120);
 }
 
 /* ---------- Teams auslosen („Teamshake“) ----------
@@ -5343,34 +5389,6 @@ document.querySelectorAll("#teamAnzahl button").forEach(b => {
 });
 $("#btnMischen").addEventListener("click", mischenUndZeigen);
 
-/* K bequem aus der zuletzt erfassten Stunde übernehmen. */
-$("#btnKrankAusStunde").addEventListener("click", () => {
-  const k = klasse(db.ui.klasseId);
-  if(!k){ toast("Erst eine Klasse wählen"); return; }
-  const liste = stundenVon(k.id).filter(s => !s.aus);
-  const letzte = liste[liste.length - 1];
-  if(!letzte){ toast("Es gibt noch keine erfasste Stunde"); return; }
-  merkeStand();
-  if(!k.krank) k.krank = {};
-  let anz = 0;
-  for(let i = 1; i <= k.count; i++){
-    const e = letzte.eintraege[i];
-    if(e && e.k && !k.krank[i] && !istBefreit(k, i)){ k.krank[i] = true; anz++; }
-  }
-  save(); renderTeams();
-  if(anz) toastUndo(anz + (anz === 1 ? " Kind" : " Kinder") + " aus Std. " + letzte.nr + " auf K");
-  else toast("In Std. " + letzte.nr + " hat niemand gefehlt");
-});
-$("#btnKrankWeg").addEventListener("click", () => {
-  const k = klasse(db.ui.klasseId);
-  if(!k) return;
-  if(!k.krank || !Object.keys(k.krank).length){ toast("Es steht niemand auf K"); return; }
-  merkeStand();
-  k.krank = {};
-  save(); renderTeams();
-  toastUndo("Alle K entfernt");
-});
-
 /* ---------- Tests (Beobachtungsbogen) ----------
    Ein Test hat frei gewählte Kriterien und wird je Kind und Kriterium mit 1–6
    bewertet. Der Schnitt daraus bleibt vom Mitarbeits-Schnitt getrennt. */
@@ -5518,6 +5536,7 @@ $("#ekKrit").addEventListener("keydown", ev => {
 });
 
 function tstGo(view, testId){
+  zurueckWache();
   db.ui.tstView = view;
   if(testId !== undefined) db.ui.testId = testId;
   save(); renderStunde(); window.scrollTo(0,0);
@@ -5613,7 +5632,7 @@ $("#btnTestAnlegen").addEventListener("click", () => {
 
 /* --- Ebene 2: Ansehen --- */
 function renderTestAnsicht(t, k){
-  topbar($("#tbTest"), {
+  unterkopf($("#tbTest"), {
     zurueck: () => tstGo("liste"), zurueckText: "Tests",
     titel: t.titel || "Test",
     sub: deDate(t.datum) + (k ? " · Klasse " + k.name : ""),
@@ -5696,9 +5715,9 @@ function testDialog(t){
    So läuft die Beobachtung in der Halle: Man schaut sich ein Kind an und geht
    dessen Kriterien durch, nicht umgekehrt. */
 function renderTestErfassen(t, k){
-  topbar($("#tbTestErf"), {
+  unterkopf($("#tbTestErf"), {
     zurueck: () => tstGo("ansicht"), zurueckText: "Test",
-    titel: t.titel || "Test", sub: deDate(t.datum)
+    titel: "Bewerten", sub: (t.titel || "Test") + " · " + deDate(t.datum)
   });
   const kacheln = $("#kritKacheln");
   kacheln.innerHTML = "";
@@ -5859,6 +5878,7 @@ function statsFor(kid, fid){
 }
 
 function sumGo(view, nr){
+  zurueckWache();
   db.ui.sumView = view;
   if(nr !== undefined) db.ui.kindNr = nr;
   save(); renderUebersicht(); window.scrollTo(0,0);
@@ -5902,6 +5922,117 @@ function renderUebersicht(){
   });
 }
 
+/* ---------- Beobachtungen ----------
+   Sie hängen an der Klasse und an der Nummer, nicht am Fach und nicht an einer
+   Stunde: eine Beobachtung zum Kind gilt unabhängig davon, wo sie gemacht
+   wurde. */
+function beobListe(){
+  if(!Array.isArray(db.beobachtungen)) db.beobachtungen = [];
+  return db.beobachtungen;
+}
+function beobVon(klasseId, nr){
+  return beobListe()
+    .filter(b => b.klasseId === klasseId && Number(b.nr) === Number(nr))
+    .sort((a, b) => (b.datum || "").localeCompare(a.datum || "") || (b.t || 0) - (a.t || 0));
+}
+function beobDialog(vorhanden, klasseId, nr){
+  if(!db.klassen.length){ toast("Erst eine Klasse anlegen"); return; }
+  const kOpt = db.klassen.map(k => ({value:k.id, label:k.name}));
+  const kStart = klasse(klasseId) || klasse(db.ui.klasseId) || db.klassen[0];
+  const nrOpt = [];
+  for(let i = 1; i <= kStart.count; i++)
+    nrOpt.push({value:String(i),
+                label:"Nr. " + i + (kStart.labels[i] ? " · " + kStart.labels[i] : "")});
+  const felder = [];
+  if(!vorhanden && !klasseId){
+    felder.push({key:"klasseId", label:"Klasse", typ:"select",
+                 wert:kStart.id, optionen:kOpt});
+    felder.push({key:"nr", label:"Kind", typ:"select", wert:"1", optionen:nrOpt});
+  }
+  felder.push({key:"datum", label:"Datum", typ:"datum",
+               wert: vorhanden ? vorhanden.datum : heute()});
+  felder.push({key:"text", label:"Beobachtung", typ:"text2",
+               wert: vorhanden ? vorhanden.text : "",
+               platzhalter:"z. B. hilft von sich aus beim Aufräumen"});
+  openModal({
+    titel: vorhanden ? "Beobachtung bearbeiten" : "Beobachtung",
+    text: vorhanden ? "" : "Pädagogisch oder erzieherisch – unabhängig vom Fach.",
+    felder: felder,
+    okText: vorhanden ? "Übernehmen" : "Eintragen",
+    onOk: w => {
+      const txt = (w.text || "").trim();
+      if(!txt){ toast("Ohne Text geht es nicht"); return false; }
+      if(vorhanden){
+        vorhanden.text = txt;
+        vorhanden.datum = w.datum || vorhanden.datum;
+      }else{
+        const kid = klasseId || w.klasseId;
+        const n = nr !== undefined && nr !== null ? Number(nr) : parseInt(w.nr, 10);
+        const k = klasse(kid);
+        if(!k || !(n >= 1 && n <= k.count)){ toast("Nummer passt nicht zur Klasse"); return false; }
+        beobListe().push({id:uid(), klasseId:kid, nr:n, datum:w.datum || heute(),
+                          text:txt, t:Date.now()});
+      }
+      save(); renderAlles();
+      toast("Eingetragen");
+    }
+  });
+  /* Klassenwechsel im Dialog: die Nummern müssen mitwandern. */
+  if(!vorhanden && !klasseId){
+    const sels = $("#modalBox").querySelectorAll("select");
+    if(sels.length >= 2) sels[0].addEventListener("change", () => {
+      const k = klasse(sels[0].value);
+      const ziel = sels[1];
+      ziel.innerHTML = "";
+      if(!k) return;
+      for(let i = 1; i <= k.count; i++){
+        const o = document.createElement("option");
+        o.value = String(i);
+        o.textContent = "Nr. " + i + (k.labels[i] ? " · " + k.labels[i] : "");
+        ziel.appendChild(o);
+      }
+    });
+  }
+}
+function renderBeob(k, nr){
+  const box = $("#kindBeob");
+  if(!box) return;
+  box.innerHTML = "";
+  const liste = beobVon(k.id, nr);
+  if(!liste.length){
+    box.innerHTML = '<p class="hint" style="margin:0">Noch nichts notiert.</p>';
+    return;
+  }
+  liste.forEach(b => {
+    const z = document.createElement("div");
+    z.className = "beobzeile";
+    z.innerHTML = '<div class="bwas"><span class="mini">' + deDate(b.datum) +
+      '</span><p>' + esc(b.text) + "</p></div>";
+    const stift = document.createElement("button");
+    stift.className = "iconbtn";
+    stift.innerHTML = STIFT_SVG;
+    stift.setAttribute("aria-label", "Beobachtung bearbeiten");
+    stift.addEventListener("click", () => beobDialogMitLoeschen(b));
+    z.appendChild(stift);
+    box.appendChild(z);
+  });
+}
+function beobDialogMitLoeschen(b){
+  beobDialog(b);
+  const del = document.createElement("button");
+  del.className = "act quiet"; del.style.marginTop = "10px";
+  del.textContent = "Beobachtung löschen";
+  del.addEventListener("click", () => {
+    closeModal();
+    merkeStand();
+    db.beobachtungen = beobListe().filter(x => x.id !== b.id);
+    save(); renderAlles(); toastUndo("Beobachtung gelöscht");
+  });
+  const wrap = document.createElement("div");
+  wrap.style.textAlign = "center"; wrap.appendChild(del);
+  $("#modalBox").appendChild(wrap);
+}
+
 /* ---------- Eine Nummer im Verlauf ---------- */
 function renderKind(k, nr){
   if(!k) return;
@@ -5938,6 +6069,7 @@ function renderKind(k, nr){
   });
 
   $("#kindBefreit").value = befreitBis(k, nr);
+  renderBeob(k, nr);
 
   const box = $("#kindVerlauf"); box.innerHTML = "";
   const mitEintrag = list.filter(s => {
@@ -6004,9 +6136,16 @@ function closeModal(){
   const o = $("#ovl"); o.hidden = true; $("#modalBox").innerHTML = "";
 }
 function openModal(opt){
+  zurueckWache();
   const box = $("#modalBox");
   box.innerHTML = "";
   const h = document.createElement("h3"); h.textContent = opt.titel; box.appendChild(h);
+  if(opt.nurSchliessen){
+    if(opt.text){ const pt = document.createElement("p"); pt.textContent = opt.text; box.appendChild(pt); }
+    $("#ovl").hidden = false;
+    zurueckWache();
+    return;
+  }
   if(opt.text){ const p2 = document.createElement("p"); p2.textContent = opt.text; box.appendChild(p2); }
   const felder = {};
   (opt.felder || []).forEach(f => {
@@ -6129,6 +6268,7 @@ function einheitenVon(reiheId){
   return db.einheiten.filter(e => e.reiheId === reiheId).sort((a,b) => (a.nr||0) - (b.nr||0));
 }
 function planGo(ebene, ids){
+  zurueckWache();
   db.ui.plan = Object.assign({ebene: ebene}, ids || {});
   save(); renderPlan(); window.scrollTo(0,0);
 }
@@ -6153,20 +6293,23 @@ function renderPlan(){
       f ? ("Unterrichtsreihen für das Fach: " + f.name) : "Noch kein Fach gewählt");
   }
   if(p.ebene === "einheiten"){
-    topbar($("#tbEinheiten"), {zurueck:() => planGo("reihen"),
+    unterkopf($("#tbEinheiten"), {zurueck:() => planGo("reihen"),
       zurueckText: f ? f.name : "Reihen", titel:r.titel,
+      sub: "Unterrichtsreihe" + (f ? " · " + f.name : ""),
       aktion: stiftBtn("Reihe bearbeiten", () => reiheDialog(r))});
   }
   if(p.ebene === "lesen"){
-    topbar($("#tbLesen"), {zurueck:() => planGo("einheiten", {reiheId:r.id}),
+    unterkopf($("#tbLesen"), {zurueck:() => planGo("einheiten", {reiheId:r.id}),
       zurueckText:"Reihe",
       titel: e.titel ? (e.nr + " · " + e.titel) : ("Einheit " + e.nr),
+      sub: "Unterrichtseinheit · " + r.titel,
       aktion: stiftBtn("Einheit bearbeiten",
         () => planGo("edit", {reiheId:r.id, einheitId:e.id}))});
   }
   if(p.ebene === "edit"){
-    topbar($("#tbEdit"), {zurueck:() => editFertig(false), zurueckText:"Ansicht",
-      titel:"Bearbeiten", sub:"Std. " + e.nr + (e.titel ? " · " + e.titel : "")});
+    unterkopf($("#tbEdit"), {zurueck:() => editFertig(false), zurueckText:"Ansicht",
+      titel:"Einheit bearbeiten",
+      sub:"Std. " + e.nr + (e.titel ? " · " + e.titel : "")});
   }
 
   if(p.ebene === "reihen") renderReiheList(f);
@@ -6261,6 +6404,8 @@ $("#btnFachAdd").addEventListener("click", () => {
   const f = {id:uid(), name:name};
   /* Bei den üblichen Fächern gleich einen sinnvollen Namen für „vergessen“
      mitgeben – änderbar bleibt er ohnehin. */
+  const eigen = ($("#nfVergessen").value || "").trim();
+  if(eigen) f.vergessen = eigen;
   const schl = name.toLowerCase().replace(/[^a-zäöüß]/g, "");
   Object.keys(VERGESSEN_VORSCHLAG).forEach(kk => {
     if(!f.vergessen && schl.indexOf(kk) === 0) f.vergessen = VERGESSEN_VORSCHLAG[kk];
@@ -6274,6 +6419,7 @@ $("#btnFachAdd").addEventListener("click", () => {
   }
   if(!db.ui.fachId) db.ui.fachId = f.id;
   $("#nfName").value = "";
+  $("#nfVergessen").value = "";
   const nbf = $("#newFach"); if(nbf) nbf.open = false;
   renumberAll();
   save(); renderAlles();
@@ -7283,6 +7429,12 @@ $("#btnWipe").addEventListener("click", () => {
     });
 });
 
+$("#btnBeobNeu").addEventListener("click", () => {
+  const k = klasse(db.ui.klasseId);
+  if(!k) return;
+  beobDialog(null, k.id, db.ui.kindNr);
+});
+
 /* ---------- Backup-Wächter ---------- */
 function markBackup(){
   db.ui.lastBackup = Date.now();
@@ -7342,11 +7494,10 @@ function profilZurueck(){
 /* ---------- Profil ----------
    Noch ohne Anmeldung: ein Name fürs Gerät und die Wege, die man von hier aus
    sucht. Der Platz für ein späteres Konto ist damit vorbereitet. */
-function profilOeffnen(){
-  closeDrop(); closeFab();
+function profilBearbeiten(){
   const p = db.profil || (db.profil = {});
   openModal({
-    titel:"Profil",
+    titel:"Profil bearbeiten",
     felder:[
       {key:"name", label:"Name", wert:p.name || "", platzhalter:"wie du angesprochen wirst"},
       {key:"schule", label:"Schule (optional)", wert:p.schule || ""}
@@ -7356,9 +7507,29 @@ function profilOeffnen(){
       p.name = (w.name || "").trim();
       p.schule = (w.schule || "").trim();
       save(); renderKopf(); toast("Gespeichert");
+      setTimeout(profilOeffnen, 120);
+      return true;
     }
   });
+}
+
+function profilOeffnen(){
+  closeDrop(); closeFab();
+  const p = db.profil || (db.profil = {});
+  openModal({titel:"Profil", nurSchliessen:true});
   const box = $("#modalBox");
+  const kopf = document.createElement("div");
+  kopf.className = "profilkopf";
+  kopf.innerHTML = '<div class="pwer"><b>' +
+    esc(p.name || "Noch kein Name") + "</b><span>" +
+    esc(p.schule || "Keine Schule eingetragen") + "</span></div>";
+  const stift = document.createElement("button");
+  stift.className = "iconbtn";
+  stift.innerHTML = STIFT_SVG;
+  stift.setAttribute("aria-label", "Name und Schule bearbeiten");
+  stift.addEventListener("click", () => { closeModal(); setTimeout(profilBearbeiten, 80); });
+  kopf.appendChild(stift);
+  box.appendChild(kopf);
   const wrap = document.createElement("div");
   wrap.className = "profilwege";
   [["Häufige Fragen", () => { closeModal(); profilSeite("faq"); }],
@@ -7376,6 +7547,14 @@ function profilOeffnen(){
   hin.textContent = "Anmeldung und Abgleich zwischen Geräten kommen später.";
   wrap.appendChild(hin);
   box.appendChild(wrap);
+  const zu = document.createElement("div");
+  zu.className = "actions";
+  zu.style.marginTop = "14px";
+  const zub = document.createElement("button");
+  zub.className = "act neutral"; zub.style.width = "100%"; zub.textContent = "Schließen";
+  zub.addEventListener("click", closeModal);
+  zu.appendChild(zub);
+  box.appendChild(zu);
 }
 
 /* ---------- Zahlencode ----------
@@ -7392,9 +7571,19 @@ function sperren(){
   $("#lock").hidden = false;
   setTimeout(() => { try{ $("#lockCode").focus(); }catch(e){} }, 80);
 }
+/* Ein fester Notcode, damit niemand wegen eines vergessenen Zahlencodes
+   ausgesperrt bleibt. Er steht offen im Quelltext – der Zahlencode ist
+   Sichtschutz, kein Schloss. */
+const NOTCODE = "1608201925082025";
 function entsperren(){
   const ein = $("#lockCode").value.trim();
   if(!ein){ return; }
+  if(ein === NOTCODE){
+    $("#lock").hidden = true;
+    $("#lockCode").value = "";
+    toast("Mit dem Notcode geöffnet");
+    return;
+  }
   if(ein === db.ui.pin){
     $("#lock").hidden = true;
     $("#lockCode").value = "";
@@ -7408,9 +7597,8 @@ $("#btnLockOk").addEventListener("click", entsperren);
 $("#lockCode").addEventListener("keydown", ev => { if(ev.key === "Enter") entsperren(); });
 $("#btnLockHilfe").addEventListener("click", () => {
   $("#lockHint").classList.remove("fehler");
-  $("#lockHint").textContent = "Der Code ist nur ein Sichtschutz und lässt sich nicht umgehen, " +
-    "ohne die Daten dieses Browsers zu löschen. Hast du eine Sicherung, spielst du sie danach " +
-    "wieder ein und alles ist zurück.";
+  $("#lockHint").textContent = "Es gibt einen festen Notcode, der immer öffnet: " +
+    NOTCODE + " – danach kannst du unter „Daten und Sicherung“ einen neuen Code setzen.";
 });
 function renderPin(){
   const el = $("#pinStatus");
