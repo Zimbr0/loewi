@@ -1719,7 +1719,8 @@ body.vertmodus .stundenkarte{cursor:pointer}
   </div>
   <div class="card faqgruppe">
     <h3>Daten und Sicherheit</h3>
-      <details class="faqfrage"><summary>Wo liegen meine Daten?</summary><p class="hint">Nur in diesem Browser auf diesem Gerät. Nichts geht ins Netz, es gibt kein Konto und keinen Server.</p></details>
+      <details class="faqfrage"><summary>Wo liegen meine Daten?</summary><p class="hint">In der Datenbank dieses Browsers auf diesem Gerät (IndexedDB). Nichts geht ins Netz, es gibt kein Konto und keinen Server. Platz ist reichlich – auch Jahre voller Stunden passen hinein.</p></details>
+      <details class="faqfrage"><summary>Muss ich irgendwo auf Speichern tippen?</summary><p class="hint">Nein. Jeder Tipp wird sofort gespeichert, im Hintergrund und ohne dass die App darauf wartet. Nur wenn der Browser gar nichts speichern kann, wird der Rahmen um das Profil-Männchen rot.</p></details>
       <details class="faqfrage"><summary>Wie mache ich eine Sicherung?</summary><p class="hint">Im Profil unter „Daten und Sicherung“ auf „Sicherung (.json)“. Du kannst sie mit einem Passwort verschlüsseln – dann ist die Datei ohne dein Passwort nicht lesbar. Mach das mindestens einmal pro Woche.</p></details>
       <details class="faqfrage"><summary>Kann ich auf ein anderes Gerät wechseln?</summary><p class="hint">Ja: Sicherung erstellen, auf dem anderen Gerät Loewi öffnen und die Datei unter „Daten und Sicherung“ wieder einspielen.</p></details>
       <details class="faqfrage"><summary>Was passiert, wenn ich den Browser-Cache lösche?</summary><p class="hint">Dann sind die Daten weg. Genau dafür ist die Sicherung da.</p></details>
@@ -2246,10 +2247,95 @@ const PDF = (function(){
   return {doc: doc, bauen: bauen, breite: breite, umbrechen: umbrechen};
 })();
 
-/* ---------- Speicher ---------- */
-function load(){
+/* ---------- Speicher ----------
+   Die Daten liegen in der IndexedDB dieses Browsers: viel mehr Platz als im
+   localStorage, sie überleben das automatische Aufräumen besser und das
+   Schreiben blockiert die Oberfläche nicht. Kann der Browser keine IndexedDB
+   (privates Fenster, alte Version), fällt alles auf den localStorage zurück –
+   dieselben Daten, nur enger. Ein alter localStorage-Stand zieht beim ersten
+   Start von allein um. */
+const IDB_NAME = "loewi", IDB_STORE = "daten", IDB_KEY = "db";
+let idb = null;              /* offene Verbindung, sonst null */
+let idbBereit = false;       /* false = wir schreiben in den localStorage */
+
+function idbOeffnen(){
+  return new Promise(fertig => {
+    let erledigt = false;
+    const raus = wert => { if(!erledigt){ erledigt = true; fertig(wert); } };
+    let a;
+    try{ a = indexedDB.open(IDB_NAME, 1); }catch(e){ raus(null); return; }
+    a.onupgradeneeded = () => {
+      try{
+        const d = a.result;
+        if(!d.objectStoreNames.contains(IDB_STORE)) d.createObjectStore(IDB_STORE);
+      }catch(e){}
+    };
+    a.onsuccess = () => raus(a.result);
+    a.onerror = () => raus(null);
+    a.onblocked = () => raus(null);
+    /* Hängt der Browser, arbeiten wir eben ohne. */
+    setTimeout(() => raus(null), 4000);
+  });
+}
+function idbLesen(){
+  return new Promise(fertig => {
+    if(!idb){ fertig(null); return; }
+    try{
+      const t = idb.transaction(IDB_STORE, "readonly");
+      const a = t.objectStore(IDB_STORE).get(IDB_KEY);
+      a.onsuccess = () => fertig(a.result === undefined ? null : a.result);
+      a.onerror = () => fertig(null);
+    }catch(e){ fertig(null); }
+  });
+}
+function idbSchreiben(text){
+  return new Promise(fertig => {
+    if(!idb){ fertig(false); return; }
+    try{
+      const t = idb.transaction(IDB_STORE, "readwrite");
+      t.objectStore(IDB_STORE).put(text, IDB_KEY);
+      t.oncomplete = () => fertig(true);
+      t.onerror = () => fertig(false);
+      t.onabort = () => fertig(false);
+    }catch(e){ fertig(false); }
+  });
+}
+function idbLeeren(){
+  return new Promise(fertig => {
+    if(!idb){ fertig(false); return; }
+    try{
+      const t = idb.transaction(IDB_STORE, "readwrite");
+      t.objectStore(IDB_STORE).delete(IDB_KEY);
+      t.oncomplete = () => fertig(true);
+      t.onerror = () => fertig(false);
+    }catch(e){ fertig(false); }
+  });
+}
+
+/* Beim Start: erst IndexedDB, sonst der alte localStorage-Stand. */
+async function ladeDaten(){
+  idb = await idbOeffnen();
+  idbBereit = !!idb;
+  let text = null;
+  if(idb) text = await idbLesen();
+  if(text === null || text === ""){
+    /* Umzug: was im localStorage liegt, kommt einmalig herüber. */
+    let alt = null;
+    try{ alt = localStorage.getItem(KEY); }catch(e){}
+    if(alt){
+      text = alt;
+      if(idb && await idbSchreiben(alt)){
+        /* Umzug geglückt – der alte Platz wird geräumt, damit kein zweiter,
+           veralteter Stand herumliegt. */
+        try{ localStorage.removeItem(KEY); }catch(e){}
+      }
+    }
+  }
+  uebernehmen(text);
+}
+
+function uebernehmen(raw){
   try{
-    const raw = localStorage.getItem(KEY);
     if(raw){
       const parsed = JSON.parse(raw);
       if(parsed && typeof parsed === "object"){
@@ -2366,15 +2452,45 @@ function pruefeAuswahl(){
   if(!db.ui.fachId && db.faecher.length) db.ui.fachId = db.faecher[0].id;
 }
 let saveTimer = null;
+let schreibKette = Promise.resolve();
+let letzterStand = "";       /* der zuletzt gewünschte Stand, für die Größe */
+
+/* Gespeichert wird wie bisher bei jedem Tipp – nur nicht mehr blockierend.
+   Der Stand wird sofort eingefroren, geschrieben wird gleich danach; kommen
+   mehrere Änderungen kurz hintereinander, wird nur die letzte geschrieben. */
 function save(){
-  try{
-    localStorage.setItem(KEY, JSON.stringify(db));
-    storageOk = true;
-    flagSaved("gespeichert");
-  }catch(e){
-    storageOk = false;
-    flagSaved("nicht gespeichert!");
+  let text;
+  try{ text = JSON.stringify(db); }
+  catch(e){ storageOk = false; flagSaved(); return; }
+  letzterStand = text;
+  schreibKette = schreibKette.then(() => schreibStand(text)).catch(() => {});
+}
+function schreibStand(text){
+  if(text !== letzterStand) return Promise.resolve();   /* schon überholt */
+  if(idbBereit){
+    return idbSchreiben(text).then(ok => {
+      if(ok){ standMelden(true); return; }
+      standMelden(lokalSchreiben(text));
+    });
   }
+  return Promise.resolve(standMelden(lokalSchreiben(text)));
+}
+function lokalSchreiben(text){
+  try{ localStorage.setItem(KEY, text); return true; }catch(e){ return false; }
+}
+function standMelden(ok){
+  storageOk = !!ok;
+  flagSaved();
+  return ok;
+}
+/* Für den letzten Moment vor dem Schließen: synchron, so weit es geht. */
+function saveJetzt(){
+  try{
+    const text = JSON.stringify(db);
+    letzterStand = text;
+    if(idbBereit) idbSchreiben(text);
+    else lokalSchreiben(text);
+  }catch(e){}
 }
 function saveSoon(){
   clearTimeout(saveTimer);
@@ -7182,14 +7298,17 @@ function backupFaellig(){
   return t === null || t >= 7;
 }
 function renderStoreInfo(){
-  let size = 0;
-  try{ size = (localStorage.getItem(KEY) || "").length; }catch(e){}
+  let size = letzterStand.length;
+  if(!size){
+    try{ size = JSON.stringify(db).length; }catch(e){}
+  }
   const info = $("#storeInfo");
   if(info){
     info.textContent = storageOk
       ? (db.klassen.length + " Klassen · " + db.stunden.length + " Stunden · " +
          db.tests.length + " Tests · " +
-         Math.round(size/1024*10)/10 + " KB in diesem Browser")
+         Math.round(size/1024*10)/10 + " KB " +
+         (idbBereit ? "in der Datenbank dieses Browsers" : "im Speicher dieses Browsers"))
       : "Achtung: Dieser Browser speichert nichts (privater Modus?). Bitte sofort sichern.";
   }
   const bs = $("#backupStatus");
@@ -7317,8 +7436,11 @@ $("#btnPinWeg").addEventListener("click", () => {
   delete db.ui.pin; save(); renderPin(); toast("Code entfernt");
 });
 
-/* ---------- Start ---------- */
-load();
+/* ---------- Start ----------
+   Die IndexedDB antwortet erst nach ein paar Millisekunden – deshalb wird
+   gezeichnet, sobald die Daten da sind. */
+(async () => {
+await ladeDaten();
 db.ui.view = "stunde";
 pruefeAuswahl();
 renumberAll();
@@ -7350,7 +7472,11 @@ setTimeout(() => {
   const ab = $("#modalBox").querySelector(".actions .act.neutral");
   if(ab) ab.textContent = "Später";
 }, 1200);
-window.addEventListener("beforeunload", () => { try{ save(); }catch(e){} });
+})();
+window.addEventListener("beforeunload", saveJetzt);
+document.addEventListener("visibilitychange", () => {
+  if(document.visibilityState === "hidden") saveJetzt();
+});
 /* ---------- Helles und dunkles Design ----------
    Drei Zustände: dem Gerät folgen, hell, dunkel. Der Knopf schaltet zwischen
    hell und dunkel um und merkt sich die Wahl; wer nie drückt, bleibt beim
