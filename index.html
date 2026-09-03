@@ -525,8 +525,9 @@ button.hpunkt:active{background:var(--surface)}
 .hpunkt.warn .hicon{background:var(--bad)}
 .hpunkt.gut .hicon{background:var(--good)}
 .hpunkt.frei .hicon{background:var(--warn)}
-.hpunkt.gesundheit{background:var(--bad-soft)}
-.hpunkt.gesundheit .hicon{background:var(--bad)}
+.hpunkt.gesundheit{border-top:0}
+.hpunkt.gesundheit .hicon{background:var(--accent)}
+.hpunkt-trenner{border-top:2px solid var(--line);margin:4px 15px 0}
 .hpunkt .htxt{flex:1;min-width:0;font-size:14px;line-height:1.4}
 .hpunkt .hchev{flex:0 0 auto;color:var(--muted);font-size:16px}
 
@@ -684,6 +685,7 @@ button.hpunkt:active{background:var(--surface)}
 .rasterzeile .uhr:focus{border-color:var(--accent);
   box-shadow:0 0 0 3px var(--soft);outline:0}
 .rasterzeile .uhr.falsch{border-color:var(--bad);color:var(--bad)}
+.uhr.falsch{border-color:var(--bad);color:var(--bad)}
 .rasterzeile .dauer{flex:0 0 52px;text-align:right;font-size:11.5px;color:var(--muted);
   font-variant-numeric:tabular-nums}
 .rasterzeile.luecke{border-top:1px dashed var(--line)}
@@ -4649,11 +4651,15 @@ function tagesAbschnitt(){
   return jetztMinuten() >= grenze ? "abschluss" : "start";
 }
 
-/* Was steht heute laut Stundenplan an? */
+/* Was steht heute laut Stundenplan an? Über tagesPlan() statt der reinen
+   Wochen-Slots, damit eine Vertretung die Klasse für diesen Tag auch hier
+   ersetzt – sonst gilt die ursprüngliche Klasse ewig als "nicht erfasst",
+   obwohl an dem Tag tatsächlich die Vertretungsklasse unterrichtet wurde.
+   Ausgefallene Stunden (_weg) zählen nicht mit. */
 function stundenHeute(datum){
   const wt = (isoZuDatum(datum).getDay() + 6) % 7;
   if(wt > 4) return [];
-  return planSlots().filter(s => s.tag === wt + 1).sort((a, b) => a.nr - b.nr);
+  return tagesPlan(wt + 1, datum).filter(s => !s._weg).sort((a, b) => a.nr - b.nr);
 }
 
 function notizen(){ if(!Array.isArray(db.notizen)) db.notizen = []; return db.notizen; }
@@ -4916,24 +4922,6 @@ function renderOrgHeute(){
   if(faellig.length > 6) punkte.push({art:"todo",
     txt:"… und " + (faellig.length - 6) + " weitere Aufgaben"});
 
-  /* Gesundheitshinweise der heute laut Stundenplan unterrichteten Klassen. */
-  if(!frei){
-    const heuteKlassen = Array.from(new Set(stundenHeute(hIso).map(s => s.klasseId)));
-    heuteKlassen.forEach(kid => {
-      const k = klasse(kid); if(!k) return;
-      for(let i = 1; i <= k.count; i++){
-        if(!gesundheitAktiv(kid, i, hIso)) continue;
-        const kat = gesundheitVon(kid, i)
-          .filter(g => (!g.von || g.von <= hIso) && (!g.bis || g.bis >= hIso))
-          .map(g => g.kategorie).join(", ");
-        const kuerzel = k.labels[i] || ("Nr. " + i);
-        punkte.push({art:"gesundheit",
-          txt:"Gesundheitshinweis: " + k.name + " - " + kuerzel + " - " + kat,
-          tap:() => kindOeffnen(kid, i)});
-      }
-    });
-  }
-
   if(!punkte.length) punkte.push({art:"gut", txt:"Nichts Offenes"});
 
   punkte.forEach(p => {
@@ -4944,6 +4932,41 @@ function renderOrgHeute(){
                   (p.tap ? '<span class="hchev">›</span>' : "");
     karte.appendChild(z);
   });
+
+  /* Gesundheitshinweise: nur im Ausblick am Morgen ("Was steht heute an?"), nicht
+     unter den offenen Aufgaben am Nachmittag – es ist ein Merk-Hinweis für den
+     Tag, keine Aufgabe. Durch einen deutlichen Trennstrich statt einer eigenen
+     Farbe von der Aufgabenliste abgesetzt. */
+  if(!frei && abschnitt === "start"){
+    const gesundheitsPunkte = [];
+    const heuteKlassen = Array.from(new Set(stundenHeute(hIso).map(s => s.klasseId)));
+    heuteKlassen.forEach(kid => {
+      const k = klasse(kid); if(!k) return;
+      for(let i = 1; i <= k.count; i++){
+        if(!gesundheitAktiv(kid, i, hIso)) continue;
+        const kat = gesundheitVon(kid, i)
+          .filter(g => (!g.von || g.von <= hIso) && (!g.bis || g.bis >= hIso))
+          .map(g => g.kategorie).join(", ");
+        const kuerzel = k.labels[i] || ("Nr. " + i);
+        gesundheitsPunkte.push({
+          txt:"Gesundheitshinweis: " + k.name + " - " + kuerzel + " - " + kat,
+          tap:() => kindOeffnen(kid, i)});
+      }
+    });
+    if(gesundheitsPunkte.length){
+      const trenner = document.createElement("div");
+      trenner.className = "hpunkt-trenner";
+      karte.appendChild(trenner);
+      gesundheitsPunkte.forEach(p => {
+        const z = document.createElement("button");
+        z.className = "hpunkt gesundheit"; z.type = "button";
+        z.addEventListener("click", p.tap);
+        z.innerHTML = '<span class="hicon"></span><span class="htxt">' + esc(p.txt) +
+                      '</span><span class="hchev">›</span>';
+        karte.appendChild(z);
+      });
+    }
+  }
 
   box.appendChild(karte);
 }
@@ -6465,20 +6488,25 @@ function vorfaelleListe(){
 }
 function vorfaelleVon(klasseId, nr){
   return vorfaelleListe()
-    .filter(v => v.klasseId === klasseId && (v.beteiligte || []).some(b => Number(b.nr) === Number(nr)))
+    .filter(v => (v.beteiligte || []).some(b => b.klasseId === klasseId && Number(b.nr) === Number(nr)))
     .sort((a, b) => (b.datum || "").localeCompare(a.datum || "") || (b.t || 0) - (a.t || 0));
 }
 const VF_ROLLEN = [["betroffen", "betroffen"], ["beteiligt", "beteiligt"], ["zeuge", "Zeuge"]];
 const VF_ROLLE_TEXT = {betroffen:"betroffen", beteiligt:"beteiligt", zeuge:"Zeuge"};
+function vfPersonName(b){
+  const k = klasse(b.klasseId);
+  return (k ? k.name : "?") + " · " + (k && k.labels[b.nr] ? k.labels[b.nr] : "Nr. " + b.nr);
+}
 function vorfallDialog(vorhanden, klasseId, nr){
   if(!db.klassen.length){ toast("Erst eine Klasse anlegen"); return; }
-  const kStart = klasse(vorhanden ? vorhanden.klasseId : (klasseId || db.ui.klasseId)) || db.klassen[0];
-  const beteiligt = {};
-  (vorhanden ? vorhanden.beteiligte : []).forEach(b => { beteiligt[b.nr] = b.rolle; });
-  if(!vorhanden && nr && !beteiligt.hasOwnProperty(Number(nr))) beteiligt[Number(nr)] = "betroffen";
+  const beteiligt = vorhanden
+    ? vorhanden.beteiligte.map(b => ({klasseId:b.klasseId, nr:Number(b.nr), rolle:b.rolle}))
+    : [];
+  if(!vorhanden && klasseId && nr &&
+     !beteiligt.some(b => b.klasseId === klasseId && b.nr === Number(nr)))
+    beteiligt.push({klasseId:klasseId, nr:Number(nr), rolle:"betroffen"});
   const z = {
     schritt: 1,
-    klasseId: kStart.id,
     datum: vorhanden ? vorhanden.datum : heute(),
     uhrzeit: vorhanden ? (vorhanden.uhrzeit || "") : "",
     ort: vorhanden ? (vorhanden.ort || "") : "",
@@ -6531,8 +6559,18 @@ function vfZeichnen(z, vorhanden){
       const i = document.createElement("input"); i.type = "date"; i.value = z.datum || heute();
       return i;
     });
-    const uIn = vfFeld(box, "Uhrzeit", () => {
-      const i = document.createElement("input"); i.type = "time"; i.value = z.uhrzeit || "";
+    /* Uhrzeit wie im Zeitraster: freie Ziffern, ":" wird beim Tippen ergänzt,
+       Prüfung beim Weitergehen – kein natives Uhr-Eingabefeld des Browsers. */
+    const uIn = vfFeld(box, "Uhrzeit (optional)", () => {
+      const i = document.createElement("input");
+      i.type = "text"; i.className = "uhr"; i.maxLength = 5; i.inputMode = "numeric";
+      i.autocomplete = "off"; i.placeholder = "--:--"; i.value = z.uhrzeit || "";
+      i.addEventListener("focus", () => i.select());
+      i.addEventListener("input", () => {
+        const ziffern = i.value.replace(/[^0-9]/g, "").slice(0, 4);
+        i.value = ziffern.length > 2 ? ziffern.slice(0, 2) + ":" + ziffern.slice(2) : ziffern;
+        i.classList.remove("falsch");
+      });
       return i;
     });
     const oIn = vfFeld(box, "Ort", () => {
@@ -6541,74 +6579,108 @@ function vfZeichnen(z, vorhanden){
       return i;
     });
     vfAktionen(box, null, "Weiter", () => {
-      z.datum = dIn.value || heute(); z.uhrzeit = uIn.value || ""; z.ort = oIn.value.trim();
+      let uhrzeit = "";
+      if(uIn.value.trim()){
+        const wert = uhrLesen(uIn.value);
+        if(!wert){ uIn.classList.add("falsch"); toast("Uhrzeit bitte wie 08:00"); return; }
+        uhrzeit = wert;
+      }
+      z.datum = dIn.value || heute(); z.uhrzeit = uhrzeit; z.ort = oIn.value.trim();
       z.schritt = 2; vfZeichnen(z, vorhanden);
     });
   }else if(z.schritt === 2){
     vfKopf(box, z, "Wer war beteiligt?");
-    const kWrap = document.createElement("div");
-    kWrap.className = "field";
-    const kLbl = document.createElement("label"); kLbl.className = "lbl"; kLbl.textContent = "Klasse";
-    kWrap.appendChild(kLbl);
-    const kSel = document.createElement("select");
+
+    const addBox = document.createElement("div");
+    addBox.className = "card"; addBox.style.cssText =
+      "background:var(--surface);box-shadow:none;padding:12px;margin:0 0 14px";
+    const addLbl = document.createElement("div");
+    addLbl.className = "lbl"; addLbl.textContent = "Kind hinzufügen";
+    addBox.appendChild(addLbl);
+    const kSel = document.createElement("select"); kSel.style.marginTop = "8px";
     db.klassen.forEach(k => {
       const op = document.createElement("option");
       op.value = k.id; op.textContent = k.name;
-      if(k.id === z.klasseId) op.selected = true;
       kSel.appendChild(op);
     });
-    kWrap.appendChild(kSel);
-    box.appendChild(kWrap);
+    addBox.appendChild(kSel);
+    const nrSel = document.createElement("select"); nrSel.style.marginTop = "8px";
+    addBox.appendChild(nrSel);
+    const addBtn = document.createElement("button");
+    addBtn.className = "act neutral"; addBtn.type = "button"; addBtn.textContent = "+ Hinzufügen";
+    addBtn.style.cssText = "width:100%;margin-top:8px";
+    addBox.appendChild(addBtn);
+    box.appendChild(addBox);
 
     const listWrap = document.createElement("div");
-    listWrap.className = "field"; listWrap.style.marginTop = "10px";
+    listWrap.className = "field";
     const listLbl = document.createElement("label"); listLbl.className = "lbl";
-    listLbl.textContent = "Beteiligte Kinder";
+    listLbl.textContent = "Beteiligte Personen";
     listWrap.appendChild(listLbl);
     const liste = document.createElement("div");
     listWrap.appendChild(liste);
     box.appendChild(listWrap);
 
-    function kinderZeichnen(){
+    function nrOptionenFuellen(){
       const k = klasse(kSel.value);
-      liste.innerHTML = "";
+      const vorher = nrSel.value;
+      nrSel.innerHTML = "";
       if(!k) return;
       for(let i = 1; i <= k.count; i++){
+        if(z.beteiligt.some(b => b.klasseId === k.id && b.nr === i)) continue;
+        const op = document.createElement("option");
+        op.value = i; op.textContent = "Nr. " + i + (k.labels[i] ? " · " + k.labels[i] : "");
+        nrSel.appendChild(op);
+      }
+      if(vorher) nrSel.value = vorher;
+      addBtn.disabled = !nrSel.options.length;
+    }
+    function listeZeichnen(){
+      liste.innerHTML = "";
+      if(!z.beteiligt.length){
+        const p = document.createElement("p");
+        p.className = "hint"; p.style.margin = "0"; p.textContent = "Noch niemand hinzugefügt.";
+        liste.appendChild(p);
+        return;
+      }
+      z.beteiligt.forEach((b, idx) => {
         const zeile = document.createElement("div");
         zeile.className = "vfkind";
-        const cb = document.createElement("input");
-        cb.type = "checkbox"; cb.id = "vfk" + i;
-        cb.checked = z.beteiligt.hasOwnProperty(i);
-        const lab = document.createElement("label");
-        lab.setAttribute("for", "vfk" + i);
-        lab.textContent = "Nr. " + i + (k.labels[i] ? " · " + k.labels[i] : "");
+        const lab = document.createElement("span");
+        lab.style.cssText = "flex:1;min-width:0;font-size:14px";
+        lab.textContent = vfPersonName(b);
         const rolle = document.createElement("select");
-        rolle.disabled = !cb.checked;
         VF_ROLLEN.forEach(o => {
           const op = document.createElement("option");
           op.value = o[0]; op.textContent = o[1];
-          if((z.beteiligt[i] || "betroffen") === o[0]) op.selected = true;
+          if(b.rolle === o[0]) op.selected = true;
           rolle.appendChild(op);
         });
-        cb.addEventListener("change", () => {
-          rolle.disabled = !cb.checked;
-          if(cb.checked) z.beteiligt[i] = rolle.value; else delete z.beteiligt[i];
+        rolle.addEventListener("change", () => { b.rolle = rolle.value; });
+        const entfernen = document.createElement("button");
+        entfernen.className = "iconbtn"; entfernen.type = "button";
+        entfernen.style.fontSize = "18px"; entfernen.textContent = "×";
+        entfernen.setAttribute("aria-label", "Entfernen");
+        entfernen.addEventListener("click", () => {
+          z.beteiligt.splice(idx, 1);
+          listeZeichnen(); nrOptionenFuellen();
         });
-        rolle.addEventListener("change", () => { if(cb.checked) z.beteiligt[i] = rolle.value; });
-        zeile.appendChild(cb); zeile.appendChild(lab); zeile.appendChild(rolle);
+        zeile.appendChild(lab); zeile.appendChild(rolle); zeile.appendChild(entfernen);
         liste.appendChild(zeile);
-      }
+      });
     }
-    kinderZeichnen();
-    kSel.addEventListener("change", () => {
-      z.klasseId = kSel.value;
-      Object.keys(z.beteiligt).forEach(nr => delete z.beteiligt[nr]);
-      kinderZeichnen();
+    nrOptionenFuellen();
+    listeZeichnen();
+    kSel.addEventListener("change", nrOptionenFuellen);
+    addBtn.addEventListener("click", () => {
+      const k = klasse(kSel.value);
+      if(!k || !nrSel.value) return;
+      z.beteiligt.push({klasseId:k.id, nr:Number(nrSel.value), rolle:"betroffen"});
+      nrOptionenFuellen(); listeZeichnen();
     });
 
     vfAktionen(box, () => { z.schritt = 1; vfZeichnen(z, vorhanden); }, "Weiter", () => {
-      z.klasseId = kSel.value;
-      if(!Object.keys(z.beteiligt).length){ toast("Mindestens ein Kind wählen"); return; }
+      if(!z.beteiligt.length){ toast("Mindestens ein Kind hinzufügen"); return; }
       z.schritt = 3; vfZeichnen(z, vorhanden);
     });
   }else if(z.schritt === 3){
@@ -6632,13 +6704,10 @@ function vfZeichnen(z, vorhanden){
     vfAktionen(box, () => { z.schritt = 3; vfZeichnen(z, vorhanden); },
       vorhanden ? "Übernehmen" : "Speichern", () => {
       z.massnahmen = mIn.value.trim();
-      const k = klasse(z.klasseId);
-      if(!k){ toast("Klasse fehlt"); return; }
-      const beteiligteListe = Object.keys(z.beteiligt).map(nr => ({nr:Number(nr), rolle:z.beteiligt[nr]}))
-        .filter(b => b.nr >= 1 && b.nr <= k.count);
       const daten = {
-        klasseId:k.id, datum:z.datum, uhrzeit:z.uhrzeit, ort:z.ort,
-        beteiligte:beteiligteListe, beschreibung:z.beschreibung, massnahmen:z.massnahmen
+        datum:z.datum, uhrzeit:z.uhrzeit, ort:z.ort,
+        beteiligte: z.beteiligt.map(b => ({klasseId:b.klasseId, nr:b.nr, rolle:b.rolle})),
+        beschreibung:z.beschreibung, massnahmen:z.massnahmen
       };
       if(vorhanden) Object.assign(vorhanden, daten);
       else vorfaelleListe().push(Object.assign({id:uid(), t:Date.now()}, daten));
@@ -6654,10 +6723,8 @@ function vfZeichnen(z, vorhanden){
       pdf.className = "act neutral"; pdf.textContent = "Als PDF sichern";
       pdf.addEventListener("click", () => {
         const bytes = vorfallPdf(vorhanden);
-        const clean = (klasse(vorhanden.klasseId) ? klasse(vorhanden.klasseId).name : "Klasse")
-          .replace(/[^\wäöüÄÖÜß-]+/g, "_");
-        dateiDialog(bytes, "Vorfall_" + clean + "_" + vorhanden.datum + ".pdf", "application/pdf",
-          {titel:"Vorfall als PDF"});
+        dateiDialog(bytes, "Vorfall_" + vorhanden.datum + "_" + vorhanden.id.slice(0, 6) + ".pdf",
+          "application/pdf", {titel:"Vorfall als PDF"});
       });
       const del = document.createElement("button");
       del.className = "act quiet"; del.textContent = "Vorfall löschen";
@@ -6675,6 +6742,30 @@ function vfZeichnen(z, vorhanden){
   const first = box.querySelector("input, select, textarea");
   if(first) setTimeout(() => first.focus(), 60);
 }
+/* Erst ansehen, nicht gleich bearbeiten – Bearbeiten ist ein eigener Schritt. */
+function vorfallAnsehen(v){
+  openModal({
+    titel: "Vorfall · " + deDate(v.datum),
+    text: [v.uhrzeit ? v.uhrzeit + " Uhr" : "", v.ort].filter(Boolean).join(" · "),
+    okText: "Bearbeiten",
+    onOk: () => { vorfallDialog(v); return false; }
+  });
+  const box = $("#modalBox");
+  const acts = box.querySelector(".actions");
+  function absatz(titel, text){
+    if(!text) return;
+    const wrap = document.createElement("div");
+    wrap.style.margin = "0 0 14px";
+    wrap.innerHTML = '<div class="lbl">' + esc(titel) + '</div>' +
+      '<p style="white-space:pre-wrap;margin:4px 0 0;font-size:14px">' + esc(text) + "</p>";
+    box.insertBefore(wrap, acts);
+  }
+  absatz("Beteiligte Personen",
+    (v.beteiligte || []).map(b => vfPersonName(b) + " (" + (VF_ROLLE_TEXT[b.rolle] || b.rolle) + ")")
+      .join("\n"));
+  absatz("Beschreibung", v.beschreibung);
+  absatz("Maßnahmen", v.massnahmen);
+}
 function renderVorfaelle(k, nr){
   const box = $("#kindVorfaelle");
   if(!box) return;
@@ -6685,22 +6776,17 @@ function renderVorfaelle(k, nr){
     return;
   }
   liste.forEach(v => {
-    const z = document.createElement("div");
-    z.className = "beobzeile";
+    const z = document.createElement("button");
+    z.className = "beobzeile"; z.type = "button";
+    z.style.cssText = "width:100%;text-align:left;background:0;border:0;cursor:pointer";
     const kurz = (v.beschreibung || "").replace(/\s+/g, " ").slice(0, 70);
     z.innerHTML = '<div class="bwas"><span class="mini">' + deDate(v.datum) + "</span><p>" +
-      esc(kurz) + (kurz.length >= 70 ? " …" : "") + "</p></div>";
-    const stift = document.createElement("button");
-    stift.className = "iconbtn";
-    stift.innerHTML = STIFT_SVG;
-    stift.setAttribute("aria-label", "Vorfall bearbeiten");
-    stift.addEventListener("click", () => vorfallDialog(v));
-    z.appendChild(stift);
+      esc(kurz) + (kurz.length >= 70 ? " …" : "") + '</p></div><span class="hchev">›</span>';
+    z.addEventListener("click", () => vorfallAnsehen(v));
     box.appendChild(z);
   });
 }
 function vorfallPdf(v){
-  const k = klasse(v.klasseId);
   const d = PDF.doc();
   const rand = P_M, inhaltsbreite = P_INNEN;
   let seite = 0, y = 0;
@@ -6712,8 +6798,7 @@ function vorfallPdf(v){
     y = d.h - rand - 28;
   }
   function fuss(){
-    d.text("Loewi · " + (k ? k.name : "") + " · " + deDate(v.datum),
-           rand, P_M - 18, 7.5, F_MUTED, false, "links");
+    d.text("Loewi · " + deDate(v.datum), rand, P_M - 18, 7.5, F_MUTED, false, "links");
     d.text("Seite " + seite, rand + inhaltsbreite, P_M - 18, 7.5, F_MUTED, false, "rechts");
   }
   function platz(h){
@@ -6732,12 +6817,14 @@ function vorfallPdf(v){
     y -= 4;
   }
   kopf();
-  zeile("Klasse", k ? k.name : "–");
+  const klassen = Array.from(new Set((v.beteiligte || [])
+    .map(b => (klasse(b.klasseId) || {}).name).filter(Boolean)));
+  zeile("Klasse(n)", klassen.join(", ") || "–");
   zeile("Datum / Uhrzeit / Ort", deDate(v.datum) + (v.uhrzeit ? ", " + v.uhrzeit + " Uhr" : "") +
     (v.ort ? " · " + v.ort : ""));
-  zeile("Beteiligte Kinder",
-    (v.beteiligte || []).map(b => "Nr. " + b.nr + " (" + (VF_ROLLE_TEXT[b.rolle] || b.rolle) + ")")
-      .join(", ") || "–");
+  zeile("Beteiligte Personen",
+    (v.beteiligte || []).map(b => vfPersonName(b) + " (" + (VF_ROLLE_TEXT[b.rolle] || b.rolle) + ")")
+      .join("; ") || "–");
   zeile("Beschreibung", v.beschreibung);
   zeile("Maßnahmen", v.massnahmen);
   fuss();
