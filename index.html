@@ -854,6 +854,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
   cursor:pointer;padding:0}
 .iconbtn:active{transform:scale(.94)}
 .iconbtn.on{color:var(--accent-dk);border-color:var(--accent)}
+.iconbtn.primary{background:var(--good);border-color:var(--good);color:var(--onaccent)}
 .read h4{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
   color:var(--muted);margin:0 0 3px}
 .read .blk{padding:11px 0;border-bottom:1px solid var(--line)}
@@ -1327,27 +1328,6 @@ body.vertmodus .stundenkarte{cursor:pointer}
   <!-- Ebene 1: Reihen des gewählten Fachs -->
   <div id="planReihen">
     <div class="topbar" id="tbReihen"></div>
-    <details class="newbox" id="newReihe">
-      <summary>+ Neue Unterrichtsreihe</summary>
-      <div class="inner">
-      <label class="lbl" for="nrTitel">Titel</label>
-      <input type="text" id="nrTitel" placeholder="z. B. Ballschule: Werfen und Fangen">
-      <div style="margin-top:10px">
-        <label class="lbl" for="nrJahrgang">Für welchen Jahrgang</label>
-        <select id="nrJahrgang"></select>
-      </div>
-      <p class="hint">Reihen gehören zum Fach und lassen sich in jeder Klasse nutzen.</p>
-      <div class="actions" style="margin-top:12px">
-        <button class="act primary" id="btnReiheAdd" style="width:100%">Reihe anlegen</button>
-      </div>
-      <div class="sep"></div>
-      <div class="actions">
-        <button class="act neutral" id="btnReiheImport" style="width:100%">Geteilte Reihe einfügen</button>
-        <input type="file" id="fileReihe" accept="application/json,.json" style="display:none">
-      </div>
-      <p class="hint">Geteilte Reihen kommen als neue Reihe dazu, vorhandene bleiben.</p>
-      </div>
-    </details>
     <div class="card">
       <div id="reiheList"></div>
     </div>
@@ -1358,14 +1338,6 @@ body.vertmodus .stundenkarte{cursor:pointer}
     <div class="topbar" id="tbEinheiten"></div>
     <div class="card">
       <div id="einheitList"></div>
-      <div class="actions" style="margin-top:14px">
-        <button class="act primary" id="btnEinheitAdd" style="width:100%">+ Unterrichtseinheit</button>
-      </div>
-      <div class="sep"></div>
-      <div class="actions">
-        <button class="act neutral" id="btnReiheExport" style="width:100%">Reihe teilen</button>
-      </div>
-      <p class="hint">Nur die Reihe und ihre Einheiten – ohne Klassen und Eintragungen.</p>
     </div>
     <div style="text-align:center">
       <button class="act quiet" id="btnReiheDel">Reihe löschen</button>
@@ -1528,34 +1500,44 @@ body.vertmodus .stundenkarte{cursor:pointer}
     <div class="card">
       <div class="rowline" style="padding-top:0;border-bottom:0;padding-bottom:0">
         <h3 style="font-size:15px">Beobachtungen</h3>
-        <div style="display:flex;gap:6px;align-items:center">
-          <button class="iconbtn" id="btnBeobDetails" aria-label="Beobachtungen ansehen"></button>
-          <button class="act primary mini" id="btnBeobNeu">+</button>
-        </div>
+        <button class="act primary mini" id="btnBeobNeu">+</button>
       </div>
+      <div id="kindBeob"></div>
     </div>
     <div class="card">
       <div class="rowline" style="padding-top:0;border-bottom:0;padding-bottom:0">
         <h3 style="font-size:15px">Gesundheitliche Besonderheiten</h3>
-        <div style="display:flex;gap:6px;align-items:center">
-          <button class="iconbtn" id="btnGesundheitDetails" aria-label="Gesundheitliche Besonderheiten ansehen"></button>
-          <button class="act primary mini" id="btnGesundheitNeu">+</button>
-        </div>
+        <button class="act primary mini" id="btnGesundheitNeu">+</button>
       </div>
+      <div id="kindGesundheit"></div>
     </div>
     <div class="card">
       <div class="rowline" style="padding-top:0;border-bottom:0;padding-bottom:0">
         <h3 style="font-size:15px">Vorfälle</h3>
-        <div style="display:flex;gap:6px;align-items:center">
-          <button class="iconbtn" id="btnVorfallDetails" aria-label="Vorfälle ansehen"></button>
-          <button class="act primary mini" id="btnVorfallNeu">+</button>
-        </div>
+        <button class="act primary mini" id="btnVorfallNeu">+</button>
       </div>
       <div id="kindVorfaelleKurz"></div>
     </div>
     <div class="card">
       <h3 style="font-size:15px;margin-bottom:6px">Verlauf</h3>
       <div id="kindVerlauf"></div>
+    </div>
+  </div>
+
+  <div id="sumGesundheit" style="display:none">
+    <div class="topbar" id="tbGesundheit"></div>
+    <div class="card">
+      <div id="gdInhalt"></div>
+    </div>
+  </div>
+
+  <div id="sumVorfall" style="display:none">
+    <div class="topbar" id="tbVorfall"></div>
+    <div class="card">
+      <div id="vdInhalt"></div>
+      <div class="actions" style="margin-top:12px">
+        <button class="act neutral" id="btnVorfallPdf" style="width:100%">Als PDF sichern</button>
+      </div>
     </div>
   </div>
 </section>
@@ -1747,9 +1729,9 @@ body.vertmodus .stundenkarte{cursor:pointer}
       <details class="faqfrage"><summary>Kann ich einen Bericht ausdrucken?</summary><p class="hint">Im Verlauf eines Kindes „Als PDF sichern“, oder unten in der Klassenliste „Alle Kinder als PDF“ – eine Seite je Kind.</p></details>
   </div>
   <div class="card faqgruppe">
-    <h3>Planung</h3>
+    <h3>Unterricht</h3>
       <details class="faqfrage"><summary>Wozu die Unterrichtsreihen?</summary><p class="hint">Eine Reihe gehört zum Fach, nicht zur Klasse: du planst sie einmal und setzt sie in jeder Klasse ein. Ob eine Einheit gehalten ist, merkt sich Loewi je Klasse.</p></details>
-      <details class="faqfrage"><summary>Kann ich eine Reihe weitergeben?</summary><p class="hint">In der Reihe unten auf „Reihe teilen“ – das ergibt eine Datei nur mit dieser Reihe. Wer sie bekommt, fügt sie im Planungs-Tab über „+ Neue Unterrichtsreihe“ ein. Das ist kein Ersatz für die Sicherung.</p></details>
+      <details class="faqfrage"><summary>Kann ich eine Reihe weitergeben?</summary><p class="hint">In der Reihe oben über das Teilen-Symbol neben der Überschrift – das ergibt eine Datei nur mit dieser Reihe. Wer sie bekommt, fügt sie im Unterricht-Tab über das grüne Plus-Symbol ein, dort über „Geteilte Reihe einfügen“. Das ist kein Ersatz für die Sicherung.</p></details>
   </div>
   <div class="card faqgruppe">
     <h3>Organisation</h3>
@@ -1853,7 +1835,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
   <button class="on" data-view="stunde"><span class="ic"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>Plan</button>
   <button data-view="uebersicht"><span class="ic"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20a4 4 0 0 0-8 0"/><circle cx="12" cy="10" r="3.2"/><path d="M5 20a3 3 0 0 1 2.2-2.9M19 20a3 3 0 0 0-2.2-2.9"/><circle cx="5.5" cy="11.5" r="2"/><circle cx="18.5" cy="11.5" r="2"/></svg></span>Klassenliste</button>
   <button data-view="organisation"><span class="ic"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5.5H6.5A1.5 1.5 0 0 0 5 7v12a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19V7a1.5 1.5 0 0 0-1.5-1.5H15"/><rect x="9" y="3.5" width="6" height="4" rx="1.3"/><path d="M8.5 12.5l1.7 1.7 3.4-3.4M8.5 17.2h7"/></svg></span>Organisation</button>
-  <button data-view="planung"><span class="ic"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span>Planung</button>
+  <button data-view="planung"><span class="ic"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span>Unterricht</button>
 </nav>
 
 <button class="fab" id="fab" type="button" aria-label="Neu anlegen" aria-expanded="false">
@@ -1865,23 +1847,6 @@ body.vertmodus .stundenkarte{cursor:pointer}
   <div class="fabgriff"></div>
   <div class="fabtitel">Was möchtest du anlegen?</div>
   <div id="fabListe"></div>
-</div>
-
-<div class="fabscrim" id="kdScrim"></div>
-<div class="fabsheet" id="kdSheet" role="dialog" aria-modal="false" aria-label="Details zum Kind">
-  <div class="fabgriff"></div>
-  <div class="card">
-    <h3 style="font-size:15px;margin-bottom:6px">Beobachtungen</h3>
-    <div id="kdBeob"></div>
-  </div>
-  <div class="card">
-    <h3 style="font-size:15px;margin-bottom:6px">Gesundheitliche Besonderheiten</h3>
-    <div id="kdGesundheit"></div>
-  </div>
-  <div class="card">
-    <h3 style="font-size:15px;margin-bottom:6px">Vorfälle</h3>
-    <div id="kdVorfaelle"></div>
-  </div>
 </div>
 
 <div class="fabscrim" id="stdScrim"></div>
@@ -1965,6 +1930,46 @@ body.vertmodus .stundenkarte{cursor:pointer}
       <div class="actions" style="margin-top:12px">
         <button class="act primary" id="btnNeuWeiter" style="width:100%">Weiter</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="fabscrim" id="rScrim"></div>
+<div class="fabsheet" id="rSheet" role="dialog" aria-modal="false" aria-label="Unterrichtsreihe hinzufügen">
+  <div class="fabgriff"></div>
+  <button class="act quiet mini" id="btnReiheSheetZu" style="margin-bottom:8px">Abbrechen</button>
+  <div class="card" style="margin:0">
+    <h3 style="font-size:16px;margin-bottom:10px">Neue Unterrichtsreihe</h3>
+    <label class="lbl" for="nrTitel">Titel</label>
+    <input type="text" id="nrTitel" placeholder="z. B. Ballschule: Werfen und Fangen">
+    <div style="margin-top:10px">
+      <label class="lbl" for="nrJahrgang">Für welchen Jahrgang</label>
+      <select id="nrJahrgang"></select>
+    </div>
+    <p class="hint">Reihen gehören zum Fach und lassen sich in jeder Klasse nutzen.</p>
+    <div class="actions" style="margin-top:12px">
+      <button class="act primary" id="btnReiheAdd" style="width:100%">Reihe anlegen</button>
+    </div>
+    <div class="sep"></div>
+    <div class="actions">
+      <button class="act neutral" id="btnReiheImport" style="width:100%">Geteilte Reihe einfügen</button>
+      <input type="file" id="fileReihe" accept="application/json,.json" style="display:none">
+    </div>
+    <p class="hint">Geteilte Reihen kommen als neue Reihe dazu, vorhandene bleiben.</p>
+  </div>
+</div>
+
+<div class="fabscrim" id="eScrim"></div>
+<div class="fabsheet" id="eSheet" role="dialog" aria-modal="false" aria-label="Unterrichtseinheit hinzufügen">
+  <div class="fabgriff"></div>
+  <button class="act quiet mini" id="btnEinheitSheetZu" style="margin-bottom:8px">Abbrechen</button>
+  <div class="card" style="margin:0">
+    <h3 style="font-size:16px;margin-bottom:10px">Neue Unterrichtseinheit</h3>
+    <label class="lbl" for="neTitel">Thema der Stunde (optional)</label>
+    <input type="text" id="neTitel" placeholder="z. B. Werfen aus dem Stand">
+    <p class="hint">Die weiteren Angaben folgen direkt danach.</p>
+    <div class="actions" style="margin-top:12px">
+      <button class="act primary" id="btnEinheitAdd" style="width:100%">Einheit anlegen</button>
     </div>
   </div>
 </div>
@@ -2827,8 +2832,9 @@ function zurueckSchritt(){
   if(!$("#ovl").hidden){ closeModal(); return true; }
   if(typeof fabOffen !== "undefined" && fabOffen){ closeFab(); return true; }
   if(typeof dropOffen !== "undefined" && dropOffen){ closeDrop(); return true; }
-  if(typeof kdSheetOffen !== "undefined" && kdSheetOffen){ closeKdSheet(); return true; }
   if(typeof stdSheetOffen !== "undefined" && stdSheetOffen){ closeStdSheet(); return true; }
+  if(typeof rSheetOffen !== "undefined" && rSheetOffen){ closeReiheSheet(); return true; }
+  if(typeof eSheetOffen !== "undefined" && eSheetOffen){ closeEinheitSheet(); return true; }
   if(db.ui.vertretungModus){
     db.ui.vertretungModus = false;
     document.body.classList.remove("vertmodus");
@@ -2842,6 +2848,9 @@ function zurueckSchritt(){
     if(db.ui.bereich === "plan" && db.ui.planEdit){
       db.ui.planEdit = false; save(); renderPlanTab(); return true;
     }
+  }
+  if(v === "uebersicht" && (db.ui.sumView === "gesundheit" || db.ui.sumView === "vorfall")){
+    sumGo("kind", db.ui.kindNr); return true;
   }
   if(v === "uebersicht" && db.ui.sumView !== "liste"){ sumGo("liste"); return true; }
   if(v === "planung" && db.ui.plan && db.ui.plan.ebene !== "reihen"){ planGo("reihen"); return true; }
@@ -2927,11 +2936,6 @@ function renderAlles(){
   renderUebersicht();
   renderKlassen();
   renderStoreInfo();
-  if(kdSheetOffen){
-    renderBeob(kdAktuellK, kdAktuellNr);
-    renderGesundheit(kdAktuellK, kdAktuellNr);
-    renderVorfaelle(kdAktuellK, kdAktuellNr);
-  }
 }
 function setAuswahl(kid, fid){
   const anders = (db.ui.klasseId !== kid) || (db.ui.fachId !== fid);
@@ -3196,6 +3200,29 @@ function stiftBtn(label, fn){
   b.setAttribute("aria-label", label);
   b.addEventListener("click", fn);
   return b;
+}
+/* grüner Plus-Knopf für die Kopfzeile – öffnet meist einen Einschub von unten */
+function plusBtn(label, fn){
+  const b = document.createElement("button");
+  b.className = "iconbtn primary"; b.innerHTML = PLUS_SVG;
+  b.setAttribute("aria-label", label);
+  b.addEventListener("click", fn);
+  return b;
+}
+/* Teilen-Knopf für die Kopfzeile */
+function teilenBtn(label, fn){
+  const b = document.createElement("button");
+  b.className = "iconbtn"; b.innerHTML = TEILEN_SVG;
+  b.setAttribute("aria-label", label);
+  b.addEventListener("click", fn);
+  return b;
+}
+/* mehrere Kopfzeilen-Knöpfe nebeneinander, als ein Element für seitenkopf/unterkopf */
+function kopfKnoepfe(...btns){
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "display:flex;gap:8px;flex:0 0 auto";
+  btns.forEach(b => wrap.appendChild(b));
+  return wrap;
 }
 
 /* ---------- Kopf: zeigt die aktive Kombination Klasse + Fach ---------- */
@@ -6297,10 +6324,17 @@ function sumGo(view, nr){
 function renderUebersicht(){
   const k = klasse(db.ui.klasseId);
   let v = db.ui.sumView || "liste";
-  if(v === "kind" && (!k || !db.ui.kindNr || db.ui.kindNr > k.count)){ v = "liste"; db.ui.sumView = "liste"; }
-  $("#sumListe").style.display = v === "liste" ? "" : "none";
-  $("#sumKind").style.display  = v === "kind" ? "" : "none";
+  if((v === "kind" || v === "gesundheit" || v === "vorfall") &&
+     (!k || !db.ui.kindNr || db.ui.kindNr > k.count)){
+    v = "liste"; db.ui.sumView = "liste";
+  }
+  $("#sumListe").style.display     = v === "liste" ? "" : "none";
+  $("#sumKind").style.display      = v === "kind" ? "" : "none";
+  $("#sumGesundheit").style.display = v === "gesundheit" ? "" : "none";
+  $("#sumVorfall").style.display    = v === "vorfall" ? "" : "none";
   if(v === "kind"){ renderKind(k, db.ui.kindNr); return; }
+  if(v === "gesundheit"){ renderGesundheitAnsicht(); return; }
+  if(v === "vorfall"){ renderVorfallAnsicht(); return; }
   const tb = $("#tblSum").querySelector("tbody");
   tb.innerHTML = "";
   if(!k){
@@ -6411,7 +6445,7 @@ function beobDialog(vorhanden, klasseId, nr){
   }
 }
 function renderBeob(k, nr){
-  const box = $("#kdBeob");
+  const box = $("#kindBeob");
   if(!box) return;
   box.innerHTML = "";
   const liste = beobVon(k.id, nr);
@@ -6480,8 +6514,8 @@ function gesundheitDialog(vorhanden, klasseId, nr){
                  wert:kStart.id, optionen:kOpt});
     felder.push({key:"nr", label:"Kind", typ:"select", wert:"1", optionen:nrOpt});
   }
-  felder.push({key:"kategorie", label:"Kategorie", wert: vorhanden ? vorhanden.kategorie : "",
-               platzhalter:"z. B. Asthma"});
+  felder.push({key:"kategorie", label:"Erkrankung/Beeinträchtigung",
+               wert: vorhanden ? vorhanden.kategorie : "", platzhalter:"z. B. Asthma"});
   felder.push({key:"hinweis", label:"Was zu beachten ist", typ:"text2",
                wert: vorhanden ? vorhanden.hinweis : "",
                platzhalter:"z. B. bei Belastung Pause anbieten, Inhalator griffbereit"});
@@ -6497,7 +6531,7 @@ function gesundheitDialog(vorhanden, klasseId, nr){
     onOk: w => {
       const kat = (w.kategorie || "").trim();
       const hin = (w.hinweis || "").trim();
-      if(!kat){ toast("Ohne Kategorie geht es nicht"); return false; }
+      if(!kat){ toast("Erkrankung/Beeinträchtigung fehlt"); return false; }
       if(vorhanden){
         vorhanden.kategorie = kat; vorhanden.hinweis = hin;
         vorhanden.von = w.von || ""; vorhanden.bis = w.bis || "";
@@ -6529,8 +6563,16 @@ function gesundheitDialog(vorhanden, klasseId, nr){
     });
   }
 }
+/* "Dauerhaft" statt Datum, wenn kein Gültigkeitszeitraum gesetzt ist. */
+function gesundheitZeitraumText(g){
+  if(!g.von && !g.bis) return "Dauerhaft";
+  return (g.von ? deDate(g.von) : "") + (g.von && g.bis ? " – " : (g.bis ? "bis " : "")) +
+    (g.bis ? deDate(g.bis) : "");
+}
+/* Auf der Kind-Übersicht nur Name und Zeitraum, ohne Stift – bearbeitet wird
+   in der eigenen Detailseite, die beim Antippen der Zeile aufgeht. */
 function renderGesundheit(k, nr){
-  const box = $("#kdGesundheit");
+  const box = $("#kindGesundheit");
   if(!box) return;
   box.innerHTML = "";
   const liste = gesundheitVon(k.id, nr);
@@ -6539,24 +6581,33 @@ function renderGesundheit(k, nr){
     return;
   }
   liste.forEach(g => {
-    const z = document.createElement("div");
-    z.className = "beobzeile";
-    const zeitraum = (g.von || g.bis)
-      ? (g.von ? deDate(g.von) : "") + (g.von && g.bis ? " – " : (g.bis ? "bis " : "")) +
-        (g.bis ? deDate(g.bis) : "")
-      : "";
-    z.innerHTML = '<div class="bwas">' +
-      (zeitraum ? '<span class="mini">' + esc(zeitraum) + "</span>" : "") +
-      "<p><b>" + esc(g.kategorie) + "</b>" + (g.hinweis ? " – " + esc(g.hinweis) : "") +
-      "</p></div>";
-    const stift = document.createElement("button");
-    stift.className = "iconbtn";
-    stift.innerHTML = STIFT_SVG;
-    stift.setAttribute("aria-label", "Gesundheitshinweis bearbeiten");
-    stift.addEventListener("click", () => gesundheitDialogMitLoeschen(g));
-    z.appendChild(stift);
+    const z = document.createElement("button");
+    z.className = "beobzeile"; z.type = "button";
+    z.style.cssText = "width:100%;text-align:left;background:0;border:0;cursor:pointer";
+    z.innerHTML = '<div class="bwas"><span class="mini">' + esc(gesundheitZeitraumText(g)) +
+      "</span><p><b>" + esc(g.kategorie) + "</b></p></div>" + '<span class="hchev">›</span>';
+    z.addEventListener("click", () => gesundheitAnsehen(g));
     box.appendChild(z);
   });
+}
+/* Eigene Detailseite: zeigt nur diesen einen Hinweis, mit Stift zum Bearbeiten
+   oben rechts neben der Überschrift. */
+function gesundheitAnsehen(g){
+  db.ui.gesundheitId = g.id;
+  save();
+  sumGo("gesundheit");
+}
+function renderGesundheitAnsicht(){
+  const g = gesundheitListe().find(x => x.id === db.ui.gesundheitId);
+  if(!g){ sumGo("kind", db.ui.kindNr); return; }
+  topbar($("#tbGesundheit"), {zurueck: () => sumGo("kind", db.ui.kindNr), zurueckText:"Zurück",
+    titel: g.kategorie, sub: gesundheitZeitraumText(g),
+    aktion: stiftBtn("Bearbeiten", () => gesundheitDialogMitLoeschen(g))});
+  const box = $("#gdInhalt");
+  box.innerHTML = g.hinweis
+    ? '<div class="lbl">Was ist zu beachten</div><p style="white-space:pre-wrap;margin:4px 0 0">' +
+      esc(g.hinweis) + "</p>"
+    : '<p class="hint" style="margin:0">Nichts weiter notiert.</p>';
 }
 function gesundheitDialogMitLoeschen(g){
   gesundheitDialog(g);
@@ -6872,40 +6923,9 @@ function vfZeichnen(z, vorhanden){
   if(first) setTimeout(() => first.focus(), 60);
 }
 /* Erst ansehen, nicht gleich bearbeiten – Bearbeiten ist ein eigener Schritt. */
-function vorfallAnsehen(v){
-  openModal({
-    titel: "Vorfall · " + deDate(v.datum),
-    text: [v.uhrzeit ? v.uhrzeit + " Uhr" : "", v.ort].filter(Boolean).join(" · "),
-    okText: "Bearbeiten",
-    onOk: () => { vorfallDialog(v); return false; }
-  });
-  const box = $("#modalBox");
-  const acts = box.querySelector(".actions");
-  function absatz(titel, text){
-    if(!text) return;
-    const wrap = document.createElement("div");
-    wrap.style.margin = "0 0 14px";
-    wrap.innerHTML = '<div class="lbl">' + esc(titel) + '</div>' +
-      '<p style="white-space:pre-wrap;margin:4px 0 0;font-size:14px">' + esc(text) + "</p>";
-    box.insertBefore(wrap, acts);
-  }
-  absatz("Beteiligte Personen",
-    (v.beteiligte || []).map(b => vfPersonName(b) + " (" + (VF_ROLLE_TEXT[b.rolle] || b.rolle) + ")")
-      .join("\n"));
-  absatz("Beschreibung", v.beschreibung);
-  absatz("Maßnahmen", v.massnahmen);
-  const pdf = document.createElement("button");
-  pdf.className = "act neutral"; pdf.type = "button"; pdf.style.cssText = "width:100%;margin-bottom:10px";
-  pdf.textContent = "Als PDF sichern";
-  pdf.addEventListener("click", () => {
-    const bytes = vorfallPdf(v);
-    dateiDialog(bytes, "Vorfall_" + v.datum + "_" + v.id.slice(0, 6) + ".pdf",
-      "application/pdf", {titel:"Vorfall als PDF"});
-  });
-  box.insertBefore(pdf, acts);
-}
-/* Kurzfassung auf der Kind-Übersicht: nur Datum und Ort, nicht antippbar –
-   die eigentliche Ansicht/Bearbeitung läuft über die Detailansicht (Auge). */
+/* Auf der Kind-Übersicht nur Datum und Ort; Antippen führt – strukturell wie
+   bei den Gesundheitshinweisen – auf eine eigene Detailseite mit nur diesem
+   einen Vorfall. */
 function renderVorfaelleKurz(k, nr){
   const box = $("#kindVorfaelleKurz");
   if(!box) return;
@@ -6913,32 +6933,46 @@ function renderVorfaelleKurz(k, nr){
   const liste = vorfaelleVon(k.id, nr);
   if(!liste.length) return;
   liste.forEach(v => {
-    const z = document.createElement("div");
-    z.className = "beobzeile";
-    z.innerHTML = '<div class="bwas"><span class="mini">' + deDate(v.datum) +
-      (v.ort ? " · " + esc(v.ort) : "") + "</span></div>";
-    box.appendChild(z);
-  });
-}
-function renderVorfaelle(k, nr){
-  const box = $("#kdVorfaelle");
-  if(!box) return;
-  box.innerHTML = "";
-  const liste = vorfaelleVon(k.id, nr);
-  if(!liste.length){
-    box.innerHTML = '<p class="hint" style="margin:0">Nichts dokumentiert.</p>';
-    return;
-  }
-  liste.forEach(v => {
     const z = document.createElement("button");
     z.className = "beobzeile"; z.type = "button";
     z.style.cssText = "width:100%;text-align:left;background:0;border:0;cursor:pointer";
-    const kurz = (v.beschreibung || "").replace(/\s+/g, " ").slice(0, 70);
-    z.innerHTML = '<div class="bwas"><span class="mini">' + deDate(v.datum) + "</span><p>" +
-      esc(kurz) + (kurz.length >= 70 ? " …" : "") + '</p></div><span class="hchev">›</span>';
-    z.addEventListener("click", () => vorfallAnsehen(v));
+    z.innerHTML = '<div class="bwas"><span class="mini">' + deDate(v.datum) +
+      (v.ort ? " · " + esc(v.ort) : "") + "</span></div>" + '<span class="hchev">›</span>';
+    z.addEventListener("click", () => vorfallAnsehenSeite(v));
     box.appendChild(z);
   });
+}
+function vorfallAnsehenSeite(v){
+  db.ui.vorfallId = v.id;
+  save();
+  sumGo("vorfall");
+}
+function renderVorfallAnsicht(){
+  const v = vorfaelleListe().find(x => x.id === db.ui.vorfallId);
+  if(!v){ sumGo("kind", db.ui.kindNr); return; }
+  topbar($("#tbVorfall"), {zurueck: () => sumGo("kind", db.ui.kindNr), zurueckText:"Zurück",
+    titel: "Vorfall · " + deDate(v.datum),
+    sub: [v.uhrzeit ? v.uhrzeit + " Uhr" : "", v.ort].filter(Boolean).join(" · "),
+    aktion: stiftBtn("Bearbeiten", () => vorfallDialog(v))});
+  const box = $("#vdInhalt"); box.innerHTML = "";
+  function absatz(titel, text){
+    if(!text) return;
+    const wrap = document.createElement("div");
+    wrap.style.margin = "0 0 14px";
+    wrap.innerHTML = '<div class="lbl">' + esc(titel) + '</div>' +
+      '<p style="white-space:pre-wrap;margin:4px 0 0;font-size:14px">' + esc(text) + "</p>";
+    box.appendChild(wrap);
+  }
+  absatz("Beteiligte Personen",
+    (v.beteiligte || []).map(b => vfPersonName(b) + " (" + (VF_ROLLE_TEXT[b.rolle] || b.rolle) + ")")
+      .join("\n"));
+  absatz("Beschreibung", v.beschreibung);
+  absatz("Maßnahmen", v.massnahmen);
+  $("#btnVorfallPdf").onclick = () => {
+    const bytes = vorfallPdf(v);
+    dateiDialog(bytes, "Vorfall_" + v.datum + "_" + v.id.slice(0, 6) + ".pdf",
+      "application/pdf", {titel:"Vorfall als PDF"});
+  };
 }
 function vorfallPdf(v){
   const d = PDF.doc();
@@ -7021,6 +7055,8 @@ function renderKind(k, nr){
   });
 
   $("#kindBefreit").value = befreitBis(k, nr);
+  renderBeob(k, nr);
+  renderGesundheit(k, nr);
   renderVorfaelleKurz(k, nr);
 
   const box = $("#kindVerlauf"); box.innerHTML = "";
@@ -7066,27 +7102,6 @@ function renderKind(k, nr){
     box.appendChild(zeile);
   });
 }
-/* Detailansicht als Einschub von unten: Beobachtungen, Gesundheitshinweise und
-   Vorfälle einzeln aufgelistet und bearbeitbar – die Kind-Übersicht selbst
-   zeigt dafür nur noch Auge- und Plus-Knopf. */
-let kdSheetOffen = false, kdAktuellK = null, kdAktuellNr = null;
-function openKdSheet(k, nr){
-  if(!k) return;
-  zurueckWache();
-  kdSheetOffen = true; kdAktuellK = k; kdAktuellNr = nr;
-  renderBeob(k, nr);
-  renderGesundheit(k, nr);
-  renderVorfaelle(k, nr);
-  $("#kdSheet").classList.add("open");
-  $("#kdScrim").classList.add("open");
-}
-function closeKdSheet(){
-  if(!kdSheetOffen) return;
-  kdSheetOffen = false;
-  $("#kdSheet").classList.remove("open");
-  $("#kdScrim").classList.remove("open");
-}
-$("#kdScrim").addEventListener("click", closeKdSheet);
 $("#kindBefreit").addEventListener("change", ev => {
   const k = klasse(db.ui.klasseId), nr = db.ui.kindNr;
   if(!k || !nr) return;
@@ -7224,17 +7239,11 @@ function statusHinweis(){
            : "Ohne gewählte Klasse lässt sich kein Status setzen.";
 }
 const STIFT_SVG = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+const PLUS_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+const TEILEN_SVG = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
 /* Kleines, ausgehöhltes Kreuz-Symbol (wie beim Roten Kreuz) für
    Gesundheitshinweise – bewusst als Umriss statt als Warndreieck. */
 const GESUNDHEIT_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" style="vertical-align:-1px"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6Z"/></svg>';
-/* Auge-Symbol (dasselbe wie beim FAB-Eintrag "Beobachtung") für den Sprung
-   in die Detailansicht eines Kindes. */
-const AUGE_SVG = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
-["btnBeobDetails", "btnGesundheitDetails", "btnVorfallDetails"].forEach(id => {
-  const el = document.getElementById(id);
-  if(el) el.innerHTML = AUGE_SVG;
-});
-
 function fach(id){ return db.faecher.find(x => x.id === id) || null; }
 function reihe(id){ return db.reihen.find(x => x.id === id) || null; }
 /* Reihen werden für einen Jahrgang geplant, nicht für einen Zeitraum. */
@@ -7277,14 +7286,18 @@ function renderPlan(){
   $("#planEdit").style.display      = p.ebene === "edit" ? "" : "none";
 
   if(p.ebene === "reihen"){
-    seitenkopf($("#tbReihen"), "Planung",
-      f ? ("Unterrichtsreihen für das Fach: " + f.name) : "Noch kein Fach gewählt");
+    seitenkopf($("#tbReihen"), "Unterrichtsreihe",
+      f ? ("Fach: " + f.name + " - Wechsel über Fachauswahl") : "Noch kein Fach gewählt",
+      plusBtn("Neue Unterrichtsreihe", () => openReiheSheet()));
   }
   if(p.ebene === "einheiten"){
     unterkopf($("#tbEinheiten"), {zurueck:() => planGo("reihen"),
       zurueckText: f ? f.name : "Reihen", titel:r.titel,
       sub: "Unterrichtsreihe" + (f ? " · " + f.name : ""),
-      aktion: stiftBtn("Reihe bearbeiten", () => reiheDialog(r))});
+      aktion: kopfKnoepfe(
+        plusBtn("Unterrichtseinheit hinzufügen", () => openEinheitSheet()),
+        teilenBtn("Reihe teilen", () => reiheTeilen(r)),
+        stiftBtn("Reihe bearbeiten", () => reiheDialog(r)))});
   }
   if(p.ebene === "lesen"){
     unterkopf($("#tbLesen"), {zurueck:() => planGo("einheiten", {reiheId:r.id}),
@@ -7417,32 +7430,27 @@ $("#btnFachAdd").addEventListener("click", () => {
 /* --- Ebene 2: Reihen --- */
 function renderReiheList(f){
   const box = $("#reiheList"); box.innerHTML = "";
-  jgOptionen($("#nrJahrgang"), $("#nrJahrgang").value);
-  const nb = $("#newReihe");
   if(!f){
-    if(nb) nb.style.display = "none";
     box.innerHTML = '<p class="hint">Erst unten über <b>Auswahl</b> ein Fach wählen. ' +
       'Fächer legst du dort über das Stift-Symbol an.</p>';
     return;
   }
-  if(nb) nb.style.display = "";
   const rs = reihenVon(f.id);
   if(!rs.length){ box.innerHTML = '<p class="hint">Noch keine Reihe in ' + esc(f.name) + '.</p>'; return; }
   rs.forEach(r => {
     const es = einheitenVon(r.id);
     const gehalten = es.filter(e => estat(e) === "gehalten").length;
     const row = document.createElement("div");
-    row.className = "item";
+    row.className = "item tapbar";
     const info = document.createElement("div");
     info.className = "grow";
     info.innerHTML = "<b>" + esc(r.titel) + "</b><div class=\"sub\">" +
       (r.jahrgang ? esc(jgText(r.jahrgang)) + " · " : "") +
       gehalten + " von " + es.length + " gehalten</div>";
-    info.addEventListener("click", () => planGo("einheiten", {reiheId:r.id}));
     const chev = document.createElement("div");
     chev.className = "chev"; chev.textContent = "›";
-    chev.addEventListener("click", () => planGo("einheiten", {reiheId:r.id}));
     row.appendChild(info); row.appendChild(chev);
+    row.addEventListener("click", () => planGo("einheiten", {reiheId:r.id}));
     box.appendChild(row);
   });
 }
@@ -7463,6 +7471,26 @@ function reiheDialog(r){
     }
   });
 }
+/* --- Einschub von unten: neue Reihe --- */
+let rSheetOffen = false;
+function openReiheSheet(){
+  const f = fach(db.ui.fachId);
+  if(!f){ toast("Erst ein Fach wählen"); return; }
+  zurueckWache();
+  rSheetOffen = true;
+  $("#nrTitel").value = "";
+  jgOptionen($("#nrJahrgang"), "");
+  $("#rSheet").classList.add("open");
+  $("#rScrim").classList.add("open");
+}
+function closeReiheSheet(){
+  if(!rSheetOffen) return;
+  rSheetOffen = false;
+  $("#rSheet").classList.remove("open");
+  $("#rScrim").classList.remove("open");
+}
+$("#rScrim").addEventListener("click", closeReiheSheet);
+$("#btnReiheSheetZu").addEventListener("click", closeReiheSheet);
 $("#btnReiheAdd").addEventListener("click", () => {
   const f = fach(db.ui.fachId);
   if(!f){ toast("Erst ein Fach wählen"); return; }
@@ -7471,8 +7499,7 @@ $("#btnReiheAdd").addEventListener("click", () => {
   const r = {id:uid(), fachId:f.id, titel:titel,
              jahrgang: $("#nrJahrgang").value, t:Date.now()};
   db.reihen.push(r);
-  $("#nrTitel").value = "";
-  $("#newReihe").open = false;
+  closeReiheSheet();
   save(); planGo("einheiten", {reiheId:r.id});
   toast("Reihe angelegt");
 });
@@ -7502,12 +7529,12 @@ function renderEinheitList(r){
   const es = einheitenVon(r.id);
   if(!es.length){
     box.insertAdjacentHTML("beforeend",
-      '<p class="hint">Noch keine Einheit – tippe unten auf „+ Unterrichtseinheit“.</p>');
+      '<p class="hint">Noch keine Einheit – oben rechts über das Plus-Symbol anlegen.</p>');
     return;
   }
   es.forEach(e => {
     const row = document.createElement("div");
-    row.className = "item";
+    row.className = "item tapbar";
     const andere = gehaltenIn(e).filter(x => !kl || x !== kl.name);
     row.innerHTML = '<div class="dot ' + estat(e) + '"></div>' +
       '<div class="grow"><b>' + e.nr + " · " + esc(e.titel || "ohne Thema") + '</b>' +
@@ -7520,13 +7547,33 @@ function renderEinheitList(r){
     box.appendChild(row);
   });
 }
+/* --- Einschub von unten: neue Einheit --- */
+let eSheetOffen = false;
+function openEinheitSheet(){
+  const r = reihe(db.ui.plan.reiheId); if(!r) return;
+  zurueckWache();
+  eSheetOffen = true;
+  $("#neTitel").value = "";
+  $("#eSheet").classList.add("open");
+  $("#eScrim").classList.add("open");
+}
+function closeEinheitSheet(){
+  if(!eSheetOffen) return;
+  eSheetOffen = false;
+  $("#eSheet").classList.remove("open");
+  $("#eScrim").classList.remove("open");
+}
+$("#eScrim").addEventListener("click", closeEinheitSheet);
+$("#btnEinheitSheetZu").addEventListener("click", closeEinheitSheet);
 $("#btnEinheitAdd").addEventListener("click", () => {
   const r = reihe(db.ui.plan.reiheId); if(!r) return;
   const es = einheitenVon(r.id);
-  const e = {id:uid(), reiheId:r.id, nr: es.length + 1, titel:"", ziel:"", inhalt:"", kompetenz:"",
+  const e = {id:uid(), reiheId:r.id, nr: es.length + 1, titel: $("#neTitel").value.trim(),
+             ziel:"", inhalt:"", kompetenz:"",
              methode:"", aufwaermen:"", hauptteil:"", abschluss:"", material:"", link:"",
              sicherheit:"", diff:"", stat:{}, reflexion:"", anpassung:"", t:Date.now()};
   db.einheiten.push(e);
+  closeEinheitSheet();
   save(); planGo("edit", {reiheId:r.id, einheitId:e.id});
 });
 
@@ -7666,15 +7713,14 @@ function reihePaket(r){
     })
   };
 }
-$("#btnReiheExport").addEventListener("click", () => {
-  const r = reihe(db.ui.plan.reiheId);
+function reiheTeilen(r){
   if(!r){ toast("Keine Reihe gewählt"); return; }
   const paket = reihePaket(r);
   const clean = String(r.titel || "Reihe").replace(/[^\wäöüÄÖÜß-]+/g, "_").slice(0, 40);
   const name = "Unterrichtsreihe_" + clean + ".json";
   dateiDialog(new TextEncoder().encode(JSON.stringify(paket, null, 1)), name,
               "application/json", {titel:"Reihe zum Teilen"});
-});
+}
 
 $("#btnReiheImport").addEventListener("click", () => $("#fileReihe").click());
 $("#fileReihe").addEventListener("change", ev => {
@@ -7690,6 +7736,7 @@ $("#fileReihe").addEventListener("change", ev => {
       toast("Das ist keine geteilte Unterrichtsreihe");
       return;
     }
+    closeReiheSheet();
     reiheEinfuegen(paket);
   };
   fr.onerror = () => toast("Datei nicht lesbar");
@@ -8481,9 +8528,6 @@ $("#btnVorfallNeu").addEventListener("click", () => {
   const k = klasse(db.ui.klasseId);
   if(!k) return;
   vorfallDialog(null, k.id, db.ui.kindNr);
-});
-["btnBeobDetails", "btnGesundheitDetails", "btnVorfallDetails"].forEach(id => {
-  $("#" + id).addEventListener("click", () => openKdSheet(klasse(db.ui.klasseId), db.ui.kindNr));
 });
 
 /* ---------- Backup-Wächter ---------- */
