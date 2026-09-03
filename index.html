@@ -89,18 +89,28 @@ button,input,select,textarea{font:inherit;color:inherit}
 header{position:sticky;top:0;z-index:20;background:var(--bg);
   border-bottom:1px solid var(--line);padding:10px 16px 8px;
   padding-top:calc(10px + env(safe-area-inset-top))}
-.hdr-row{display:flex;align-items:center;gap:8px}
+.hdr-row{display:flex;align-items:center;gap:8px;position:relative}
+/* Der Schriftzug sitzt unabhängig von der (unterschiedlich breiten) Auswahl
+   links und den Knöpfen rechts immer mittig in der Zeile. */
+.hdr-logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  height:23px;width:auto;pointer-events:none;display:block}
+:root[data-theme="dark"] .hdr-logo{filter:invert(1)}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .hdr-logo{filter:invert(1)}
+}
 /* Die Kopfzeile ist der Auswahlknopf: Klasse und Fach stehen dort, wo man
-   ohnehin hinsieht, und ein Tipp öffnet die Auswahl. */
-.hdr-txt{flex:0 1 auto;min-width:0;margin-right:auto;display:flex;align-items:center;gap:4px;
+   ohnehin hinsieht, und ein Tipp öffnet die Auswahl. Bewusst schmal gehalten,
+   damit der Schriftzug in der Mitte nicht bedrängt wird. */
+.hdr-txt{flex:0 1 auto;min-width:0;max-width:38%;margin-right:auto;
+  display:flex;align-items:center;gap:4px;
   border:0;background:0;padding:4px 8px 4px 6px;margin-left:-6px;border-radius:11px;
   text-align:left;color:inherit;font:inherit;cursor:pointer}
 .hdr-txt:active{background:var(--surface)}
 .hdr-txt.offen{background:var(--surface)}
 .hdr-wer{flex:0 1 auto;min-width:0}
-.hdr-title{display:block;font-size:19px;font-weight:700;
+.hdr-title{display:block;font-size:15px;font-weight:700;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hdr-sub{display:block;font-size:12px;color:var(--muted);margin-top:1px;
+.hdr-sub{display:block;font-size:10.5px;color:var(--muted);margin-top:1px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hdr-pfeil{flex:0 0 auto;color:var(--muted);line-height:0;
   transition:transform .2s ease}
@@ -952,6 +962,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
 
 <header>
   <div class="hdr-row">
+    <img src="logo.png" alt="Loewi" class="hdr-logo">
     <button class="hdr-txt" id="navAuswahl" type="button"
       aria-haspopup="true" aria-expanded="false" aria-label="Klasse und Fach wählen">
       <span class="hdr-wer">
@@ -1070,71 +1081,6 @@ body.vertmodus .stundenkarte{cursor:pointer}
         <button class="weg" id="stdSucheWeg" aria-label="Suche leeren">✕</button>
       </div>
       <div id="stundenListe"></div>
-    </div>
-  </div>
-
-  <!-- Ebene 0: Neue Stunde in drei Schritten -->
-  <div id="stdNeu" style="display:none">
-    <div class="topbar" id="tbNeu"></div>
-    <div class="schrittleiste" id="neuSchritte"></div>
-
-    <div class="card" id="neu1">
-      <h3 style="font-size:16px;margin-bottom:2px">Was war in dieser Stunde?</h3>
-      <div class="mini" id="neuWer"></div>
-      <div class="wahl" id="neuArt">
-        <button class="wahlknopf" data-a="gehalten">
-          <b>Stattgefunden</b><span>Ganz normal unterrichtet</span></button>
-        <button class="wahlknopf" data-a="ausgefallen">
-          <b>Ausgefallen</b><span>Kein Unterricht – Grund notieren</span></button>
-        <button class="wahlknopf" data-a="vertretung">
-          <b>Vertretung</b><span>Fremde Klasse oder fremdes Fach</span></button>
-      </div>
-    </div>
-
-    <div class="card" id="neu2" style="display:none">
-      <h3 style="font-size:16px;margin-bottom:10px" id="neu2Titel">Angaben zur Stunde</h3>
-      <div id="neu2Vertretung" style="display:none">
-        <div class="grid2">
-          <div>
-            <label class="lbl" for="nvKlasse">Klasse</label>
-            <select id="nvKlasse"></select>
-          </div>
-          <div>
-            <label class="lbl" for="nvFach">Fach</label>
-            <select id="nvFach"></select>
-          </div>
-        </div>
-        <div class="sep"></div>
-      </div>
-      <div class="grid2">
-        <div>
-          <label class="lbl" for="nsDatum">Datum</label>
-          <input type="date" id="nsDatum">
-        </div>
-        <div id="nsEinheitFeld">
-          <label class="lbl" for="nsEinheit">Aus der Planung</label>
-          <select id="nsEinheit"></select>
-        </div>
-      </div>
-      <div style="margin-top:10px">
-        <label class="lbl" for="nsThema" id="nsThemaLabel">Was wurde gemacht</label>
-        <textarea id="nsThema" rows="2" style="min-height:46px"
-          placeholder="z. B. Ballschule: Werfen und Fangen"></textarea>
-      </div>
-      <div style="margin-top:10px" id="nsHaFeld">
-        <label class="lbl" for="nsHa">Hausaufgabe</label>
-        <textarea id="nsHa" rows="2" style="min-height:46px" placeholder="optional"></textarea>
-      </div>
-      <div style="margin-top:10px">
-        <label class="lbl" for="nsNotiz">Notiz</label>
-        <textarea id="nsNotiz" rows="2" placeholder="optional"></textarea>
-      </div>
-      <div class="actions" style="margin-top:8px">
-        <button class="act quiet" id="btnWieLetztes">Wie letztes Mal übernehmen</button>
-      </div>
-      <div class="actions" style="margin-top:12px">
-        <button class="act primary" id="btnNeuWeiter" style="width:100%">Weiter</button>
-      </div>
     </div>
   </div>
 
@@ -1584,7 +1530,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
         <h3 style="font-size:15px">Beobachtungen</h3>
         <div style="display:flex;gap:6px;align-items:center">
           <button class="iconbtn" id="btnBeobDetails" aria-label="Beobachtungen ansehen"></button>
-          <button class="act neutral mini" id="btnBeobNeu">+</button>
+          <button class="act primary mini" id="btnBeobNeu">+</button>
         </div>
       </div>
     </div>
@@ -1593,7 +1539,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
         <h3 style="font-size:15px">Gesundheitliche Besonderheiten</h3>
         <div style="display:flex;gap:6px;align-items:center">
           <button class="iconbtn" id="btnGesundheitDetails" aria-label="Gesundheitliche Besonderheiten ansehen"></button>
-          <button class="act neutral mini" id="btnGesundheitNeu">+</button>
+          <button class="act primary mini" id="btnGesundheitNeu">+</button>
         </div>
       </div>
     </div>
@@ -1602,7 +1548,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
         <h3 style="font-size:15px">Vorfälle</h3>
         <div style="display:flex;gap:6px;align-items:center">
           <button class="iconbtn" id="btnVorfallDetails" aria-label="Vorfälle ansehen"></button>
-          <button class="act neutral mini" id="btnVorfallNeu">+</button>
+          <button class="act primary mini" id="btnVorfallNeu">+</button>
         </div>
       </div>
       <div id="kindVorfaelleKurz"></div>
@@ -1610,22 +1556,6 @@ body.vertmodus .stundenkarte{cursor:pointer}
     <div class="card">
       <h3 style="font-size:15px;margin-bottom:6px">Verlauf</h3>
       <div id="kindVerlauf"></div>
-    </div>
-  </div>
-
-  <div id="sumDetails" style="display:none">
-    <div class="topbar" id="tbDetails"></div>
-    <div class="card">
-      <h3 style="font-size:15px;margin-bottom:6px">Beobachtungen</h3>
-      <div id="kdBeob"></div>
-    </div>
-    <div class="card">
-      <h3 style="font-size:15px;margin-bottom:6px">Gesundheitliche Besonderheiten</h3>
-      <div id="kdGesundheit"></div>
-    </div>
-    <div class="card">
-      <h3 style="font-size:15px;margin-bottom:6px">Vorfälle</h3>
-      <div id="kdVorfaelle"></div>
     </div>
   </div>
 </section>
@@ -1935,6 +1865,108 @@ body.vertmodus .stundenkarte{cursor:pointer}
   <div class="fabgriff"></div>
   <div class="fabtitel">Was möchtest du anlegen?</div>
   <div id="fabListe"></div>
+</div>
+
+<div class="fabscrim" id="kdScrim"></div>
+<div class="fabsheet" id="kdSheet" role="dialog" aria-modal="false" aria-label="Details zum Kind">
+  <div class="fabgriff"></div>
+  <div class="card">
+    <h3 style="font-size:15px;margin-bottom:6px">Beobachtungen</h3>
+    <div id="kdBeob"></div>
+  </div>
+  <div class="card">
+    <h3 style="font-size:15px;margin-bottom:6px">Gesundheitliche Besonderheiten</h3>
+    <div id="kdGesundheit"></div>
+  </div>
+  <div class="card">
+    <h3 style="font-size:15px;margin-bottom:6px">Vorfälle</h3>
+    <div id="kdVorfaelle"></div>
+  </div>
+</div>
+
+<div class="fabscrim" id="stdScrim"></div>
+<div class="fabsheet" id="stdSheet" role="dialog" aria-modal="false" aria-label="Stunde hinzufügen">
+  <div class="fabgriff"></div>
+  <div id="stdSheetInhalt">
+    <button class="act quiet mini" id="btnNeuZurueck" style="margin-bottom:8px">Abbrechen</button>
+    <div class="schrittleiste" id="neuSchritte"></div>
+
+    <div class="card" id="neu0" style="display:none">
+      <h3 style="font-size:16px;margin-bottom:10px">Welche Stunde?</h3>
+      <div class="grid2">
+        <div>
+          <label class="lbl" for="naKlasse">Klasse</label>
+          <select id="naKlasse"></select>
+        </div>
+        <div>
+          <label class="lbl" for="naFach">Fach</label>
+          <select id="naFach"></select>
+        </div>
+      </div>
+      <div class="actions" style="margin-top:14px">
+        <button class="act primary" id="btnNeuAuswahlWeiter" style="width:100%">Weiter</button>
+      </div>
+    </div>
+
+    <div class="card" id="neu1" style="display:none">
+      <h3 style="font-size:16px;margin-bottom:2px">Was war in dieser Stunde?</h3>
+      <div class="mini" id="neuWer"></div>
+      <div class="wahl" id="neuArt">
+        <button class="wahlknopf" data-a="gehalten">
+          <b>Stattgefunden</b><span>Ganz normal unterrichtet</span></button>
+        <button class="wahlknopf" data-a="ausgefallen">
+          <b>Ausgefallen</b><span>Kein Unterricht – Grund notieren</span></button>
+        <button class="wahlknopf" data-a="vertretung">
+          <b>Vertretung</b><span>Fremde Klasse oder fremdes Fach</span></button>
+      </div>
+    </div>
+
+    <div class="card" id="neu2" style="display:none">
+      <h3 style="font-size:16px;margin-bottom:10px" id="neu2Titel">Angaben zur Stunde</h3>
+      <div id="neu2Vertretung" style="display:none">
+        <div class="grid2">
+          <div>
+            <label class="lbl" for="nvKlasse">Klasse</label>
+            <select id="nvKlasse"></select>
+          </div>
+          <div>
+            <label class="lbl" for="nvFach">Fach</label>
+            <select id="nvFach"></select>
+          </div>
+        </div>
+        <div class="sep"></div>
+      </div>
+      <div class="grid2">
+        <div>
+          <label class="lbl" for="nsDatum">Datum</label>
+          <input type="date" id="nsDatum">
+        </div>
+        <div id="nsEinheitFeld">
+          <label class="lbl" for="nsEinheit">Aus der Planung</label>
+          <select id="nsEinheit"></select>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <label class="lbl" for="nsThema" id="nsThemaLabel">Was wurde gemacht</label>
+        <textarea id="nsThema" rows="2" style="min-height:46px"
+          placeholder="z. B. Ballschule: Werfen und Fangen"></textarea>
+      </div>
+      <div style="margin-top:10px" id="nsHaFeld">
+        <label class="lbl" for="nsHa">Hausaufgabe</label>
+        <textarea id="nsHa" rows="2" style="min-height:46px" placeholder="optional"></textarea>
+      </div>
+      <div style="margin-top:10px">
+        <label class="lbl" for="nsNotiz">Notiz</label>
+        <textarea id="nsNotiz" rows="2" placeholder="optional"></textarea>
+      </div>
+      <div class="actions" style="margin-top:8px">
+        <button class="act quiet" id="btnWieLetztes">Wie letztes Mal übernehmen</button>
+      </div>
+      <div class="actions" style="margin-top:12px">
+        <button class="act primary" id="btnNeuWeiter" style="width:100%">Weiter</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="lock" id="lock" hidden>
@@ -2795,6 +2827,8 @@ function zurueckSchritt(){
   if(!$("#ovl").hidden){ closeModal(); return true; }
   if(typeof fabOffen !== "undefined" && fabOffen){ closeFab(); return true; }
   if(typeof dropOffen !== "undefined" && dropOffen){ closeDrop(); return true; }
+  if(typeof kdSheetOffen !== "undefined" && kdSheetOffen){ closeKdSheet(); return true; }
+  if(typeof stdSheetOffen !== "undefined" && stdSheetOffen){ closeStdSheet(); return true; }
   if(db.ui.vertretungModus){
     db.ui.vertretungModus = false;
     document.body.classList.remove("vertmodus");
@@ -2893,6 +2927,11 @@ function renderAlles(){
   renderUebersicht();
   renderKlassen();
   renderStoreInfo();
+  if(kdSheetOffen){
+    renderBeob(kdAktuellK, kdAktuellNr);
+    renderGesundheit(kdAktuellK, kdAktuellNr);
+    renderVorfaelle(kdAktuellK, kdAktuellNr);
+  }
 }
 function setAuswahl(kid, fid){
   const anders = (db.ui.klasseId !== kid) || (db.ui.fachId !== fid);
@@ -3229,49 +3268,86 @@ function renderStunde(){
   if((v === "ansicht" || v === "erfassen" || v === "daten") && (!s || !k)){
     v = "liste"; db.ui.stdView = "liste";
   }
-  if(v === "neu" && !k){ v = "liste"; db.ui.stdView = "liste"; }
+  /* "neu" gibt es als stdView nicht mehr – eine neue Stunde läuft über den
+     Einschub von unten (stdSheet). Alte gespeicherte Stände fallen auf die
+     Liste zurück. */
+  if(v === "neu"){ v = "liste"; db.ui.stdView = "liste"; }
   $("#stdListe").style.display    = v === "liste" ? "" : "none";
-  $("#stdNeu").style.display      = v === "neu" ? "" : "none";
   $("#stdAnsicht").style.display  = v === "ansicht" ? "" : "none";
   $("#stdErfassen").style.display = (v === "erfassen" || v === "daten") ? "" : "none";
   if(v === "liste") renderStundenListe(k);
-  if(v === "neu") renderNeu(k);
   if(v === "ansicht") renderAnsicht(s, k);
   if(v === "erfassen" || v === "daten") renderErfassen(s, k, v);
 }
 
-/* ---------- Ebene 0: der Assistent ----------
-   Schritt 1 klärt, was überhaupt war; Schritt 2 nimmt die Angaben auf; danach
-   geht es entweder in die Mitarbeit oder – bei Ausfall – gleich zur Übersicht. */
-function neuStarten(vorgabe){
+/* ---------- Neue Stunde als Einschub von unten ----------
+   Schritt 0 (nur bei Start über den Plus-Knopf) klärt Klasse und Fach; Schritt 1
+   klärt, was überhaupt war; Schritt 2 nimmt die Angaben auf; danach geht es
+   für Mitarbeit oder Ausfall direkt in den bestehenden Stunden-Tab – nur die
+   Bearbeitung einer schon angelegten Stunde läuft weiter dort. */
+let stdSheetOffen = false;
+function neuStarten(vorgabe, brauchtAuswahl){
   const v = vorgabe || {};
   db.ui.neu = {art:"", datum: v.datum || heute(),
                klasseId: v.klasseId || db.ui.klasseId,
                fachId: v.fachId === undefined ? db.ui.fachId : v.fachId,
-               thema:"", ha:"", notiz:"", einheitId:""};
-  db.ui.stdView = "neu";
-  db.ui.bereich = "stunden";
-  save(); goView("stunde"); window.scrollTo(0, 0);
+               thema:"", ha:"", notiz:"", einheitId:"",
+               brauchtAuswahl: !!brauchtAuswahl, auswahlFertig: false};
+  openStdSheet();
 }
-function renderNeu(k){
+function openStdSheet(){
+  zurueckWache();
+  stdSheetOffen = true;
+  renderNeu();
+  $("#stdSheet").classList.add("open");
+  $("#stdScrim").classList.add("open");
+}
+function closeStdSheet(){
+  if(!stdSheetOffen) return;
+  stdSheetOffen = false;
+  db.ui.neu = null; save();
+  $("#stdSheet").classList.remove("open");
+  $("#stdScrim").classList.remove("open");
+}
+$("#stdScrim").addEventListener("click", closeStdSheet);
+$("#btnNeuZurueck").addEventListener("click", () => {
+  const nu = db.ui.neu; if(!nu) return;
+  const zeigeAuswahl = !!nu.brauchtAuswahl && !nu.auswahlFertig;
+  if(zeigeAuswahl){ closeStdSheet(); return; }
+  if(nu.art){ nu.art = ""; save(); renderNeu(); return; }
+  if(nu.brauchtAuswahl){ nu.auswahlFertig = false; save(); renderNeu(); return; }
+  closeStdSheet();
+});
+function renderNeu(){
   const nu = db.ui.neu || (db.ui.neu = {art:"", datum:heute()});
-  topbar($("#tbNeu"), {zurueck: () => { if(nu.art){ nu.art = ""; save(); renderStunde(); }
-                                        else stdGo("liste"); },
-                       zurueckText: nu.art ? "Zurück" : "Stunden"});
-  const schritt = nu.art ? 2 : 1;
+  const zeigeAuswahl = !!nu.brauchtAuswahl && !nu.auswahlFertig;
+
+  const namenBasis = nu.art === "ausgefallen" ? ["Was war?", "Grund"]
+                                              : ["Was war?", "Angaben", "Mitarbeit"];
+  const namen = nu.brauchtAuswahl ? ["Welche Stunde?"].concat(namenBasis) : namenBasis;
+  const schrittBasis = nu.art ? 2 : 1;
+  const schritt = nu.brauchtAuswahl ? (zeigeAuswahl ? 1 : schrittBasis + 1) : schrittBasis;
   const leiste = $("#neuSchritte"); leiste.innerHTML = "";
-  const namen = nu.art === "ausgefallen" ? ["Was war?", "Grund"]
-                                         : ["Was war?", "Angaben", "Mitarbeit"];
   namen.forEach((t, i) => {
     const d = document.createElement("div");
     d.className = "schritt" + (i + 1 === schritt ? " an" : (i + 1 < schritt ? " fertig" : ""));
     d.innerHTML = "<b>" + (i + 1) + "</b><span>" + t + "</span>";
     leiste.appendChild(d);
   });
+  $("#btnNeuZurueck").textContent =
+    (zeigeAuswahl || (!nu.brauchtAuswahl && !nu.art)) ? "Abbrechen" : "Zurück";
 
-  $("#neu1").style.display = nu.art ? "none" : "";
-  $("#neu2").style.display = nu.art ? "" : "none";
-  const kk = klasse(nu.klasseId) || k;
+  $("#neu0").style.display = zeigeAuswahl ? "" : "none";
+  $("#neu1").style.display = (!zeigeAuswahl && !nu.art) ? "" : "none";
+  $("#neu2").style.display = (!zeigeAuswahl && nu.art) ? "" : "none";
+  if(zeigeAuswahl){
+    fuelleAuswahl($("#naKlasse"), aktiveKlassen().map(x => [x.id, x.name]), nu.klasseId);
+    fuelleAuswahl($("#naFach"), [["", "– kein Fach –"]].concat(
+      db.faecher.map(x => [x.id, x.name])), nu.fachId || "");
+    return;
+  }
+
+  const kk = klasse(nu.klasseId);
   const ff = fach(nu.fachId);
   $("#neuWer").textContent = (kk ? kk.name : "keine Klasse") + (ff ? " · " + ff.name : "") +
     " · " + deDate(nu.datum);
@@ -3300,6 +3376,14 @@ function renderNeu(k){
   }
   renderNeuPicker();
 }
+$("#btnNeuAuswahlWeiter").addEventListener("click", () => {
+  const nu = db.ui.neu; if(!nu) return;
+  const kSel = $("#naKlasse"), fSel = $("#naFach");
+  if(!kSel.value){ toast("Erst eine Klasse wählen"); return; }
+  nu.klasseId = kSel.value; nu.fachId = fSel.value || null;
+  nu.auswahlFertig = true;
+  save(); renderNeu();
+});
 function fuelleAuswahl(sel, paare, wert){
   sel.innerHTML = "";
   paare.forEach(([v, t]) => {
@@ -3313,7 +3397,7 @@ document.querySelectorAll("#neuArt .wahlknopf").forEach(b => {
   b.addEventListener("click", () => {
     const nu = db.ui.neu || (db.ui.neu = {});
     nu.art = b.dataset.a;
-    save(); renderStunde(); window.scrollTo(0, 0);
+    save(); renderNeu();
   });
 });
 ["nvKlasse", "nvFach"].forEach(id => {
@@ -3321,7 +3405,7 @@ document.querySelectorAll("#neuArt .wahlknopf").forEach(b => {
   if(el) el.addEventListener("change", () => {
     const nu = db.ui.neu;
     if(id === "nvKlasse") nu.klasseId = el.value; else nu.fachId = el.value || null;
-    save(); renderNeu(klasse(db.ui.klasseId));
+    save(); renderNeu();
   });
 });
 $("#btnNeuWeiter").addEventListener("click", () => {
@@ -3338,7 +3422,12 @@ $("#btnNeuWeiter").addEventListener("click", () => {
   if(nu.art === "vertretung") s.vertretung = true;
   setAuswahl(k.id, nu.fachId || null);
   db.ui.neu = null;
+  stdSheetOffen = false;
+  $("#stdSheet").classList.remove("open");
+  $("#stdScrim").classList.remove("open");
+  db.ui.bereich = "stunden";
   save();
+  goView("stunde");
   stdGo(aus ? "ansicht" : "erfassen", s.id);
   toast(aus ? "Als ausgefallen eingetragen" : "Stunde " + s.nr + " angelegt");
 });
@@ -3877,8 +3966,7 @@ function planOeffnen(slot, datum){
   if(!k){ toast("Diese Klasse gibt es nicht mehr"); return; }
   setAuswahl(slot.klasseId, slot.fachId || null);
   const s = stundeZuSlot(slot, datum);
-  db.ui.bereich = "stunden";
-  if(s){ save(); stdGo("ansicht", s.id); return; }
+  if(s){ db.ui.bereich = "stunden"; save(); stdGo("ansicht", s.id); return; }
   /* Noch nichts erfasst – also von vorn, mit der Frage nach dem Was. */
   neuStarten({datum:datum, klasseId:slot.klasseId, fachId:slot.fachId || null});
 }
@@ -4007,13 +4095,9 @@ function renderPlanTag(){
     }
     streifen.innerHTML = txt;
     box.appendChild(streifen);
-  }else if(datum === heute() && liste.length && !freiHeute){
-    const streifen = document.createElement("div");
-    streifen.className = "jetztstreifen";
-    streifen.innerHTML = "<b>Heute</b><span>Uhrzeiten im Zeitraster eintragen, " +
-      "dann steht hier die laufende Stunde.</span>";
-    box.appendChild(streifen);
   }
+  /* Keine aktuelle oder kommende Stunde (Schultag vorbei oder Uhrzeiten nicht
+     gesetzt) – dann zeigen wir dazu gar nichts an, statt eines Hinweistexts. */
   if(!liste.length && !db.ui.vertretungModus){
     const p = document.createElement("div");
     p.className = "card";
@@ -5367,13 +5451,16 @@ function schnellStunde(){
   const jetzt = laufenderSlot();
   if(jetzt){ planOeffnen(jetzt, heute()); return; }
   const k = klasse(db.ui.klasseId);
-  if(!k){ toast("Erst oben eine Klasse wählen"); return; }
   const hIso = heute();
-  const s = db.stunden.find(x => x.klasseId === k.id &&
-    (x.fachId || null) === (db.ui.fachId || null) && x.datum === hIso);
-  db.ui.bereich = "stunden"; db.ui.view = "stunde";
-  if(s){ save(); goView("stunde"); stdGo("ansicht", s.id); return; }
-  neuStarten({datum:hIso});
+  if(k){
+    const s = db.stunden.find(x => x.klasseId === k.id &&
+      (x.fachId || null) === (db.ui.fachId || null) && x.datum === hIso);
+    if(s){ db.ui.bereich = "stunden"; save(); goView("stunde"); stdGo("ansicht", s.id); return; }
+  }
+  /* Über den Plus-Knopf ist nicht klar, welche Stunde gemeint ist – deshalb
+     fragt der Assistent das als ersten Schritt ab, statt die oben gewählte
+     Klasse stillschweigend zu übernehmen. */
+  neuStarten({datum:hIso}, true);
 }
 
 /* ---------- Teams auslosen („Teamshake“) ----------
@@ -6210,14 +6297,10 @@ function sumGo(view, nr){
 function renderUebersicht(){
   const k = klasse(db.ui.klasseId);
   let v = db.ui.sumView || "liste";
-  if((v === "kind" || v === "details") && (!k || !db.ui.kindNr || db.ui.kindNr > k.count)){
-    v = "liste"; db.ui.sumView = "liste";
-  }
-  $("#sumListe").style.display   = v === "liste" ? "" : "none";
-  $("#sumKind").style.display    = v === "kind" ? "" : "none";
-  $("#sumDetails").style.display = v === "details" ? "" : "none";
+  if(v === "kind" && (!k || !db.ui.kindNr || db.ui.kindNr > k.count)){ v = "liste"; db.ui.sumView = "liste"; }
+  $("#sumListe").style.display = v === "liste" ? "" : "none";
+  $("#sumKind").style.display  = v === "kind" ? "" : "none";
   if(v === "kind"){ renderKind(k, db.ui.kindNr); return; }
-  if(v === "details"){ renderKindDetails(k, db.ui.kindNr); return; }
   const tb = $("#tblSum").querySelector("tbody");
   tb.innerHTML = "";
   if(!k){
@@ -6538,7 +6621,7 @@ function vorfallDialog(vorhanden, klasseId, nr){
   vfZeichnen(z, vorhanden);
 }
 const VF_SCHRITT_NAMEN = ["Wann & wo", "Beteiligte", "Beschreibung", "Maßnahmen"];
-function vfKopf(box, z, untertitel){
+function vfKopf(box, z, vorhanden, untertitel){
   const h = document.createElement("h3");
   h.textContent = "Vorfall dokumentieren";
   box.appendChild(h);
@@ -6546,9 +6629,12 @@ function vfKopf(box, z, untertitel){
   leiste.className = "schrittleiste";
   VF_SCHRITT_NAMEN.forEach((t, i) => {
     const nr = i + 1;
-    const d = document.createElement("div");
+    const d = document.createElement("button");
+    d.type = "button";
+    d.style.cssText = "border:0;font:inherit;cursor:pointer";
     d.className = "schritt" + (nr === z.schritt ? " an" : (nr < z.schritt ? " fertig" : ""));
     d.innerHTML = "<b>" + nr + "</b><span>" + t + "</span>";
+    d.addEventListener("click", () => { z.schritt = nr; vfZeichnen(z, vorhanden); });
     leiste.appendChild(d);
   });
   box.appendChild(leiste);
@@ -6586,9 +6672,10 @@ function vfZeichnen(z, vorhanden){
   box.innerHTML = "";
 
   if(z.schritt === 1){
-    vfKopf(box, z, "Wann und wo war der Vorfall?");
+    vfKopf(box, z, vorhanden, "Wann und wo war der Vorfall?");
     const dIn = vfFeld(box, "Datum", () => {
       const i = document.createElement("input"); i.type = "date"; i.value = z.datum || heute();
+      i.addEventListener("input", () => { z.datum = i.value; });
       return i;
     });
     /* Uhrzeit wie im Zeitraster: freie Ziffern, ":" wird beim Tippen ergänzt,
@@ -6602,12 +6689,14 @@ function vfZeichnen(z, vorhanden){
         const ziffern = i.value.replace(/[^0-9]/g, "").slice(0, 4);
         i.value = ziffern.length > 2 ? ziffern.slice(0, 2) + ":" + ziffern.slice(2) : ziffern;
         i.classList.remove("falsch");
+        z.uhrzeit = i.value;
       });
       return i;
     });
     const oIn = vfFeld(box, "Ort", () => {
       const i = document.createElement("input"); i.type = "text"; i.value = z.ort || "";
       i.placeholder = "z. B. Turnhalle, Pausenhof";
+      i.addEventListener("input", () => { z.ort = i.value; });
       return i;
     });
     vfAktionen(box, null, "Weiter", () => {
@@ -6621,7 +6710,7 @@ function vfZeichnen(z, vorhanden){
       z.schritt = 2; vfZeichnen(z, vorhanden);
     });
   }else if(z.schritt === 2){
-    vfKopf(box, z, "Wer war beteiligt?");
+    vfKopf(box, z, vorhanden, "Wer war beteiligt?");
 
     const addLbl = document.createElement("label");
     addLbl.className = "lbl"; addLbl.style.marginTop = "4px"; addLbl.textContent = "Kind hinzufügen";
@@ -6722,10 +6811,11 @@ function vfZeichnen(z, vorhanden){
       z.schritt = 3; vfZeichnen(z, vorhanden);
     });
   }else if(z.schritt === 3){
-    vfKopf(box, z, "Was ist passiert?");
+    vfKopf(box, z, vorhanden, "Was ist passiert?");
     const bIn = vfFeld(box, "Beschreibung", () => {
       const t = document.createElement("textarea"); t.rows = 7; t.value = z.beschreibung || "";
       t.placeholder = "Hergang in eigenen Worten";
+      t.addEventListener("input", () => { z.beschreibung = t.value; });
       return t;
     });
     vfAktionen(box, () => { z.schritt = 2; vfZeichnen(z, vorhanden); }, "Weiter", () => {
@@ -6733,10 +6823,11 @@ function vfZeichnen(z, vorhanden){
       z.schritt = 4; vfZeichnen(z, vorhanden);
     });
   }else if(z.schritt === 4){
-    vfKopf(box, z, "Welche Maßnahmen wurden ergriffen?");
+    vfKopf(box, z, vorhanden, "Welche Maßnahmen wurden ergriffen?");
     const mIn = vfFeld(box, "Maßnahmen", () => {
       const t = document.createElement("textarea"); t.rows = 7; t.value = z.massnahmen || "";
       t.placeholder = "Erste Hilfe, Elterninfo, weitere Schritte …";
+      t.addEventListener("input", () => { z.massnahmen = t.value; });
       return t;
     });
     vfAktionen(box, () => { z.schritt = 3; vfZeichnen(z, vorhanden); },
@@ -6803,6 +6894,15 @@ function vorfallAnsehen(v){
       .join("\n"));
   absatz("Beschreibung", v.beschreibung);
   absatz("Maßnahmen", v.massnahmen);
+  const pdf = document.createElement("button");
+  pdf.className = "act neutral"; pdf.type = "button"; pdf.style.cssText = "width:100%;margin-bottom:10px";
+  pdf.textContent = "Als PDF sichern";
+  pdf.addEventListener("click", () => {
+    const bytes = vorfallPdf(v);
+    dateiDialog(bytes, "Vorfall_" + v.datum + "_" + v.id.slice(0, 6) + ".pdf",
+      "application/pdf", {titel:"Vorfall als PDF"});
+  });
+  box.insertBefore(pdf, acts);
 }
 /* Kurzfassung auf der Kind-Übersicht: nur Datum und Ort, nicht antippbar –
    die eigentliche Ansicht/Bearbeitung läuft über die Detailansicht (Auge). */
@@ -6966,18 +7066,27 @@ function renderKind(k, nr){
     box.appendChild(zeile);
   });
 }
-/* Detailansicht: eigenes Unterkapitel, in dem Beobachtungen, Gesundheitshinweise
-   und Vorfälle einzeln aufgelistet und bearbeitet werden können – die
-   Kind-Übersicht selbst zeigt dafür nur noch Auge- und Plus-Knopf. */
-function renderKindDetails(k, nr){
+/* Detailansicht als Einschub von unten: Beobachtungen, Gesundheitshinweise und
+   Vorfälle einzeln aufgelistet und bearbeitbar – die Kind-Übersicht selbst
+   zeigt dafür nur noch Auge- und Plus-Knopf. */
+let kdSheetOffen = false, kdAktuellK = null, kdAktuellNr = null;
+function openKdSheet(k, nr){
   if(!k) return;
-  const label = k.labels[nr] ? k.labels[nr] : "";
-  topbar($("#tbDetails"), {zurueck: () => sumGo("kind", nr),
-    zurueckText: label ? label : ("Nr. " + nr)});
+  zurueckWache();
+  kdSheetOffen = true; kdAktuellK = k; kdAktuellNr = nr;
   renderBeob(k, nr);
   renderGesundheit(k, nr);
   renderVorfaelle(k, nr);
+  $("#kdSheet").classList.add("open");
+  $("#kdScrim").classList.add("open");
 }
+function closeKdSheet(){
+  if(!kdSheetOffen) return;
+  kdSheetOffen = false;
+  $("#kdSheet").classList.remove("open");
+  $("#kdScrim").classList.remove("open");
+}
+$("#kdScrim").addEventListener("click", closeKdSheet);
 $("#kindBefreit").addEventListener("change", ev => {
   const k = klasse(db.ui.klasseId), nr = db.ui.kindNr;
   if(!k || !nr) return;
@@ -8374,7 +8483,7 @@ $("#btnVorfallNeu").addEventListener("click", () => {
   vorfallDialog(null, k.id, db.ui.kindNr);
 });
 ["btnBeobDetails", "btnGesundheitDetails", "btnVorfallDetails"].forEach(id => {
-  $("#" + id).addEventListener("click", () => sumGo("details"));
+  $("#" + id).addEventListener("click", () => openKdSheet(klasse(db.ui.klasseId), db.ui.kindNr));
 });
 
 /* ---------- Backup-Wächter ---------- */
