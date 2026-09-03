@@ -7,6 +7,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#F2EDE4">
 <meta name="description" content="Loewi – Unterrichtsdokumentation für Lehrkräfte. Läuft offline im Browser, ohne Konto, ohne Server. Gearbeitet wird mit Nummern statt Namen.">
+<meta property="og:title" content="Loewi">
+<meta property="og:description" content="Unterrichtsdokumentation für Lehrkräfte – eine einzige HTML-Datei, die offline im Browser läuft, ohne Konto, ohne Server, ohne Cloud.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://zimbr0.github.io/loewi/">
+<meta property="og:image" content="https://zimbr0.github.io/loewi/icon-512.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Loewi">
+<meta name="twitter:description" content="Unterrichtsdokumentation für Lehrkräfte – offline, ohne Konto, ohne Server, ohne Cloud.">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Loewi">
 <title>Loewi</title>
@@ -483,6 +491,10 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
 .beobzeile:first-child{border-top:0;padding-top:0}
 .beobzeile .bwas{flex:1;min-width:0}
 .beobzeile .bwas p{margin:2px 0 0;font-size:14px;line-height:1.45}
+.vfkind{display:flex;align-items:center;gap:8px;padding:5px 0}
+.field .vfkind label{display:inline;flex:1;min-width:0;font-size:14px}
+.vfkind select{width:auto;min-height:34px;padding:6px 8px;font-size:13px;flex:0 0 auto}
+.vfkind input[type=checkbox]{flex:0 0 auto;margin:0;width:auto}
 .faqgruppe h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;
   color:var(--muted);margin-bottom:2px}
 .faqfrage{border-top:1px solid var(--line)}
@@ -728,6 +740,14 @@ body.vertmodus .stundenkarte{cursor:pointer}
 .einstufung{display:flex;align-items:center;gap:8px;padding:7px 0;
   border-bottom:1px solid var(--line)}
 .einstufung:last-child{border-bottom:0}
+.timeranzeige{font-size:52px;font-weight:700;font-variant-numeric:tabular-nums;
+  letter-spacing:.02em;margin:6px 0}
+.stationsflaeche{position:relative;width:100%;aspect-ratio:3/2;background:var(--surface);
+  border:1px solid var(--line);border-radius:12px;overflow:hidden;touch-action:none}
+.geraetetoken{position:absolute;transform:translate(-50%,-50%);background:var(--accent);
+  color:var(--onaccent);border-radius:9px;padding:7px 10px;font-size:12.5px;font-weight:700;
+  cursor:grab;display:flex;align-items:center;gap:6px;white-space:nowrap;user-select:none}
+.geraetetoken .x{opacity:.75;font-weight:400;padding:0 2px}
 .einstufung .wer{flex:0 0 76px;min-width:0;font-size:13px;overflow:hidden;
   text-overflow:ellipsis;white-space:nowrap}
 .einstufung .wer b{font-weight:700}
@@ -770,6 +790,11 @@ body.vertmodus .stundenkarte{cursor:pointer}
 .vlz .cd.k{color:var(--bad)} .vlz .cd.v{color:var(--warn)} .vlz .cd.leer{color:var(--muted);font-weight:400}
 .befreitchip{font-size:10.5px;font-weight:700;color:var(--warn);background:var(--warn-soft);
   border-radius:999px;padding:1px 7px;display:inline-block;margin-top:2px}
+.gesundheitchip{font-size:10.5px;font-weight:700;color:var(--bad);background:var(--bad-soft);
+  border-radius:999px;padding:1px 7px;display:inline-block;margin-top:2px;margin-left:4px}
+.kindnr-gesundheit{color:var(--bad);margin-left:5px;font-size:12px;vertical-align:middle}
+.kindnr-serie{color:var(--warn);background:var(--warn-soft);border-radius:999px;
+  padding:1px 6px;margin-left:5px;font-size:10.5px;font-weight:700;vertical-align:middle}
 .suchfeld{position:relative;margin:0 0 12px}
 .suchfeld .lupe{position:absolute;left:13px;top:50%;transform:translateY(-50%);
   color:var(--muted);line-height:0;pointer-events:none}
@@ -970,7 +995,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
     <button data-b="plan" class="on">Plan</button>
     <button data-b="stunden">Stunden</button>
     <button data-b="tests">Tests</button>
-    <button data-b="teams" id="segTeams" style="display:none">Teams</button>
+    <button data-b="teams" id="segTeams" style="display:none">Tools</button>
   </div>
 
   <!-- ============ STUNDENPLAN ============ -->
@@ -1268,6 +1293,13 @@ body.vertmodus .stundenkarte{cursor:pointer}
           </div>
           <div class="chiprow" id="ekKritListe" style="margin-top:10px"></div>
           <p class="hint">Ein entferntes Kriterium nimmt seine Eintragungen mit.</p>
+          <div class="sep"></div>
+          <div class="actions">
+            <button class="act neutral mini" id="btnKritVorlageSpeichern">Als Vorlage speichern</button>
+            <button class="act neutral mini" id="btnKritVorlageLaden">Vorlage übernehmen</button>
+          </div>
+          <p class="hint">Einmal die Kriterien einer Reihe anlegen und als Vorlage sichern –
+            bei neuen Tests dann übernehmen statt neu eintippen.</p>
         </div>
       </details>
       <div class="card">
@@ -1305,6 +1337,16 @@ body.vertmodus .stundenkarte{cursor:pointer}
 
   <!-- ============ TEAMS (nur im Sport) ============ -->
   <div id="bereichTeams" style="display:none">
+
+  <div class="segrow" id="toolSeg">
+    <span class="pille" id="toolSegPille"></span>
+    <button data-t="mannschaften" class="on">Mannschaften</button>
+    <button data-t="timer">Stationstimer</button>
+    <button data-t="stoppuhr">Stoppuhr</button>
+    <button data-t="stationen">Stationenplaner</button>
+  </div>
+
+  <div id="toolMannschaften">
   <div class="card">
     <label class="lbl">Wie viele Mannschaften</label>
     <div class="zahlwahl" id="teamAnzahl">
@@ -1340,6 +1382,74 @@ body.vertmodus .stundenkarte{cursor:pointer}
       <div id="einstufListe"></div>
     </div>
   </details>
+  </div>
+
+  <div id="toolTimer" style="display:none">
+    <div class="card" style="text-align:center">
+      <label class="lbl" style="text-align:left">Rundenzeit</label>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+        <input type="number" id="timerSekunden" min="5" max="3600" step="5" value="60"
+               style="text-align:center">
+        <span class="mini">Sekunden</span>
+      </div>
+      <div class="timeranzeige" id="timerAnzeige">01:00</div>
+      <p class="mini" id="timerRunde">Runde 0</p>
+      <div class="actions" style="margin-top:10px">
+        <button class="act primary" id="btnTimerStart" style="width:100%">Start</button>
+      </div>
+      <div class="actions" style="margin-top:8px">
+        <button class="act neutral" id="btnTimerStop" style="width:100%">Stopp</button>
+        <button class="act quiet" id="btnTimerReset" style="width:100%">Zurücksetzen</button>
+      </div>
+      <p class="hint">Läuft die Zeit ab, ertönt ein Signal und die nächste Runde
+        startet automatisch – bis „Stopp“ gedrückt wird.</p>
+    </div>
+  </div>
+
+  <div id="toolStoppuhr" style="display:none">
+    <div class="card" style="text-align:center">
+      <div class="timeranzeige" id="stoppuhrAnzeige">00:00,0</div>
+      <div class="actions" style="margin-top:10px">
+        <button class="act primary" id="btnStoppuhrStart" style="width:100%">Start</button>
+      </div>
+      <div class="actions" style="margin-top:8px">
+        <button class="act neutral" id="btnStoppuhrStop" style="width:100%">Stopp</button>
+        <button class="act quiet" id="btnStoppuhrReset" style="width:100%">Zurücksetzen</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toolStationen" style="display:none">
+    <div class="card">
+      <label class="lbl">Halle</label>
+      <div style="display:flex;gap:8px">
+        <select id="selHalle" style="flex:1"></select>
+        <button class="act neutral mini" id="btnHalleNeu">+ Halle</button>
+      </div>
+    </div>
+    <div class="card">
+      <label class="lbl">Geräte antippen, um sie in die Halle zu legen</label>
+      <div class="chiprow" id="geraetePalette"></div>
+      <div class="actions" style="margin-top:10px">
+        <button class="act neutral mini" id="btnGeraetNeu">+ Neues Gerät</button>
+        <button class="act quiet mini" id="btnStationenLeeren">Halle leeren</button>
+      </div>
+    </div>
+    <div class="card">
+      <div id="stationsflaeche" class="stationsflaeche"></div>
+      <p class="hint">Geräte antippen und ziehen, um sie zu verschieben. Ein Tipp auf das
+        Kreuz entfernt ein Gerät wieder.</p>
+    </div>
+    <div class="card">
+      <label class="lbl">Mit Unterrichtseinheit verknüpfen (optional)</label>
+      <select id="selStationenEinheit"></select>
+      <div class="actions" style="margin-top:10px">
+        <button class="act neutral" id="btnStationenSpeichern">An Einheit speichern</button>
+        <button class="act quiet" id="btnStationenLaden">Aus Einheit laden</button>
+      </div>
+    </div>
+  </div>
+
   </div>
 </section>
 
@@ -1557,6 +1667,24 @@ body.vertmodus .stundenkarte{cursor:pointer}
       <div id="kindBeob"></div>
     </div>
     <div class="card">
+      <div class="rowline" style="padding-top:0;border-bottom:0;padding-bottom:0">
+        <h3 style="font-size:15px">Gesundheitliche Besonderheiten</h3>
+        <button class="act neutral mini" id="btnGesundheitNeu">+ Hinweis</button>
+      </div>
+      <p class="hint" style="margin:6px 0 10px">Gesundheitsbezogen – etwa Asthma oder
+        Einschränkungen – getrennt von den Beobachtungen.</p>
+      <div id="kindGesundheit"></div>
+    </div>
+    <div class="card">
+      <div class="rowline" style="padding-top:0;border-bottom:0;padding-bottom:0">
+        <h3 style="font-size:15px">Vorfälle</h3>
+        <button class="act neutral mini" id="btnVorfallNeu">+ Dokumentieren</button>
+      </div>
+      <p class="hint" style="margin:6px 0 10px">Unfälle und Vorkommnisse, in die dieses
+        Kind involviert war.</p>
+      <div id="kindVorfaelle"></div>
+    </div>
+    <div class="card">
       <h3 style="font-size:15px;margin-bottom:6px">Verlauf</h3>
       <div id="kindVerlauf"></div>
     </div>
@@ -1762,7 +1890,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
   <div class="card faqgruppe">
     <h3>Tests und Teams</h3>
       <details class="faqfrage"><summary>Wie funktionieren Tests?</summary><p class="hint">Oben im Stunden-Tab auf „Tests“. Du legst eigene Kriterien fest und vergibst 1 bis 6. Bewertet wird kriterienweise – so tippst du an einer Station die ganze Klasse durch. Der Test-Schnitt bleibt vom Mitarbeits-Schnitt getrennt.</p></details>
-      <details class="faqfrage"><summary>Was macht der Teams-Umschalter?</summary><p class="hint">Im Sport lost Loewi Mannschaften aus – auf Wunsch nach Stärke ausgeglichen und Geschlecht gemischt. Unter „Kinder einstufen“ trägst du das ein; befreite Kinder stehen dort von allein.</p></details>
+      <details class="faqfrage"><summary>Was steckt im Tools-Tab?</summary><p class="hint">Im Sport erscheint neben Plan, Stunden und Tests ein vierter Reiter: Mannschaften auslosen (auf Wunsch nach Stärke ausgeglichen und Geschlecht gemischt – unter „Kinder einstufen“ trägst du das ein, befreite Kinder stehen dort von allein), dazu Stationstimer, Stoppuhr und Stationenplaner für die Halle.</p></details>
   </div>
   <div class="card faqgruppe">
     <h3>Daten und Sicherheit</h3>
@@ -1797,6 +1925,16 @@ body.vertmodus .stundenkarte{cursor:pointer}
       <b>Stundendoku</b> und – sobald vorhanden – <b>Tests</b> und <b>Planung</b>.
       Nach dem Erstellen kannst du wählen: <b>Speichern</b> legt die Datei in deine Downloads,
       <b>Teilen</b> öffnet das Teilen-Menü (auf dem iPhone „In Dateien sichern“).</p>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:15px;margin-bottom:4px">Schuljahr abschließen</h3>
+    <p class="hint" style="margin-top:0">Setzt alle Klassen einen Jahrgang hoch oder
+      archiviert abgehende Klassen – Kinderliste, Beobachtungen, Gesundheitshinweise,
+      Vorfälle und Tests bleiben dabei erhalten.</p>
+    <div class="actions" style="margin-top:12px">
+      <button class="act neutral" id="btnSchuljahrAbschluss">Schuljahr abschließen</button>
+    </div>
   </div>
 
   <div class="card">
@@ -2642,6 +2780,19 @@ function sortiereStamm(){
   db.faecher.sort((a, b) => natVergleich(a.name, b.name));
 }
 function klasse(id){ return db.klassen.find(k => k.id === id) || null; }
+/* Für Auswahllisten, die eine neue Unterrichtsverpflichtung anlegen (Stundenplan,
+   Vertretung, neue Stunde): archivierte (abgegangene) Klassen tauchen dort nicht
+   mehr auf, bleiben aber über die Kopfzeile und die Klassenverwaltung erreichbar –
+   ihre Daten sollen weiter einsehbar und exportierbar bleiben. */
+function aktiveKlassen(){ return db.klassen.filter(k => !k.archiviert); }
+/* Schlägt beim Schuljahresabschluss den nächsten Jahrgang vor: die erste Zahl im
+   Namen wird um eins erhöht ("3a" -> "4a"); ohne erkennbare Zahl bleibt der Name
+   unverändert, die Lehrkraft trägt ihn dann selbst ein. */
+function naechsteKlasse(name){
+  const m = String(name || "").match(/^(\d+)(.*)$/);
+  if(!m) return name;
+  return (parseInt(m[1], 10) + 1) + m[2];
+}
 /* Was in diesem Fach vergessen wird: in Sport das Sportzeug, in Deutsch die
    Hausaufgaben. Der Name haengt am Fach und laesst sich dort aendern. */
 function vergessenWort(fid){
@@ -2837,7 +2988,7 @@ function renderDrop(){
     kb.appendChild(p);
   }
   db.klassen.forEach(k => {
-    kb.appendChild(chip(k.name, k.id === db.ui.klasseId,
+    kb.appendChild(chip(k.name + (k.archiviert ? " · archiviert" : ""), k.id === db.ui.klasseId,
       () => setAuswahl(k.id, db.ui.fachId)));
   });
 
@@ -2914,6 +3065,7 @@ function renderKlassen(){
     const info = document.createElement("div");
     info.className = "grow";
     info.innerHTML = "<b>" + esc(k.name) + "</b>" +
+      (k.archiviert ? ' <span class="befreitchip">archiviert</span>' : "") +
       '<div class="sub">' + k.count + " Kinder · " + anzStd +
       (anzStd === 1 ? " Stunde" : " Stunden") + " erfasst" +
       (k.id === db.ui.klasseId ? " · <b>ausgewählt</b>" : "") + "</div>";
@@ -3086,6 +3238,10 @@ function stdGo(view, stundeId){
   zurueckWache();
   db.ui.stdView = view;
   if(stundeId !== undefined) db.ui.stundeId = stundeId;
+  if(view === "erfassen"){
+    const s = stunde(stundeId !== undefined ? stundeId : db.ui.stundeId), k = klasse(db.ui.klasseId);
+    if(s && k && !s.aus) alleAufPlusVorbelegen(s, k);
+  }
   save(); renderStunde(); window.scrollTo(0,0);
 }
 function stundenStats(s, k){
@@ -3126,7 +3282,7 @@ function renderStunde(){
   $("#bereichTeams").style.display   = bereich === "teams" ? "" : "none";
   renderKopf();
   if(bereich === "plan"){ renderPlanTab(); return; }
-  if(bereich === "teams"){ renderTeams(); return; }
+  if(bereich === "teams"){ renderTools(); return; }
   if(bereich === "tests"){ renderTests(); return; }
   const k = klasse(db.ui.klasseId);
   let v = db.ui.stdView || "liste";
@@ -3199,7 +3355,7 @@ function renderNeu(k){
   $("#nsHa").value = nu.ha || "";
   $("#nsNotiz").value = nu.notiz || "";
   if(vert){
-    fuelleAuswahl($("#nvKlasse"), db.klassen.map(x => [x.id, x.name]), nu.klasseId);
+    fuelleAuswahl($("#nvKlasse"), aktiveKlassen().map(x => [x.id, x.name]), nu.klasseId);
     fuelleAuswahl($("#nvFach"), [["", "– kein Fach –"]].concat(
       db.faecher.map(x => [x.id, x.name])), nu.fachId || "");
   }
@@ -3476,7 +3632,18 @@ function renderErfassen(s, k, modus){
   updateProgress();
 }
 $("#btnErfassenFertig").addEventListener("click", () => stdGo("ansicht"));
-/* Der Regelfall ist „+“ – wer noch gar nichts hat, bekommt es auf einen Schlag. */
+/* Der Regelfall ist „+“ – wer noch gar nichts hat, bekommt es auf einen Schlag.
+   Dieselbe Logik läuft beim Öffnen der Erfassung automatisch (siehe stdGo), damit
+   von Anfang an nur noch Abweichungen angetippt werden müssen. */
+function alleAufPlusVorbelegen(s, k){
+  let anz = 0;
+  for(let i = 1; i <= k.count; i++){
+    if(istBefreit(k, i, s.datum)) continue;
+    const e = s.eintraege[i] || (s.eintraege[i] = {m:null, k:false, v:false, n:""});
+    if(!e.m && !e.k){ e.m = "+"; anz++; }
+  }
+  return anz;
+}
 $("#btnRestPlus").addEventListener("click", () => {
   const s = stunde(db.ui.stundeId), k = klasse(db.ui.klasseId);
   if(!s || !k) return;
@@ -3488,12 +3655,7 @@ $("#btnRestPlus").addEventListener("click", () => {
   }
   if(!offen){ toast("Alle sind schon eingetragen"); return; }
   merkeStand();                       // erst sichern, dann ändern
-  let anz = 0;
-  for(let i = 1; i <= k.count; i++){
-    if(istBefreit(k, i, s.datum)) continue;
-    const e = s.eintraege[i] || (s.eintraege[i] = {m:null, k:false, v:false, n:""});
-    if(!e.m && !e.k){ e.m = "+"; anz++; }
-  }
+  const anz = alleAufPlusVorbelegen(s, k);
   save(); renderErfassen(s, k);
   toastUndo(anz + (anz === 1 ? " Kind" : " Kinder") + " auf + gesetzt");
 });
@@ -3537,7 +3699,8 @@ function kidRow(k, s, i){
   const num = document.createElement("div");
   num.className = "num";
   num.innerHTML = "<b>" + i + "</b>" + (k.labels[i] ? "<small>" + esc(k.labels[i]) + "</small>" : "") +
-    (istBefreit(k, i, s.datum) ? '<span class="befreitchip">befreit</span>' : "");
+    (istBefreit(k, i, s.datum) ? '<span class="befreitchip">befreit</span>' : "") +
+    (gesundheitAktiv(k.id, i, s.datum) ? '<span class="gesundheitchip">⚠ Hinweis</span>' : "");
   row.appendChild(num);
   const seg = document.createElement("div");
   seg.className = "seg";
@@ -4027,7 +4190,7 @@ function dienstStreifen(d){
 /* Vertretung, Zusatzstunde oder Ausfall – aber nur an diesem einen Tag. */
 function aenderungDialog(vorhanden, datum, tag, slot){
   if(!db.klassen.length && !slot){ toast("Erst eine Klasse anlegen"); return; }
-  const kOpt = db.klassen.map(k => ({value:k.id, label:k.name}));
+  const kOpt = aktiveKlassen().map(k => ({value:k.id, label:k.name}));
   const fOpt = [{value:"", label:"– kein Fach –"}].concat(
     db.faecher.map(f => ({value:f.id, label:f.name})));
   const nrOpt = planRaster().map(r => ({value:String(r.nr),
@@ -4310,7 +4473,7 @@ function planZelle(tag, nr, istHeute){
 function slotDialog(tag, nr){
   const slot = slotAn(tag, nr);
   const kOpt = [{value:"", label:"– keine –"}].concat(
-    db.klassen.map(k => ({value:k.id, label:k.name})));
+    aktiveKlassen().map(k => ({value:k.id, label:k.name})));
   const fOpt = [{value:"", label:"– keins –"}].concat(
     db.faecher.map(f => ({value:f.id, label:f.name})));
   if(!db.klassen.length){ toast("Erst eine Klasse anlegen"); return; }
@@ -4510,6 +4673,18 @@ document.addEventListener("visibilitychange", () => {
      db.ui.view === "stunde" && db.ui.bereich === "plan") renderPlanTab();
 });
 
+/* Tageswechsel: Kalender und Tagesüberblick springen von selbst auf den neuen
+   Tag, sobald echte Mitternacht überschritten wird – nicht erst beim manuellen
+   Neuladen der Seite. */
+let letzterTag = heute();
+setInterval(() => {
+  const t = heute();
+  if(t === letzterTag){ return; }
+  letzterTag = t;
+  if(db.ui.kalTag && db.ui.kalTag < t) db.ui.kalTag = null;
+  if(db.ui.view === "organisation") renderOrganisation();
+}, 20000);
+
 /* ---------- Organisation ----------
    Ein Ort für alles, was nicht am Unterricht selbst hängt: was heute ansteht,
    Termine, Aufgaben und das Schuljahr mit seinen freien Tagen. */
@@ -4697,9 +4872,24 @@ function renderNotizen(){
       '<span class="ttxt"><b>' + esc(nz.titel) + "</b><span>" + esc(kurz) +
       (String(nz.text || "").length > 60 ? " …" : "") + "</span></span>" +
       '<span class="bchev">›</span>';
-    z.addEventListener("click", () => notizDialog(nz));
+    z.addEventListener("click", () => notizAnsehen(nz));
     box.appendChild(z);
   });
+}
+/* Erst ansehen, nicht gleich bearbeiten – Bearbeiten ist ein eigener Schritt. */
+function notizAnsehen(nz){
+  openModal({
+    titel: nz.titel,
+    text: deDate(nz.datum),
+    okText: "Bearbeiten",
+    onOk: () => { notizDialog(nz); return false; }
+  });
+  if(nz.text){
+    const p = document.createElement("p");
+    p.style.cssText = "white-space:pre-wrap;margin:-8px 0 14px";
+    p.textContent = nz.text;
+    $("#modalBox").insertBefore(p, $("#modalBox").querySelector(".actions"));
+  }
 }
 function notizDialog(nz){
   const neu = !nz;
@@ -4782,6 +4972,23 @@ function renderOrgHeute(){
     tap: () => { db.ui.orgSeg = "todos"; save(); renderOrganisation(); }}));
   if(faellig.length > 6) punkte.push({art:"todo",
     txt:"… und " + (faellig.length - 6) + " weitere Aufgaben"});
+
+  /* Gesundheitshinweise der heute laut Stundenplan unterrichteten Klassen. */
+  if(!frei){
+    const heuteKlassen = Array.from(new Set(stundenHeute(hIso).map(s => s.klasseId)));
+    heuteKlassen.forEach(kid => {
+      const k = klasse(kid); if(!k) return;
+      for(let i = 1; i <= k.count; i++){
+        if(!gesundheitAktiv(kid, i, hIso)) continue;
+        const kat = gesundheitVon(kid, i)
+          .filter(g => (!g.von || g.von <= hIso) && (!g.bis || g.bis >= hIso))
+          .map(g => g.kategorie).join(", ");
+        punkte.push({art:"warn",
+          txt:"Gesundheitshinweis · " + k.name + " Nr. " + i + " · " + kat,
+          tap:() => kindOeffnen(kid, i)});
+      }
+    });
+  }
 
   if(!punkte.length) punkte.push({art:"gut", txt:"Nichts Offenes"});
 
@@ -4913,8 +5120,21 @@ function renderTodos(){
       (t.faellig ? '<span class="mini">' +
         (t.faellig < hIso ? "überfällig seit " : (t.faellig === hIso ? "heute fällig" : "bis ")) +
         (t.faellig === hIso ? "" : deDate(t.faellig)) + "</span>" : "");
-    txt.addEventListener("click", () => todoDialog(t));
+    /* Antippen der Aufgabe selbst hakt ab – bearbeiten geht nur noch über den Stift. */
+    txt.addEventListener("click", () => {
+      t.erledigt = !t.erledigt;
+      t.fertigAm = t.erledigt ? heute() : "";
+      save(); renderOrganisation();
+      if(t.erledigt) toast("Erledigt");
+    });
     z.appendChild(txt);
+    const stift = document.createElement("button");
+    stift.className = "iconbtn";
+    stift.type = "button";
+    stift.innerHTML = STIFT_SVG;
+    stift.setAttribute("aria-label", "Aufgabe bearbeiten");
+    stift.addEventListener("click", ev => { ev.stopPropagation(); todoDialog(t); });
+    z.appendChild(stift);
     box.appendChild(z);
   });
 }
@@ -5104,6 +5324,10 @@ function fabEintraege(){
      sub:wer, tap:schnellStunde},
     {icon:"auge", titel:"Beobachtung",
      sub:"Pädagogisch oder erzieherisch, zu einem Kind", tap:() => beobDialog(null)},
+    {icon:"herz", titel:"Gesundheitshinweis",
+     sub:"Gesundheitsbezogen, zu einem Kind", tap:() => gesundheitDialog(null)},
+    {icon:"warnung", titel:"Vorfall dokumentieren",
+     sub:"Unfall oder Vorkommnis zwischen Kindern", tap:() => vorfallDialog(null)},
     {icon:"haken", titel:"Aufgabe",
      sub:"Für deine To-do-Liste", tap:() => todoDialog(null)},
     {icon:"kalender", titel:"Termin",
@@ -5116,7 +5340,9 @@ const FAB_ICON = {
   auge:'<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/>',
   haken:'<path d="M4 12.5l4.5 4.5L20 6"/>',
   kalender:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
-  test:'<path d="M9 4h6v3H9z"/><path d="M6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1Z"/><path d="M9.5 13h5M12 10.5v5"/>'
+  test:'<path d="M9 4h6v3H9z"/><path d="M6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1Z"/><path d="M9.5 13h5M12 10.5v5"/>',
+  herz:'<path d="M12 20.5s-7.5-4.6-9.8-9.3C.7 7.9 2.4 4.5 5.8 4c2.2-.3 4 .8 6.2 3.4C14.2 4.8 16 3.7 18.2 4c3.4.5 5.1 3.9 3.6 7.2C19.5 15.9 12 20.5 12 20.5Z"/>',
+  warnung:'<path d="M12 3.5 22 20.5H2Z"/><path d="M12 10v4.5"/><circle cx="12" cy="17.3" r="0.2" fill="currentColor"/>'
 };
 function renderFab(){
   const box = $("#fabListe"); box.innerHTML = "";
@@ -5243,6 +5469,349 @@ function mischenUndZeigen(){
   save(); renderTeams();
   toast(anzahl + " Mannschaften gelost");
 }
+
+/* ---------- Tools (früher „Teams“) ----------
+   Der Sport-Bereich bündelt Mannschafts-Losung, Stationstimer, Stoppuhr und
+   Stationenplaner hinter einer internen Unterleiste. Jede Karte bleibt eine
+   eigene, unabhängige Render-Funktion – renderTools() schaltet nur um. */
+function renderTools(){
+  let tab = db.ui.toolTab || "mannschaften";
+  if(["mannschaften", "timer", "stoppuhr", "stationen"].indexOf(tab) === -1) tab = "mannschaften";
+  document.querySelectorAll("#toolSeg button").forEach(b => {
+    b.classList.toggle("on", b.dataset.t === tab);
+  });
+  toolSegPille();
+  $("#toolMannschaften").style.display = tab === "mannschaften" ? "" : "none";
+  $("#toolTimer").style.display        = tab === "timer" ? "" : "none";
+  $("#toolStoppuhr").style.display     = tab === "stoppuhr" ? "" : "none";
+  $("#toolStationen").style.display    = tab === "stationen" ? "" : "none";
+  if(tab === "mannschaften") renderTeams();
+  if(tab === "timer") timerAnzeigeAktualisieren();
+  if(tab === "stoppuhr") stoppuhrAnzeigeAktualisieren();
+  if(tab === "stationen") renderStationen();
+}
+function toolSegPille(){
+  const leiste = $("#toolSeg"), pille = $("#toolSegPille");
+  if(!leiste || !pille) return;
+  const aktiv = leiste.querySelector("button.on");
+  if(!aktiv || !aktiv.offsetWidth) return;
+  pille.style.width = aktiv.offsetWidth + "px";
+  pille.style.transform = "translateX(" + (aktiv.offsetLeft - 4) + "px)";
+}
+window.addEventListener("resize", toolSegPille);
+document.querySelectorAll("#toolSeg button").forEach(b => {
+  b.addEventListener("click", () => {
+    db.ui.toolTab = b.dataset.t; save(); renderTools();
+  });
+});
+/* Kurzer Signalton per Web Audio API – keine Audiodatei nötig. */
+function toolBeep(){
+  try{
+    const ctx = toolBeep._ctx || (toolBeep._ctx = new (window.AudioContext || window.webkitAudioContext)());
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = "sine"; o.frequency.value = 880;
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(); o.stop(ctx.currentTime + 0.55);
+  }catch(e){}
+}
+
+/* ---- Stationstimer: läuft, bis "Stopp" gedrückt wird, und startet nach jedem
+   Signal von selbst die nächste Runde. Rein flüchtiger Zustand, keine db-Daten. */
+let timerVerbleibend = 0, timerLaeuft = false, timerRunde = 0, timerHandle = null;
+function timerFormat(sek){
+  sek = Math.max(0, Math.round(sek));
+  const m = Math.floor(sek / 60), s = sek % 60;
+  return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+}
+function timerAnzeigeAktualisieren(){
+  const el = $("#timerAnzeige"); if(!el) return;
+  const eingabe = Math.max(5, parseInt($("#timerSekunden").value, 10) || 60);
+  el.textContent = timerFormat(timerVerbleibend || eingabe);
+  $("#timerRunde").textContent = "Runde " + timerRunde;
+  $("#btnTimerStart").textContent = timerLaeuft ? "Läuft …" : "Start";
+  $("#btnTimerStart").disabled = timerLaeuft;
+}
+function timerTick(){
+  timerVerbleibend -= 1;
+  if(timerVerbleibend <= 0){
+    toolBeep();
+    timerRunde += 1;
+    timerVerbleibend = Math.max(5, parseInt($("#timerSekunden").value, 10) || 60);
+  }
+  timerAnzeigeAktualisieren();
+}
+$("#timerSekunden").addEventListener("input", () => { if(!timerLaeuft) timerAnzeigeAktualisieren(); });
+$("#btnTimerStart").addEventListener("click", () => {
+  if(timerLaeuft) return;
+  const dauer = Math.max(5, parseInt($("#timerSekunden").value, 10) || 60);
+  if(!timerVerbleibend) timerVerbleibend = dauer;
+  if(!timerRunde) timerRunde = 1;
+  timerLaeuft = true;
+  timerHandle = setInterval(timerTick, 1000);
+  timerAnzeigeAktualisieren();
+});
+$("#btnTimerStop").addEventListener("click", () => {
+  timerLaeuft = false;
+  if(timerHandle){ clearInterval(timerHandle); timerHandle = null; }
+  timerAnzeigeAktualisieren();
+});
+$("#btnTimerReset").addEventListener("click", () => {
+  timerLaeuft = false;
+  if(timerHandle){ clearInterval(timerHandle); timerHandle = null; }
+  timerVerbleibend = 0; timerRunde = 0;
+  timerAnzeigeAktualisieren();
+});
+
+/* ---- Stoppuhr: einfache, freistehende Zeitmessung, unabhängig vom Test-Modul. */
+let stoppuhrLaeuft = false, stoppuhrStart = 0, stoppuhrVergangen = 0, stoppuhrHandle = null;
+function stoppuhrFormat(ms){
+  const zehntel = Math.floor(ms / 100) % 10;
+  const gesSek = Math.floor(ms / 1000);
+  const m = Math.floor(gesSek / 60), s = gesSek % 60;
+  return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0") + "," + zehntel;
+}
+function stoppuhrAnzeigeAktualisieren(){
+  const el = $("#stoppuhrAnzeige"); if(!el) return;
+  const ms = stoppuhrLaeuft ? (stoppuhrVergangen + (Date.now() - stoppuhrStart)) : stoppuhrVergangen;
+  el.textContent = stoppuhrFormat(ms);
+  $("#btnStoppuhrStart").textContent = stoppuhrLaeuft ? "Läuft …" : "Start";
+  $("#btnStoppuhrStart").disabled = stoppuhrLaeuft;
+}
+$("#btnStoppuhrStart").addEventListener("click", () => {
+  if(stoppuhrLaeuft) return;
+  stoppuhrLaeuft = true; stoppuhrStart = Date.now();
+  stoppuhrHandle = setInterval(stoppuhrAnzeigeAktualisieren, 100);
+  stoppuhrAnzeigeAktualisieren();
+});
+$("#btnStoppuhrStop").addEventListener("click", () => {
+  if(stoppuhrLaeuft) stoppuhrVergangen += Date.now() - stoppuhrStart;
+  stoppuhrLaeuft = false;
+  if(stoppuhrHandle){ clearInterval(stoppuhrHandle); stoppuhrHandle = null; }
+  stoppuhrAnzeigeAktualisieren();
+});
+$("#btnStoppuhrReset").addEventListener("click", () => {
+  stoppuhrLaeuft = false;
+  if(stoppuhrHandle){ clearInterval(stoppuhrHandle); stoppuhrHandle = null; }
+  stoppuhrVergangen = 0;
+  stoppuhrAnzeigeAktualisieren();
+});
+
+/* Kleine, eigenständige Stoppuhr für Zeitkriterien im Test-Modul (z. B. Sprint,
+   800-m-Lauf) – unabhängig von der Stoppuhr im Tools-Tab, damit sich beide nicht
+   gegenseitig stören. */
+function zeitMessenDialog(inp){
+  let laeuft = false, start = 0, vergangen = 0, handle = null;
+  openModal({titel:"Zeit stoppen", okText:"Übernehmen", onOk: () => {
+    if(handle) clearInterval(handle);
+    inp.value = stoppuhrFormat(laeuft ? vergangen + (Date.now() - start) : vergangen);
+    inp.dispatchEvent(new Event("input", {bubbles:true}));
+    inp.dispatchEvent(new Event("change", {bubbles:true}));
+  }});
+  const box = $("#modalBox");
+  const anzeige = document.createElement("div");
+  anzeige.className = "timeranzeige"; anzeige.style.textAlign = "center";
+  anzeige.textContent = "00:00,0";
+  box.insertBefore(anzeige, box.querySelector(".actions"));
+  const reihe = document.createElement("div");
+  reihe.className = "actions"; reihe.style.marginBottom = "10px";
+  const bStart = document.createElement("button");
+  bStart.className = "act primary"; bStart.type = "button"; bStart.textContent = "Start";
+  const bStop = document.createElement("button");
+  bStop.className = "act neutral"; bStop.type = "button"; bStop.textContent = "Stopp";
+  reihe.appendChild(bStart); reihe.appendChild(bStop);
+  box.insertBefore(reihe, box.querySelector(".actions"));
+  function aktualisieren(){
+    const ms = laeuft ? vergangen + (Date.now() - start) : vergangen;
+    anzeige.textContent = stoppuhrFormat(ms);
+  }
+  bStart.addEventListener("click", () => {
+    if(laeuft) return;
+    laeuft = true; start = Date.now();
+    handle = setInterval(aktualisieren, 100);
+    aktualisieren();
+  });
+  bStop.addEventListener("click", () => {
+    if(!laeuft) return;
+    vergangen += Date.now() - start; laeuft = false;
+    if(handle){ clearInterval(handle); handle = null; }
+    aktualisieren();
+  });
+}
+
+/* ---- Stationenplaner: Hallen und Geräte sind ein wiederverwendbarer Katalog,
+   die Platzierung ist ein flüchtiger Arbeitsstand, der optional an einer
+   Unterrichtseinheit gespeichert wird. */
+function hallenListe(){ if(!Array.isArray(db.hallen)) db.hallen = []; return db.hallen; }
+function geraeteListe(){ if(!Array.isArray(db.geraete)) db.geraete = []; return db.geraete; }
+function stationsPlatzierungen(){
+  if(!Array.isArray(db.ui.stationsPlatzierungen)) db.ui.stationsPlatzierungen = [];
+  return db.ui.stationsPlatzierungen;
+}
+function aktiveHalle(){
+  const liste = hallenListe();
+  if(!liste.length) return null;
+  return liste.find(h => h.id === db.ui.stationsHalleId) || liste[0];
+}
+function halleDialog(){
+  openModal({
+    titel: "Neue Halle",
+    felder:[
+      {key:"name", label:"Name", platzhalter:"z. B. Turnhalle"},
+      {key:"breite", label:"Breite (m)", wert:"20"},
+      {key:"hoehe", label:"Länge (m)", wert:"12"}
+    ],
+    okText:"Anlegen",
+    onOk: w => {
+      const name = (w.name || "").trim();
+      if(!name){ toast("Name fehlt"); return false; }
+      const h = {id:uid(), name:name,
+        breite: Math.max(1, parseFloat(w.breite) || 20),
+        hoehe: Math.max(1, parseFloat(w.hoehe) || 12)};
+      hallenListe().push(h);
+      db.ui.stationsHalleId = h.id;
+      save(); renderStationen();
+    }
+  });
+}
+function geraetDialog(){
+  openModal({
+    titel: "Neues Gerät",
+    felder:[{key:"name", label:"Name", platzhalter:"z. B. Kasten"}],
+    okText:"Anlegen",
+    onOk: w => {
+      const name = (w.name || "").trim();
+      if(!name){ toast("Name fehlt"); return false; }
+      geraeteListe().push({id:uid(), name:name});
+      save(); renderStationen();
+    }
+  });
+}
+function renderStationen(){
+  const selHalle = $("#selHalle");
+  const hallen = hallenListe();
+  selHalle.innerHTML = "";
+  if(!hallen.length){
+    const o = document.createElement("option");
+    o.value = ""; o.textContent = "Noch keine Halle angelegt";
+    selHalle.appendChild(o);
+  }
+  hallen.forEach(h => {
+    const o = document.createElement("option");
+    o.value = h.id; o.textContent = h.name + " (" + h.breite + "×" + h.hoehe + " m)";
+    selHalle.appendChild(o);
+  });
+  const halle = aktiveHalle();
+  if(halle) selHalle.value = halle.id;
+
+  const palette = $("#geraetePalette"); palette.innerHTML = "";
+  geraeteListe().forEach(g => {
+    palette.appendChild(chip(g.name, false, () => {
+      if(!halle){ toast("Erst eine Halle anlegen"); return; }
+      stationsPlatzierungen().push({id:uid(), geraetId:g.id, x:0.5, y:0.5});
+      save(); zeichneStationsflaeche(halle);
+    }));
+  });
+
+  const flaeche = $("#stationsflaeche");
+  if(halle) flaeche.style.aspectRatio = halle.breite + " / " + halle.hoehe;
+  zeichneStationsflaeche(halle);
+
+  const selE = $("#selStationenEinheit");
+  selE.innerHTML = "";
+  const oNone = document.createElement("option");
+  oNone.value = ""; oNone.textContent = "– keine –";
+  selE.appendChild(oNone);
+  reihenVon(db.ui.fachId).forEach(r => {
+    einheitenVon(r.id).forEach(e => {
+      const o = document.createElement("option");
+      o.value = e.id;
+      o.textContent = r.titel + " · " + (e.titel || "Einheit " + e.nr);
+      selE.appendChild(o);
+    });
+  });
+}
+function zeichneStationsflaeche(halle){
+  const flaeche = $("#stationsflaeche");
+  flaeche.innerHTML = "";
+  if(!halle){
+    flaeche.innerHTML = '<p class="hint" style="margin:14px">Erst oben eine Halle anlegen.</p>';
+    return;
+  }
+  stationsPlatzierungen().forEach(p => {
+    const g = geraeteListe().find(x => x.id === p.geraetId);
+    if(!g) return;
+    const tok = document.createElement("div");
+    tok.className = "geraetetoken";
+    tok.style.left = (p.x * 100) + "%";
+    tok.style.top = (p.y * 100) + "%";
+    tok.innerHTML = "<span>" + esc(g.name) + "</span><span class=\"x\">×</span>";
+    tok.querySelector(".x").addEventListener("click", ev => {
+      ev.stopPropagation();
+      db.ui.stationsPlatzierungen = stationsPlatzierungen().filter(x => x.id !== p.id);
+      save(); zeichneStationsflaeche(halle);
+    });
+    stationsDragBinden(tok, p, flaeche);
+    flaeche.appendChild(tok);
+  });
+}
+function stationsDragBinden(tok, p, flaeche){
+  let ziehend = false;
+  tok.addEventListener("pointerdown", ev => {
+    ziehend = true;
+    try{ tok.setPointerCapture(ev.pointerId); }catch(e){}
+    tok.style.cursor = "grabbing";
+  });
+  tok.addEventListener("pointermove", ev => {
+    if(!ziehend) return;
+    const r = flaeche.getBoundingClientRect();
+    let x = (ev.clientX - r.left) / r.width;
+    let y = (ev.clientY - r.top) / r.height;
+    x = Math.min(1, Math.max(0, x)); y = Math.min(1, Math.max(0, y));
+    p.x = x; p.y = y;
+    tok.style.left = (x * 100) + "%"; tok.style.top = (y * 100) + "%";
+  });
+  function loslassen(){
+    if(!ziehend) return;
+    ziehend = false; tok.style.cursor = "grab";
+    save();
+  }
+  tok.addEventListener("pointerup", loslassen);
+  tok.addEventListener("pointercancel", loslassen);
+}
+$("#selHalle").addEventListener("change", ev => {
+  db.ui.stationsHalleId = ev.target.value; save(); renderStationen();
+});
+$("#btnHalleNeu").addEventListener("click", halleDialog);
+$("#btnGeraetNeu").addEventListener("click", geraetDialog);
+$("#btnStationenLeeren").addEventListener("click", () => {
+  if(!stationsPlatzierungen().length) return;
+  db.ui.stationsPlatzierungen = [];
+  save(); zeichneStationsflaeche(aktiveHalle());
+  toast("Halle geleert");
+});
+$("#btnStationenSpeichern").addEventListener("click", () => {
+  const eid = $("#selStationenEinheit").value;
+  if(!eid){ toast("Erst eine Einheit wählen"); return; }
+  const e = db.einheiten.find(x => x.id === eid);
+  if(!e) return;
+  e.stationenplan = {halleId: db.ui.stationsHalleId,
+    platzierungen: stationsPlatzierungen().map(p => ({id:p.id, geraetId:p.geraetId, x:p.x, y:p.y}))};
+  save();
+  toast("An Einheit gespeichert");
+});
+$("#btnStationenLaden").addEventListener("click", () => {
+  const eid = $("#selStationenEinheit").value;
+  if(!eid){ toast("Erst eine Einheit wählen"); return; }
+  const e = db.einheiten.find(x => x.id === eid);
+  if(!e || !e.stationenplan){ toast("Diese Einheit hat noch keinen gespeicherten Plan"); return; }
+  db.ui.stationsHalleId = e.stationenplan.halleId;
+  db.ui.stationsPlatzierungen = (e.stationenplan.platzierungen || []).map(p => Object.assign({}, p));
+  save(); renderStationen();
+  toast("Plan geladen");
+});
 
 function renderTeams(){
   const k = klasse(db.ui.klasseId);
@@ -5532,6 +6101,57 @@ $("#ekKrit").addEventListener("keydown", ev => {
   if(ev.key === "Enter"){ ev.preventDefault(); $("#btnEkAdd").click(); }
 });
 
+/* ---- Kriterienvorlagen: einmal pro Reihe anlegen, statt jedes Mal neu tippen. ---- */
+function kriterienVorlagenListe(){
+  if(!Array.isArray(db.kriterienVorlagen)) db.kriterienVorlagen = [];
+  return db.kriterienVorlagen;
+}
+$("#btnKritVorlageSpeichern").addEventListener("click", () => {
+  const t = test(db.ui.testId); if(!t) return;
+  openModal({
+    titel: "Als Vorlage speichern",
+    felder:[{key:"name", label:"Name der Vorlage",
+             wert: t.titel || "", platzhalter:"z. B. Rolle vorwärts"}],
+    okText: "Speichern",
+    onOk: w => {
+      const name = (w.name || "").trim();
+      if(!name){ toast("Name fehlt"); return false; }
+      kriterienVorlagenListe().push({id:uid(), name:name,
+        kriterien: t.kriterien.map(kr => ({name:kr.name, typ:kr.typ}))});
+      save();
+      toast("Vorlage „" + name + "“ gespeichert");
+    }
+  });
+});
+$("#btnKritVorlageLaden").addEventListener("click", () => {
+  const t = test(db.ui.testId); if(!t) return;
+  const vorlagen = kriterienVorlagenListe();
+  if(!vorlagen.length){ toast("Noch keine Vorlage gespeichert"); return; }
+  openModal({
+    titel: "Vorlage übernehmen",
+    felder:[{key:"vorlageId", label:"Vorlage", typ:"select",
+      wert:vorlagen[0].id,
+      optionen: vorlagen.map(v => ({value:v.id,
+        label:v.name + " (" + v.kriterien.length + ")"}))}],
+    okText: "Übernehmen",
+    onOk: w => {
+      const v = vorlagen.find(x => x.id === w.vorlageId);
+      if(!v) return false;
+      const vorhandene = t.kriterien.map(kr => kr.name.toLowerCase());
+      let uebernommen = 0;
+      v.kriterien.forEach(kr => {
+        if(t.kriterien.length >= 12) return;
+        if(vorhandene.indexOf(kr.name.toLowerCase()) !== -1) return;
+        t.kriterien.push({id:uid(), name:kr.name, typ:kr.typ});
+        vorhandene.push(kr.name.toLowerCase());
+        uebernommen++;
+      });
+      save(); renderStunde();
+      toast(uebernommen ? uebernommen + " Kriterien übernommen" : "Schon alle vorhanden");
+    }
+  });
+});
+
 function tstGo(view, testId){
   zurueckWache();
   db.ui.tstView = view;
@@ -5759,6 +6379,8 @@ function kritKachel(t, k, nr, kr){
   if(!t.noten[nr]) t.noten[nr] = {};
 
   if(kr.typ === "text"){
+    const reihe = document.createElement("div");
+    reihe.style.cssText = "display:flex;gap:8px";
     const inp = document.createElement("input");
     inp.type = "text";
     inp.value = zeigeWert(t, nr, kr);
@@ -5770,7 +6392,13 @@ function kritKachel(t, k, nr, kr){
       saveSoon();
     });
     inp.addEventListener("change", () => { save(); testKopfAuffrischen(t, k, nr); });
-    karte.appendChild(inp);
+    reihe.appendChild(inp);
+    const uhr = document.createElement("button");
+    uhr.className = "act neutral mini"; uhr.type = "button";
+    uhr.textContent = "⏱"; uhr.setAttribute("aria-label", "Zeit stoppen");
+    uhr.addEventListener("click", () => zeitMessenDialog(inp));
+    reihe.appendChild(uhr);
+    karte.appendChild(reihe);
   }else{
     const wert = t.noten[nr][kr.id];
     const seg = document.createElement("div");
@@ -5853,6 +6481,20 @@ $("#tstKind").addEventListener("change", ev => {
 $("#btnTestFertig").addEventListener("click", () => tstGo("ansicht"));
 
 /* ---------- Übersicht ---------- */
+/* Wie viele der jüngsten dokumentierten Stunden in Folge k oder v haben – hilfreich
+   als früher Hinweis, etwa für ein Elterngespräch. Bricht an der ersten Stunde ohne
+   k/v ab; nicht dokumentierte Stunden werden dabei übersprungen. */
+function kvSerie(kid, nr){
+  const list = stundenVon(kid).filter(s => !s.aus && s.eintraege[nr] &&
+    (s.eintraege[nr].m || s.eintraege[nr].k || s.eintraege[nr].v));
+  let serie = 0;
+  for(let i = list.length - 1; i >= 0; i--){
+    const e = list[i].eintraege[nr];
+    if(e.k || e.v) serie++; else break;
+  }
+  return serie;
+}
+const KV_SERIE_SCHWELLE = 3;
 function statsFor(kid, fid){
   const k = klasse(kid);
   const list = stundenVon(kid, fid);
@@ -5910,6 +6552,11 @@ function renderUebersicht(){
     tr.addEventListener("click", () => sumGo("kind", r.nr));
     tr.innerHTML =
       '<td><span class="kindzelle"><span class="kindnr">' + r.nr + "</span>" +
+        (gesundheitAktiv(k.id, r.nr, heute()) ?
+          '<span class="kindnr-gesundheit" title="Gesundheitshinweis hinterlegt">⚠</span>' : "") +
+        (kvSerie(k.id, r.nr) >= KV_SERIE_SCHWELLE ?
+          '<span class="kindnr-serie" title="' + kvSerie(k.id, r.nr) +
+          "× in Folge gefehlt oder vergessen\">" + kvSerie(k.id, r.nr) + "×</span>" : "") +
         (r.label ? '<span class="kindname">' + esc(r.label) + "</span>" : "") + "</span></td>" +
       "<td>" + (r.k || "") + "</td><td>" + (r.v || "") + "</td>" +
       '<td class="strong">' + (r.avg === null ? "" : String(r.avg).replace(".", ",")) + "</td>" +
@@ -6030,6 +6677,363 @@ function beobDialogMitLoeschen(b){
   $("#modalBox").appendChild(wrap);
 }
 
+/* ---------- Gesundheitliche Besonderheiten ----------
+   Wie Beobachtungen an Klasse und Nummer gebunden, aber gesundheitsbezogen, mit
+   optionalem Gültigkeitszeitraum und bewusst getrennt von den pädagogischen
+   Beobachtungen – landet auch im Tagesüberblick, nicht nur auf der Kind-Seite. */
+function gesundheitListe(){
+  if(!Array.isArray(db.gesundheit)) db.gesundheit = [];
+  return db.gesundheit;
+}
+function gesundheitVon(klasseId, nr){
+  return gesundheitListe()
+    .filter(g => g.klasseId === klasseId && Number(g.nr) === Number(nr))
+    .sort((a, b) => (b.t || 0) - (a.t || 0));
+}
+function gesundheitAktiv(klasseId, nr, datum){
+  return gesundheitVon(klasseId, nr).some(g =>
+    (!g.von || g.von <= datum) && (!g.bis || g.bis >= datum));
+}
+function gesundheitDialog(vorhanden, klasseId, nr){
+  if(!db.klassen.length){ toast("Erst eine Klasse anlegen"); return; }
+  const kOpt = db.klassen.map(k => ({value:k.id, label:k.name}));
+  const kStart = klasse(klasseId) || klasse(db.ui.klasseId) || db.klassen[0];
+  const nrOpt = [];
+  for(let i = 1; i <= kStart.count; i++)
+    nrOpt.push({value:String(i),
+                label:"Nr. " + i + (kStart.labels[i] ? " · " + kStart.labels[i] : "")});
+  const felder = [];
+  if(!vorhanden && !klasseId){
+    felder.push({key:"klasseId", label:"Klasse", typ:"select",
+                 wert:kStart.id, optionen:kOpt});
+    felder.push({key:"nr", label:"Kind", typ:"select", wert:"1", optionen:nrOpt});
+  }
+  felder.push({key:"kategorie", label:"Kategorie", wert: vorhanden ? vorhanden.kategorie : "",
+               platzhalter:"z. B. Asthma"});
+  felder.push({key:"hinweis", label:"Was zu beachten ist", typ:"text2",
+               wert: vorhanden ? vorhanden.hinweis : "",
+               platzhalter:"z. B. bei Belastung Pause anbieten, Inhalator griffbereit"});
+  felder.push({key:"von", label:"Gültig ab (optional)", typ:"datum",
+               wert: vorhanden ? (vorhanden.von || "") : ""});
+  felder.push({key:"bis", label:"Gültig bis (optional)", typ:"datum",
+               wert: vorhanden ? (vorhanden.bis || "") : ""});
+  openModal({
+    titel: vorhanden ? "Gesundheitshinweis bearbeiten" : "Gesundheitshinweis",
+    text: vorhanden ? "" : "Gesundheitsbezogen – unabhängig von Beobachtungen.",
+    felder: felder,
+    okText: vorhanden ? "Übernehmen" : "Eintragen",
+    onOk: w => {
+      const kat = (w.kategorie || "").trim();
+      const hin = (w.hinweis || "").trim();
+      if(!kat){ toast("Ohne Kategorie geht es nicht"); return false; }
+      if(vorhanden){
+        vorhanden.kategorie = kat; vorhanden.hinweis = hin;
+        vorhanden.von = w.von || ""; vorhanden.bis = w.bis || "";
+      }else{
+        const kid = klasseId || w.klasseId;
+        const n = nr !== undefined && nr !== null ? Number(nr) : parseInt(w.nr, 10);
+        const k = klasse(kid);
+        if(!k || !(n >= 1 && n <= k.count)){ toast("Nummer passt nicht zur Klasse"); return false; }
+        gesundheitListe().push({id:uid(), klasseId:kid, nr:n, kategorie:kat, hinweis:hin,
+                                von:w.von || "", bis:w.bis || "", t:Date.now()});
+      }
+      save(); renderAlles();
+      toast("Eingetragen");
+    }
+  });
+  if(!vorhanden && !klasseId){
+    const sels = $("#modalBox").querySelectorAll("select");
+    if(sels.length >= 2) sels[0].addEventListener("change", () => {
+      const k = klasse(sels[0].value);
+      const ziel = sels[1];
+      ziel.innerHTML = "";
+      if(!k) return;
+      for(let i = 1; i <= k.count; i++){
+        const o = document.createElement("option");
+        o.value = String(i);
+        o.textContent = "Nr. " + i + (k.labels[i] ? " · " + k.labels[i] : "");
+        ziel.appendChild(o);
+      }
+    });
+  }
+}
+function renderGesundheit(k, nr){
+  const box = $("#kindGesundheit");
+  if(!box) return;
+  box.innerHTML = "";
+  const liste = gesundheitVon(k.id, nr);
+  if(!liste.length){
+    box.innerHTML = '<p class="hint" style="margin:0">Nichts hinterlegt.</p>';
+    return;
+  }
+  liste.forEach(g => {
+    const z = document.createElement("div");
+    z.className = "beobzeile";
+    const zeitraum = (g.von || g.bis)
+      ? (g.von ? deDate(g.von) : "") + (g.von && g.bis ? " – " : (g.bis ? "bis " : "")) +
+        (g.bis ? deDate(g.bis) : "")
+      : "";
+    z.innerHTML = '<div class="bwas">' +
+      (zeitraum ? '<span class="mini">' + esc(zeitraum) + "</span>" : "") +
+      "<p><b>" + esc(g.kategorie) + "</b>" + (g.hinweis ? " – " + esc(g.hinweis) : "") +
+      "</p></div>";
+    const stift = document.createElement("button");
+    stift.className = "iconbtn";
+    stift.innerHTML = STIFT_SVG;
+    stift.setAttribute("aria-label", "Gesundheitshinweis bearbeiten");
+    stift.addEventListener("click", () => gesundheitDialogMitLoeschen(g));
+    z.appendChild(stift);
+    box.appendChild(z);
+  });
+}
+function gesundheitDialogMitLoeschen(g){
+  gesundheitDialog(g);
+  const del = document.createElement("button");
+  del.className = "act quiet"; del.style.marginTop = "10px";
+  del.textContent = "Hinweis löschen";
+  del.addEventListener("click", () => {
+    closeModal();
+    merkeStand();
+    db.gesundheit = gesundheitListe().filter(x => x.id !== g.id);
+    save(); renderAlles(); toastUndo("Gesundheitshinweis gelöscht");
+  });
+  const wrap = document.createElement("div");
+  wrap.style.textAlign = "center"; wrap.appendChild(del);
+  $("#modalBox").appendChild(wrap);
+}
+/* Von überall aus direkt zu einem bestimmten Kind springen (z. B. aus dem
+   Tagesüberblick oder aus einem Vorfall heraus). */
+function kindOeffnen(klasseId, nr){
+  db.ui.klasseId = klasseId;
+  save();
+  goView("uebersicht");
+  sumGo("kind", nr);
+}
+
+/* ---------- Vorfalldokumentation ----------
+   Unfälle und Vorkommnisse zwischen Kindern, angelehnt an Verbandbuch-Praxis.
+   Eigenständig von Beobachtungen/Gesundheitshinweisen, da mehrere beteiligte
+   Kinder mit Rolle möglich sind – deshalb ein eigener, nicht auf dem normalen
+   felder-Formular basierender Dialog. */
+function vorfaelleListe(){
+  if(!Array.isArray(db.vorfaelle)) db.vorfaelle = [];
+  return db.vorfaelle;
+}
+function vorfaelleVon(klasseId, nr){
+  return vorfaelleListe()
+    .filter(v => v.klasseId === klasseId && (v.beteiligte || []).some(b => Number(b.nr) === Number(nr)))
+    .sort((a, b) => (b.datum || "").localeCompare(a.datum || "") || (b.t || 0) - (a.t || 0));
+}
+function vorfallDialog(vorhanden, klasseId, nr){
+  if(!db.klassen.length){ toast("Erst eine Klasse anlegen"); return; }
+  const kOpt = db.klassen.map(k => ({value:k.id, label:k.name}));
+  const kStart = klasse(vorhanden ? vorhanden.klasseId : (klasseId || db.ui.klasseId)) || db.klassen[0];
+  const beteiligt = {};
+  (vorhanden ? vorhanden.beteiligte : []).forEach(b => { beteiligt[b.nr] = b.rolle; });
+  if(!vorhanden && nr && !beteiligt.hasOwnProperty(Number(nr))) beteiligt[Number(nr)] = "betroffen";
+
+  const felder = [
+    {key:"klasseId", label:"Klasse", typ:"select", wert:kStart.id, optionen:kOpt},
+    {key:"typ", label:"Art des Vorfalls", typ:"select",
+     wert: vorhanden ? vorhanden.typ : "unfall",
+     optionen:[{value:"unfall", label:"Unfall / Verletzung"},
+               {value:"vorkommnis", label:"Vorkommnis zwischen Kindern"}]},
+    {key:"datum", label:"Datum", typ:"datum", wert: vorhanden ? vorhanden.datum : heute()},
+    {key:"uhrzeit", label:"Uhrzeit", typ:"zeit", wert: vorhanden ? (vorhanden.uhrzeit || "") : ""},
+    {key:"ort", label:"Ort", wert: vorhanden ? (vorhanden.ort || "") : "",
+     platzhalter:"z. B. Turnhalle, Pausenhof"},
+    {key:"hergang", label:"Hergang", typ:"text2", wert: vorhanden ? (vorhanden.hergang || "") : ""},
+    {key:"art", label:"Art der Verletzung / des Vorfalls",
+     wert: vorhanden ? (vorhanden.art || "") : ""},
+    {key:"massnahmen", label:"Erste-Hilfe-Maßnahmen bzw. ergriffene Schritte", typ:"text2",
+     wert: vorhanden ? (vorhanden.massnahmen || "") : ""},
+    {key:"zeugen", label:"Zeugen", wert: vorhanden ? (vorhanden.zeugen || "") : "",
+     platzhalter:"Kinder oder Kolleg:innen"},
+    {key:"elternStatus", label:"Eltern informiert", typ:"ja-nein",
+     wert: vorhanden && vorhanden.elternInfo && vorhanden.elternInfo.status ? "ja" : "nein"},
+    {key:"elternWie", label:"Wie (Telefon, Abholung, Zettel …)",
+     wert: vorhanden && vorhanden.elternInfo ? (vorhanden.elternInfo.wie || "") : ""},
+    {key:"arztRettung", label:"Arzt / Rettungsdienst hinzugezogen", typ:"ja-nein",
+     wert: vorhanden && vorhanden.arztRettung ? "ja" : "nein"},
+    {key:"notiz", label:"Weitere Notiz", typ:"text2", wert: vorhanden ? (vorhanden.notiz || "") : ""}
+  ];
+
+  openModal({
+    titel: vorhanden ? "Vorfall bearbeiten" : "Vorfall dokumentieren",
+    felder: felder,
+    okText: vorhanden ? "Übernehmen" : "Eintragen",
+    onOk: w => {
+      const k = klasse(w.klasseId);
+      if(!k){ toast("Klasse fehlt"); return false; }
+      const liste = Object.keys(beteiligt).map(nr => ({nr:Number(nr), rolle:beteiligt[nr]}))
+        .filter(b => b.nr >= 1 && b.nr <= k.count);
+      if(!liste.length){ toast("Mindestens ein beteiligtes Kind wählen"); return false; }
+      const daten = {
+        klasseId:k.id, typ:w.typ, datum:w.datum || heute(), uhrzeit:w.uhrzeit || "",
+        ort:(w.ort || "").trim(), beteiligte:liste, hergang:(w.hergang || "").trim(),
+        art:(w.art || "").trim(), massnahmen:(w.massnahmen || "").trim(),
+        zeugen:(w.zeugen || "").trim(),
+        elternInfo:{status: w.elternStatus === "ja", wie:(w.elternWie || "").trim()},
+        arztRettung: w.arztRettung === "ja", notiz:(w.notiz || "").trim()
+      };
+      if(vorhanden) Object.assign(vorhanden, daten);
+      else vorfaelleListe().push(Object.assign({id:uid(), t:Date.now()}, daten));
+      save(); renderAlles();
+      toast("Eingetragen");
+    }
+  });
+
+  /* Beteiligte Kinder: eigener Block vor Speichern/Abbrechen, da Mehrfachauswahl
+     mit Rolle über das normale felder-Formular hinausgeht. */
+  const box = $("#modalBox");
+  const wrap = document.createElement("div");
+  wrap.className = "field"; wrap.style.marginTop = "10px";
+  const lbl = document.createElement("label"); lbl.className = "lbl";
+  lbl.textContent = "Beteiligte Kinder";
+  wrap.appendChild(lbl);
+  const liste = document.createElement("div"); liste.id = "vfBeteiligte";
+  wrap.appendChild(liste);
+  box.insertBefore(wrap, box.querySelector(".actions"));
+
+  function beteiligteZeichnen(k){
+    liste.innerHTML = "";
+    for(let i = 1; i <= k.count; i++){
+      const z = document.createElement("div");
+      z.className = "vfkind";
+      const cb = document.createElement("input");
+      cb.type = "checkbox"; cb.id = "vfk" + i;
+      cb.checked = beteiligt.hasOwnProperty(i);
+      const lab = document.createElement("label");
+      lab.setAttribute("for", "vfk" + i);
+      lab.textContent = "Nr. " + i + (k.labels[i] ? " · " + k.labels[i] : "");
+      const rolle = document.createElement("select");
+      rolle.disabled = !cb.checked;
+      [["beteiligt", "beteiligt"], ["betroffen", "betroffen"]].forEach(o => {
+        const op = document.createElement("option");
+        op.value = o[0]; op.textContent = o[1];
+        if((beteiligt[i] || "beteiligt") === o[0]) op.selected = true;
+        rolle.appendChild(op);
+      });
+      cb.addEventListener("change", () => {
+        rolle.disabled = !cb.checked;
+        if(cb.checked) beteiligt[i] = rolle.value; else delete beteiligt[i];
+      });
+      rolle.addEventListener("change", () => { if(cb.checked) beteiligt[i] = rolle.value; });
+      z.appendChild(cb); z.appendChild(lab); z.appendChild(rolle);
+      liste.appendChild(z);
+    }
+  }
+  beteiligteZeichnen(kStart);
+  const klasseSel = box.querySelector("select");
+  if(klasseSel) klasseSel.addEventListener("change", () => {
+    Object.keys(beteiligt).forEach(nr => delete beteiligt[nr]);
+    const k2 = klasse(klasseSel.value);
+    if(k2) beteiligteZeichnen(k2);
+  });
+}
+function renderVorfaelle(k, nr){
+  const box = $("#kindVorfaelle");
+  if(!box) return;
+  box.innerHTML = "";
+  const liste = vorfaelleVon(k.id, nr);
+  if(!liste.length){
+    box.innerHTML = '<p class="hint" style="margin:0">Nichts dokumentiert.</p>';
+    return;
+  }
+  liste.forEach(v => {
+    const z = document.createElement("div");
+    z.className = "beobzeile";
+    const kurz = (v.hergang || v.art || "").replace(/\s+/g, " ").slice(0, 70);
+    z.innerHTML = '<div class="bwas"><span class="mini">' + deDate(v.datum) + " · " +
+      (v.typ === "unfall" ? "Unfall/Verletzung" : "Vorkommnis") + "</span><p>" + esc(kurz) +
+      (kurz.length >= 70 ? " …" : "") + "</p></div>";
+    const stift = document.createElement("button");
+    stift.className = "iconbtn";
+    stift.innerHTML = STIFT_SVG;
+    stift.setAttribute("aria-label", "Vorfall bearbeiten");
+    stift.addEventListener("click", () => vorfallDialogMitAktionen(v));
+    z.appendChild(stift);
+    box.appendChild(z);
+  });
+}
+function vorfallDialogMitAktionen(v){
+  vorfallDialog(v);
+  const wrap = document.createElement("div");
+  wrap.style.textAlign = "center"; wrap.style.marginTop = "10px";
+  wrap.style.display = "flex"; wrap.style.gap = "8px"; wrap.style.flexDirection = "column";
+  const pdf = document.createElement("button");
+  pdf.className = "act neutral";
+  pdf.textContent = "Als PDF sichern";
+  pdf.addEventListener("click", () => {
+    const bytes = vorfallPdf(v);
+    const clean = (klasse(v.klasseId) ? klasse(v.klasseId).name : "Klasse")
+      .replace(/[^\wäöüÄÖÜß-]+/g, "_");
+    dateiDialog(bytes, "Vorfall_" + clean + "_" + v.datum + ".pdf", "application/pdf",
+      {titel:"Vorfall als PDF"});
+  });
+  const del = document.createElement("button");
+  del.className = "act quiet";
+  del.textContent = "Vorfall löschen";
+  del.addEventListener("click", () => {
+    closeModal();
+    merkeStand();
+    db.vorfaelle = vorfaelleListe().filter(x => x.id !== v.id);
+    save(); renderAlles(); toastUndo("Vorfall gelöscht");
+  });
+  wrap.appendChild(pdf); wrap.appendChild(del);
+  $("#modalBox").appendChild(wrap);
+}
+function vorfallPdf(v){
+  const k = klasse(v.klasseId);
+  const d = PDF.doc();
+  const rand = P_M, inhaltsbreite = P_INNEN;
+  let seite = 0, y = 0;
+  function kopf(){
+    seite++;
+    d.kasten(0, 0, d.b, d.h, F_BG);
+    d.text(seite === 1 ? "Vorfalldokumentation" : "Vorfalldokumentation (Forts.)",
+           rand, d.h - rand, 16, F_INK, true);
+    y = d.h - rand - 28;
+  }
+  function fuss(){
+    d.text("Loewi · " + (k ? k.name : "") + " · " + deDate(v.datum),
+           rand, P_M - 18, 7.5, F_MUTED, false, "links");
+    d.text("Seite " + seite, rand + inhaltsbreite, P_M - 18, 7.5, F_MUTED, false, "rechts");
+  }
+  function platz(h){
+    if(y - h < P_M + 10){ fuss(); d.neueSeite(); kopf(); }
+  }
+  function zeile(label, wert){
+    if(!wert) return;
+    platz(16);
+    d.text(label, rand, y, 9, F_MUTED, false);
+    y -= 12;
+    d.umbrechen(String(wert), inhaltsbreite, 10, false).forEach(z => {
+      platz(14);
+      d.text(z, rand, y, 10, F_INK, false);
+      y -= 13;
+    });
+    y -= 4;
+  }
+  kopf();
+  zeile("Klasse", k ? k.name : "–");
+  zeile("Art", v.typ === "unfall" ? "Unfall / Verletzung" : "Vorkommnis zwischen Kindern");
+  zeile("Datum / Uhrzeit / Ort", deDate(v.datum) + (v.uhrzeit ? ", " + v.uhrzeit + " Uhr" : "") +
+    (v.ort ? " · " + v.ort : ""));
+  zeile("Beteiligte Kinder",
+    (v.beteiligte || []).map(b => "Nr. " + b.nr + " (" + b.rolle + ")").join(", ") || "–");
+  zeile("Hergang", v.hergang);
+  zeile("Art der Verletzung / des Vorfalls", v.art);
+  zeile("Erste-Hilfe-Maßnahmen / Schritte", v.massnahmen);
+  zeile("Zeugen", v.zeugen);
+  zeile("Eltern informiert", v.elternInfo && v.elternInfo.status
+    ? "Ja" + (v.elternInfo.wie ? " – " + v.elternInfo.wie : "") : "Nein");
+  zeile("Arzt / Rettungsdienst hinzugezogen", v.arztRettung ? "Ja" : "Nein");
+  zeile("Notiz", v.notiz);
+  fuss();
+  return PDF.bauen(d.fertig());
+}
+
 /* ---------- Eine Nummer im Verlauf ---------- */
 function renderKind(k, nr){
   if(!k) return;
@@ -6067,6 +7071,8 @@ function renderKind(k, nr){
 
   $("#kindBefreit").value = befreitBis(k, nr);
   renderBeob(k, nr);
+  renderGesundheit(k, nr);
+  renderVorfaelle(k, nr);
 
   const box = $("#kindVerlauf"); box.innerHTML = "";
   const mitEintrag = list.filter(s => {
@@ -6153,12 +7159,17 @@ function openModal(opt){
     let inp;
     if(f.typ === "datum"){
       inp = document.createElement("input"); inp.type = "date"; inp.value = f.wert || "";
+    }else if(f.typ === "zeit"){
+      inp = document.createElement("input"); inp.type = "time"; inp.value = f.wert || "";
     }else if(f.typ === "text2"){
       inp = document.createElement("textarea"); inp.rows = 6; inp.value = f.wert || "";
       if(f.platzhalter) inp.placeholder = f.platzhalter;
-    }else if(f.typ === "select"){
+    }else if(f.typ === "select" || f.typ === "ja-nein"){
       inp = document.createElement("select");
-      (f.optionen || []).forEach(o => {
+      const optionen = f.typ === "ja-nein"
+        ? [{value:"nein", label:"Nein"}, {value:"ja", label:"Ja"}]
+        : (f.optionen || []);
+      optionen.forEach(o => {
         const op = document.createElement("option");
         op.value = o.value; op.textContent = o.label;
         if(o.value === (f.wert || "")) op.selected = true;
@@ -7426,10 +8437,70 @@ $("#btnWipe").addEventListener("click", () => {
     });
 });
 
+/* ---------- Schuljahresabschluss ----------
+   Setzt Klassen einen Jahrgang hoch oder archiviert sie – die id der Klasse
+   bleibt in beiden Fällen stabil, also bleiben Plan, Fächer, Beobachtungen,
+   Gesundheitshinweise, Vorfälle und Tests automatisch verknüpft. */
+function schuljahrAbschlussDialog(){
+  const klassen = aktiveKlassen();
+  if(!klassen.length){ toast("Keine aktiven Klassen vorhanden"); return; }
+  openModal({
+    titel: "Schuljahr abschließen?",
+    text: "Erstelle vorher eine Sicherung (.json), falls du die Daten noch brauchst. " +
+      "Im nächsten Schritt legst du je Klasse fest, ob sie versetzt oder archiviert wird.",
+    gefahr: true,
+    okText: "Weiter",
+    onOk: () => { schuljahrKlassenDialog(klassen); return false; }
+  });
+}
+function schuljahrKlassenDialog(klassen){
+  const felder = [];
+  klassen.forEach(k => {
+    felder.push({key:"aktion_" + k.id, label:k.name + " (" + k.count + " Kinder)",
+      typ:"select", wert:"versetzen",
+      optionen:[{value:"versetzen", label:"Versetzen"}, {value:"archivieren", label:"Archivieren"}]});
+    felder.push({key:"name_" + k.id, label:"Neuer Name für " + k.name,
+      wert: naechsteKlasse(k.name)});
+  });
+  openModal({
+    titel: "Klassen einzeln festlegen",
+    text: "„Archivieren“ nimmt eine Klasse aus Plan und Stundenplan, ihre Daten " +
+      "bleiben über die Klassenverwaltung einsehbar und exportierbar.",
+    felder: felder,
+    okText: "Schuljahr abschließen",
+    onOk: w => {
+      let versetzt = 0, archiviert = 0;
+      klassen.forEach(k => {
+        if(w["aktion_" + k.id] === "archivieren"){
+          k.archiviert = true; archiviert++;
+        }else{
+          const neu = (w["name_" + k.id] || "").trim();
+          if(neu) k.name = neu;
+          versetzt++;
+        }
+      });
+      sortiereStamm();
+      save(); renderAlles();
+      toast(versetzt + " versetzt, " + archiviert + " archiviert");
+    }
+  });
+}
+$("#btnSchuljahrAbschluss").addEventListener("click", schuljahrAbschlussDialog);
+
 $("#btnBeobNeu").addEventListener("click", () => {
   const k = klasse(db.ui.klasseId);
   if(!k) return;
   beobDialog(null, k.id, db.ui.kindNr);
+});
+$("#btnGesundheitNeu").addEventListener("click", () => {
+  const k = klasse(db.ui.klasseId);
+  if(!k) return;
+  gesundheitDialog(null, k.id, db.ui.kindNr);
+});
+$("#btnVorfallNeu").addEventListener("click", () => {
+  const k = klasse(db.ui.klasseId);
+  if(!k) return;
+  vorfallDialog(null, k.id, db.ui.kindNr);
 });
 
 /* ---------- Backup-Wächter ---------- */
