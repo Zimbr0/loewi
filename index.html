@@ -1859,23 +1859,14 @@ body.vertmodus .stundenkarte{cursor:pointer}
 <div class="fabsheet" id="stdSheet" role="dialog" aria-modal="false" aria-label="Stunde hinzufügen">
   <div class="fabgriff"></div>
   <div id="stdSheetInhalt">
-    <button class="act quiet mini" id="btnNeuZurueck" style="margin-bottom:8px">Abbrechen</button>
     <div class="schrittleiste" id="neuSchritte"></div>
 
     <div class="card" id="neu0" style="display:none">
-      <h3 style="font-size:16px;margin-bottom:10px">Welche Stunde?</h3>
-      <div class="grid2">
-        <div>
-          <label class="lbl" for="naKlasse">Klasse</label>
-          <select id="naKlasse"></select>
-        </div>
-        <div>
-          <label class="lbl" for="naFach">Fach</label>
-          <select id="naFach"></select>
-        </div>
-      </div>
-      <div class="actions" style="margin-top:14px">
-        <button class="act primary" id="btnNeuAuswahlWeiter" style="width:100%">Weiter</button>
+      <h3 style="font-size:16px;margin-bottom:2px">Welche Stunde?</h3>
+      <div class="mini" id="neu0Datum" style="margin-bottom:10px"></div>
+      <div id="neu0Liste"></div>
+      <div class="actions" style="margin-top:12px" id="neu0Actions">
+        <button class="act neutral" id="btnNeuZurueck">Abbrechen</button>
       </div>
     </div>
 
@@ -1890,6 +1881,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
         <button class="wahlknopf" data-a="vertretung">
           <b>Vertretung</b><span>Fremde Klasse oder fremdes Fach</span></button>
       </div>
+      <div class="actions" style="margin-top:12px" id="neu1Actions"></div>
     </div>
 
     <div class="card" id="neu2" style="display:none">
@@ -1933,8 +1925,8 @@ body.vertmodus .stundenkarte{cursor:pointer}
       <div class="actions" style="margin-top:8px">
         <button class="act quiet" id="btnWieLetztes">Wie letztes Mal übernehmen</button>
       </div>
-      <div class="actions" style="margin-top:12px">
-        <button class="act primary" id="btnNeuWeiter" style="width:100%">Weiter</button>
+      <div class="actions" style="margin-top:12px" id="neu2Actions">
+        <button class="act primary" id="btnNeuWeiter">Weiter</button>
       </div>
     </div>
   </div>
@@ -1943,7 +1935,6 @@ body.vertmodus .stundenkarte{cursor:pointer}
 <div class="fabscrim" id="rScrim"></div>
 <div class="fabsheet" id="rSheet" role="dialog" aria-modal="false" aria-label="Unterrichtsreihe hinzufügen">
   <div class="fabgriff"></div>
-  <button class="act quiet mini" id="btnReiheSheetZu" style="margin-bottom:8px">Abbrechen</button>
   <div class="card" style="margin:0">
     <h3 style="font-size:16px;margin-bottom:10px">Neue Unterrichtsreihe</h3>
     <label class="lbl" for="nrTitel">Titel</label>
@@ -1954,7 +1945,8 @@ body.vertmodus .stundenkarte{cursor:pointer}
     </div>
     <p class="hint">Reihen gehören zum Fach und lassen sich in jeder Klasse nutzen.</p>
     <div class="actions" style="margin-top:12px">
-      <button class="act primary" id="btnReiheAdd" style="width:100%">Reihe anlegen</button>
+      <button class="act primary" id="btnReiheAdd">Reihe anlegen</button>
+      <button class="act neutral" id="btnReiheSheetZu">Abbrechen</button>
     </div>
     <div class="sep"></div>
     <div class="actions">
@@ -1968,14 +1960,14 @@ body.vertmodus .stundenkarte{cursor:pointer}
 <div class="fabscrim" id="eScrim"></div>
 <div class="fabsheet" id="eSheet" role="dialog" aria-modal="false" aria-label="Unterrichtseinheit hinzufügen">
   <div class="fabgriff"></div>
-  <button class="act quiet mini" id="btnEinheitSheetZu" style="margin-bottom:8px">Abbrechen</button>
   <div class="card" style="margin:0">
     <h3 style="font-size:16px;margin-bottom:10px">Neue Unterrichtseinheit</h3>
     <label class="lbl" for="neTitel">Thema der Stunde (optional)</label>
     <input type="text" id="neTitel" placeholder="z. B. Werfen aus dem Stand">
     <p class="hint">Die weiteren Angaben folgen direkt danach.</p>
     <div class="actions" style="margin-top:12px">
-      <button class="act primary" id="btnEinheitAdd" style="width:100%">Einheit anlegen</button>
+      <button class="act primary" id="btnEinheitAdd">Einheit anlegen</button>
+      <button class="act neutral" id="btnEinheitSheetZu">Abbrechen</button>
     </div>
   </div>
 </div>
@@ -3371,14 +3363,23 @@ function renderNeu(){
   });
   $("#btnNeuZurueck").textContent =
     (zeigeAuswahl || (!nu.brauchtAuswahl && !nu.art)) ? "Abbrechen" : "Zurück";
+  /* Abbrechen zieht immer in die Aktionsleiste des gerade sichtbaren Schritts,
+     neben dessen Weiter-Knopf (falls vorhanden). */
+  const abbrechenZiel = zeigeAuswahl ? "#neu0Actions" : (!nu.art ? "#neu1Actions" : "#neu2Actions");
+  $(abbrechenZiel).appendChild($("#btnNeuZurueck"));
 
   $("#neu0").style.display = zeigeAuswahl ? "" : "none";
   $("#neu1").style.display = (!zeigeAuswahl && !nu.art) ? "" : "none";
   $("#neu2").style.display = (!zeigeAuswahl && nu.art) ? "" : "none";
   if(zeigeAuswahl){
-    fuelleAuswahl($("#naKlasse"), aktiveKlassen().map(x => [x.id, x.name]), nu.klasseId);
-    fuelleAuswahl($("#naFach"), [["", "– kein Fach –"]].concat(
-      db.faecher.map(x => [x.id, x.name])), nu.fachId || "");
+    $("#neu0Datum").textContent = WOCHENTAG[isoZuDatum(nu.datum).getDay()] + ", " + deDate(nu.datum);
+    const box = $("#neu0Liste"); box.innerHTML = "";
+    const liste = stundenHeute(nu.datum);
+    if(!liste.length){
+      box.innerHTML = '<p class="hint">Kein Stundenplan für diesen Tag.</p>';
+    }else{
+      liste.forEach(slot => box.appendChild(neuStundenplanKarte(slot, nu.datum)));
+    }
     return;
   }
 
@@ -3411,14 +3412,34 @@ function renderNeu(){
   }
   renderNeuPicker();
 }
-$("#btnNeuAuswahlWeiter").addEventListener("click", () => {
+/* Schritt 1 zeigt den Tagesplan; nur was noch nicht erfasst ist, lässt sich
+   antippen. Bearbeiten von Vorhandenem läuft ausschließlich über Stunden. */
+function neuStundenplanKarte(slot, datum){
+  const k = klasse(slot.klasseId), f = fach(slot.fachId);
+  const zeit = planRaster().find(r => r.nr === slot.nr);
+  const vorhanden = stundeZuSlot(slot, datum);
+  const karte = document.createElement("div");
+  karte.className = "card stundenkarte" + (vorhanden ? " gedimmt" : " offen");
+  if(vorhanden) karte.style.cursor = "default";
+  karte.innerHTML =
+    '<div class="zeit"><b>' + slot.nr + ".</b><span>" +
+      (zeit && zeit.von ? esc(zeit.von) + "<br>" + esc(zeit.bis || "") : "Stunde") + "</span></div>" +
+    '<div class="was"><h3>' + (k ? esc(k.name) : "Klasse weg") +
+      (f ? " · " + esc(f.name) : "") + "</h3>" +
+      '<div class="sub">' + (vorhanden ? "Schon erfasst" : "Antippen zum Dokumentieren") +
+      (slot.raum ? " · " + esc(slot.raum) : "") + "</div></div>" +
+    (vorhanden ? "" : '<div class="chev">›</div>');
+  if(!vorhanden && k){
+    karte.addEventListener("click", () => neuAuswahlUebernehmen(slot.klasseId, slot.fachId));
+  }
+  return karte;
+}
+function neuAuswahlUebernehmen(klasseId, fachId){
   const nu = db.ui.neu; if(!nu) return;
-  const kSel = $("#naKlasse"), fSel = $("#naFach");
-  if(!kSel.value){ toast("Erst eine Klasse wählen"); return; }
-  nu.klasseId = kSel.value; nu.fachId = fSel.value || null;
+  nu.klasseId = klasseId; nu.fachId = fachId || null;
   nu.auswahlFertig = true;
   save(); renderNeu();
-});
+}
 function fuelleAuswahl(sel, paare, wert){
   sel.innerHTML = "";
   paare.forEach(([v, t]) => {
