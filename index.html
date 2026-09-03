@@ -1582,33 +1582,50 @@ body.vertmodus .stundenkarte{cursor:pointer}
     <div class="card">
       <div class="rowline" style="padding-top:0;border-bottom:0;padding-bottom:0">
         <h3 style="font-size:15px">Beobachtungen</h3>
-        <button class="act neutral mini" id="btnBeobNeu">+ Notieren</button>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="iconbtn" id="btnBeobDetails" aria-label="Beobachtungen ansehen"></button>
+          <button class="act neutral mini" id="btnBeobNeu">+</button>
+        </div>
       </div>
-      <p class="hint" style="margin:6px 0 10px">Alltägliche pädagogische und
-        erzieherische Beobachtungen zum Kind – unabhängig von Fach und Mitarbeit.</p>
-      <div id="kindBeob"></div>
     </div>
     <div class="card">
       <div class="rowline" style="padding-top:0;border-bottom:0;padding-bottom:0">
         <h3 style="font-size:15px">Gesundheitliche Besonderheiten</h3>
-        <button class="act neutral mini" id="btnGesundheitNeu">+ Hinweis</button>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="iconbtn" id="btnGesundheitDetails" aria-label="Gesundheitliche Besonderheiten ansehen"></button>
+          <button class="act neutral mini" id="btnGesundheitNeu">+</button>
+        </div>
       </div>
-      <p class="hint" style="margin:6px 0 10px">Gesundheitsbezogen – etwa Asthma oder
-        Einschränkungen – getrennt von den Beobachtungen.</p>
-      <div id="kindGesundheit"></div>
     </div>
     <div class="card">
       <div class="rowline" style="padding-top:0;border-bottom:0;padding-bottom:0">
         <h3 style="font-size:15px">Vorfälle</h3>
-        <button class="act neutral mini" id="btnVorfallNeu">+ Dokumentieren</button>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="iconbtn" id="btnVorfallDetails" aria-label="Vorfälle ansehen"></button>
+          <button class="act neutral mini" id="btnVorfallNeu">+</button>
+        </div>
       </div>
-      <p class="hint" style="margin:6px 0 10px">Unfälle und Vorkommnisse, in die dieses
-        Kind involviert war.</p>
-      <div id="kindVorfaelle"></div>
+      <div id="kindVorfaelleKurz"></div>
     </div>
     <div class="card">
       <h3 style="font-size:15px;margin-bottom:6px">Verlauf</h3>
       <div id="kindVerlauf"></div>
+    </div>
+  </div>
+
+  <div id="sumDetails" style="display:none">
+    <div class="topbar" id="tbDetails"></div>
+    <div class="card">
+      <h3 style="font-size:15px;margin-bottom:6px">Beobachtungen</h3>
+      <div id="kdBeob"></div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:15px;margin-bottom:6px">Gesundheitliche Besonderheiten</h3>
+      <div id="kdGesundheit"></div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:15px;margin-bottom:6px">Vorfälle</h3>
+      <div id="kdVorfaelle"></div>
     </div>
   </div>
 </section>
@@ -6193,10 +6210,14 @@ function sumGo(view, nr){
 function renderUebersicht(){
   const k = klasse(db.ui.klasseId);
   let v = db.ui.sumView || "liste";
-  if(v === "kind" && (!k || !db.ui.kindNr || db.ui.kindNr > k.count)){ v = "liste"; db.ui.sumView = "liste"; }
-  $("#sumListe").style.display = v === "liste" ? "" : "none";
-  $("#sumKind").style.display  = v === "kind" ? "" : "none";
+  if((v === "kind" || v === "details") && (!k || !db.ui.kindNr || db.ui.kindNr > k.count)){
+    v = "liste"; db.ui.sumView = "liste";
+  }
+  $("#sumListe").style.display   = v === "liste" ? "" : "none";
+  $("#sumKind").style.display    = v === "kind" ? "" : "none";
+  $("#sumDetails").style.display = v === "details" ? "" : "none";
   if(v === "kind"){ renderKind(k, db.ui.kindNr); return; }
+  if(v === "details"){ renderKindDetails(k, db.ui.kindNr); return; }
   const tb = $("#tblSum").querySelector("tbody");
   tb.innerHTML = "";
   if(!k){
@@ -6307,7 +6328,7 @@ function beobDialog(vorhanden, klasseId, nr){
   }
 }
 function renderBeob(k, nr){
-  const box = $("#kindBeob");
+  const box = $("#kdBeob");
   if(!box) return;
   box.innerHTML = "";
   const liste = beobVon(k.id, nr);
@@ -6426,7 +6447,7 @@ function gesundheitDialog(vorhanden, klasseId, nr){
   }
 }
 function renderGesundheit(k, nr){
-  const box = $("#kindGesundheit");
+  const box = $("#kdGesundheit");
   if(!box) return;
   box.innerHTML = "";
   const liste = gesundheitVon(k.id, nr);
@@ -6516,10 +6537,21 @@ function vorfallDialog(vorhanden, klasseId, nr){
   };
   vfZeichnen(z, vorhanden);
 }
+const VF_SCHRITT_NAMEN = ["Wann & wo", "Beteiligte", "Beschreibung", "Maßnahmen"];
 function vfKopf(box, z, untertitel){
   const h = document.createElement("h3");
-  h.textContent = "Vorfall · Schritt " + z.schritt + " von 4";
+  h.textContent = "Vorfall dokumentieren";
   box.appendChild(h);
+  const leiste = document.createElement("div");
+  leiste.className = "schrittleiste";
+  VF_SCHRITT_NAMEN.forEach((t, i) => {
+    const nr = i + 1;
+    const d = document.createElement("div");
+    d.className = "schritt" + (nr === z.schritt ? " an" : (nr < z.schritt ? " fertig" : ""));
+    d.innerHTML = "<b>" + nr + "</b><span>" + t + "</span>";
+    leiste.appendChild(d);
+  });
+  box.appendChild(leiste);
   const p = document.createElement("p");
   p.style.cssText = "font-size:13.5px;color:var(--muted);margin:0 0 14px";
   p.textContent = untertitel;
@@ -6591,29 +6623,32 @@ function vfZeichnen(z, vorhanden){
   }else if(z.schritt === 2){
     vfKopf(box, z, "Wer war beteiligt?");
 
-    const addBox = document.createElement("div");
-    addBox.className = "card"; addBox.style.cssText =
-      "background:var(--surface);box-shadow:none;padding:12px;margin:0 0 14px";
-    const addLbl = document.createElement("div");
-    addLbl.className = "lbl"; addLbl.textContent = "Kind hinzufügen";
-    addBox.appendChild(addLbl);
+    const addLbl = document.createElement("label");
+    addLbl.className = "lbl"; addLbl.style.marginTop = "4px"; addLbl.textContent = "Kind hinzufügen";
+    box.appendChild(addLbl);
     const kSel = document.createElement("select"); kSel.style.marginTop = "8px";
+    const kPlatz = document.createElement("option");
+    kPlatz.value = ""; kPlatz.textContent = "Klasse"; kPlatz.disabled = true; kPlatz.selected = true;
+    kSel.appendChild(kPlatz);
     db.klassen.forEach(k => {
       const op = document.createElement("option");
       op.value = k.id; op.textContent = k.name;
       kSel.appendChild(op);
     });
-    addBox.appendChild(kSel);
+    box.appendChild(kSel);
     const nrSel = document.createElement("select"); nrSel.style.marginTop = "8px";
-    addBox.appendChild(nrSel);
+    box.appendChild(nrSel);
     const addBtn = document.createElement("button");
     addBtn.className = "act neutral"; addBtn.type = "button"; addBtn.textContent = "+ Hinzufügen";
     addBtn.style.cssText = "width:100%;margin-top:8px";
-    addBox.appendChild(addBtn);
-    box.appendChild(addBox);
+    box.appendChild(addBtn);
+
+    const trenner = document.createElement("div");
+    trenner.className = "sep"; trenner.style.margin = "14px 0";
+    box.appendChild(trenner);
 
     const listWrap = document.createElement("div");
-    listWrap.className = "field";
+    listWrap.className = "field"; listWrap.style.marginTop = "0";
     const listLbl = document.createElement("label"); listLbl.className = "lbl";
     listLbl.textContent = "Beteiligte Personen";
     listWrap.appendChild(listLbl);
@@ -6623,18 +6658,21 @@ function vfZeichnen(z, vorhanden){
 
     function nrOptionenFuellen(){
       const k = klasse(kSel.value);
-      const vorher = nrSel.value;
       nrSel.innerHTML = "";
-      if(!k) return;
-      for(let i = 1; i <= k.count; i++){
-        if(z.beteiligt.some(b => b.klasseId === k.id && b.nr === i)) continue;
-        const op = document.createElement("option");
-        op.value = i; op.textContent = "Nr. " + i + (k.labels[i] ? " · " + k.labels[i] : "");
-        nrSel.appendChild(op);
+      const nrPlatz = document.createElement("option");
+      nrPlatz.value = ""; nrPlatz.textContent = "Kind"; nrPlatz.disabled = true; nrPlatz.selected = true;
+      nrSel.appendChild(nrPlatz);
+      if(k){
+        for(let i = 1; i <= k.count; i++){
+          if(z.beteiligt.some(b => b.klasseId === k.id && b.nr === i)) continue;
+          const op = document.createElement("option");
+          op.value = i; op.textContent = "Nr. " + i + (k.labels[i] ? " · " + k.labels[i] : "");
+          nrSel.appendChild(op);
+        }
       }
-      if(vorher) nrSel.value = vorher;
-      addBtn.disabled = !nrSel.options.length;
+      addBtn.disabled = !kSel.value || nrSel.options.length <= 1;
     }
+    nrSel.addEventListener("change", () => { addBtn.disabled = !kSel.value || !nrSel.value; });
     function listeZeichnen(){
       liste.innerHTML = "";
       if(!z.beteiligt.length){
@@ -6766,8 +6804,24 @@ function vorfallAnsehen(v){
   absatz("Beschreibung", v.beschreibung);
   absatz("Maßnahmen", v.massnahmen);
 }
+/* Kurzfassung auf der Kind-Übersicht: nur Datum und Ort, nicht antippbar –
+   die eigentliche Ansicht/Bearbeitung läuft über die Detailansicht (Auge). */
+function renderVorfaelleKurz(k, nr){
+  const box = $("#kindVorfaelleKurz");
+  if(!box) return;
+  box.innerHTML = "";
+  const liste = vorfaelleVon(k.id, nr);
+  if(!liste.length) return;
+  liste.forEach(v => {
+    const z = document.createElement("div");
+    z.className = "beobzeile";
+    z.innerHTML = '<div class="bwas"><span class="mini">' + deDate(v.datum) +
+      (v.ort ? " · " + esc(v.ort) : "") + "</span></div>";
+    box.appendChild(z);
+  });
+}
 function renderVorfaelle(k, nr){
-  const box = $("#kindVorfaelle");
+  const box = $("#kdVorfaelle");
   if(!box) return;
   box.innerHTML = "";
   const liste = vorfaelleVon(k.id, nr);
@@ -6867,9 +6921,7 @@ function renderKind(k, nr){
   });
 
   $("#kindBefreit").value = befreitBis(k, nr);
-  renderBeob(k, nr);
-  renderGesundheit(k, nr);
-  renderVorfaelle(k, nr);
+  renderVorfaelleKurz(k, nr);
 
   const box = $("#kindVerlauf"); box.innerHTML = "";
   const mitEintrag = list.filter(s => {
@@ -6913,6 +6965,18 @@ function renderKind(k, nr){
       '<div class="cd ' + cls + '">' + (c || "–") + "</div>";
     box.appendChild(zeile);
   });
+}
+/* Detailansicht: eigenes Unterkapitel, in dem Beobachtungen, Gesundheitshinweise
+   und Vorfälle einzeln aufgelistet und bearbeitet werden können – die
+   Kind-Übersicht selbst zeigt dafür nur noch Auge- und Plus-Knopf. */
+function renderKindDetails(k, nr){
+  if(!k) return;
+  const label = k.labels[nr] ? k.labels[nr] : "";
+  topbar($("#tbDetails"), {zurueck: () => sumGo("kind", nr),
+    zurueckText: label ? label : ("Nr. " + nr)});
+  renderBeob(k, nr);
+  renderGesundheit(k, nr);
+  renderVorfaelle(k, nr);
 }
 $("#kindBefreit").addEventListener("change", ev => {
   const k = klasse(db.ui.klasseId), nr = db.ui.kindNr;
@@ -7054,6 +7118,13 @@ const STIFT_SVG = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" s
 /* Kleines, ausgehöhltes Kreuz-Symbol (wie beim Roten Kreuz) für
    Gesundheitshinweise – bewusst als Umriss statt als Warndreieck. */
 const GESUNDHEIT_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" style="vertical-align:-1px"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6Z"/></svg>';
+/* Auge-Symbol (dasselbe wie beim FAB-Eintrag "Beobachtung") für den Sprung
+   in die Detailansicht eines Kindes. */
+const AUGE_SVG = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
+["btnBeobDetails", "btnGesundheitDetails", "btnVorfallDetails"].forEach(id => {
+  const el = document.getElementById(id);
+  if(el) el.innerHTML = AUGE_SVG;
+});
 
 function fach(id){ return db.faecher.find(x => x.id === id) || null; }
 function reihe(id){ return db.reihen.find(x => x.id === id) || null; }
@@ -8301,6 +8372,9 @@ $("#btnVorfallNeu").addEventListener("click", () => {
   const k = klasse(db.ui.klasseId);
   if(!k) return;
   vorfallDialog(null, k.id, db.ui.kindNr);
+});
+["btnBeobDetails", "btnGesundheitDetails", "btnVorfallDetails"].forEach(id => {
+  $("#" + id).addEventListener("click", () => sumGo("details"));
 });
 
 /* ---------- Backup-Wächter ---------- */
