@@ -93,11 +93,8 @@ header{position:sticky;top:0;z-index:20;background:var(--bg);
 /* Der Schriftzug sitzt unabhängig von der (unterschiedlich breiten) Auswahl
    links und den Knöpfen rechts immer mittig in der Zeile. */
 .hdr-logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  height:23px;width:auto;pointer-events:none;display:block}
-:root[data-theme="dark"] .hdr-logo{filter:invert(1)}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]) .hdr-logo{filter:invert(1)}
-}
+  margin:0;font-size:21px;font-weight:800;letter-spacing:.01em;
+  color:var(--ink);pointer-events:none;white-space:nowrap}
 /* Die Kopfzeile ist der Auswahlknopf: Klasse und Fach stehen dort, wo man
    ohnehin hinsieht, und ein Tipp öffnet die Auswahl. Bewusst schmal gehalten,
    damit der Schriftzug in der Mitte nicht bedrängt wird. */
@@ -1024,7 +1021,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
 
 <header>
   <div class="hdr-row">
-    <img src="logo.png" alt="Loewi" class="hdr-logo">
+    <div class="hdr-logo">Loewi</div>
     <button class="hdr-txt" id="navAuswahl" type="button"
       aria-haspopup="true" aria-expanded="false" aria-label="Klasse und Fach wählen">
       <span class="hdr-wer">
