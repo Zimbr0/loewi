@@ -4,14 +4,16 @@
    umgekehrt zuerst aus dem Zwischenspeicher genommen, weil sie sich nie ändern.
    Die Unterrichtsdaten liegen NICHT hier, sondern im localStorage des Browsers. */
 
-const CACHE = "loewi-v1";
+const CACHE = "loewi-v2";
 const DATEIEN = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
-  "./apple-touch-icon.png"
+  "./apple-touch-icon.png",
+  "./logo.png",
+  "./loewe-tour.png"
 ];
 
 self.addEventListener("install", ev => {
