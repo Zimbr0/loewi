@@ -971,6 +971,42 @@ body.vertmodus .stundenkarte{cursor:pointer}
 .badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;
   background:var(--surface);color:var(--muted)}
 .badge.gehalten{background:var(--good-soft);color:var(--good)}
+
+/* --- Rundgang: abgedunkelte Seite, ein Loch über der erklärten Stelle,
+     Sprechblase am Löwen unten rechts. Klick auf die Fläche geht weiter. */
+.tourlayer{position:fixed;inset:0;z-index:100;cursor:pointer}
+.tourdim{position:fixed;inset:0;background:rgba(12,10,8,.72);
+  transition:opacity .25s ease}
+.tourspot{position:fixed;border-radius:14px;pointer-events:none;
+  box-shadow:0 0 0 3px var(--accent), 0 0 0 9999px rgba(12,10,8,.72);
+  transition:top .35s cubic-bezier(.3,.8,.3,1),left .35s cubic-bezier(.3,.8,.3,1),
+    width .35s cubic-bezier(.3,.8,.3,1),height .35s cubic-bezier(.3,.8,.3,1);
+  opacity:0}
+.tourspot.an{opacity:1}
+.tourfigur{position:fixed;right:12px;
+  bottom:calc(74px + env(safe-area-inset-bottom));z-index:101;
+  display:flex;flex-direction:column;align-items:flex-end;
+  max-width:min(310px,calc(100vw - 24px))}
+.tourblase{position:relative;background:var(--card);border:1px solid var(--line);
+  border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:8px;
+  cursor:auto}
+.tourblase::after{content:"";position:absolute;bottom:-9px;right:38px;
+  width:16px;height:16px;background:var(--card);
+  border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+  transform:rotate(45deg);border-radius:0 0 3px 0}
+.tourblase h3{font-size:15.5px;margin-bottom:4px}
+.tourblase p{font-size:13.5px;color:var(--ink);line-height:1.45;margin:0}
+.tourx{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:8px;
+  border:0;background:0;color:var(--muted);display:flex;align-items:center;
+  justify-content:center;cursor:pointer;padding:0}
+.tourx:active{transform:scale(.92)}
+.tourpunkte{display:flex;gap:5px;margin-top:10px}
+.tourpunkte span{width:6px;height:6px;border-radius:999px;background:var(--line)}
+.tourpunkte span.an{background:var(--accent);width:16px;border-radius:999px}
+.tourloewe{width:92px;height:auto;display:block;
+  filter:drop-shadow(0 8px 16px rgba(0,0,0,.35))}
+.tourweiter{font-size:11px;color:var(--muted);text-align:right;margin-top:6px;
+  padding-right:2px}
 </style>
 </head>
 <body>
@@ -1993,6 +2029,20 @@ body.vertmodus .stundenkarte{cursor:pointer}
   </div>
 </div>
 
+<div class="tourlayer" id="tourLayer" hidden>
+  <div class="tourdim" id="tourDim"></div>
+  <div class="tourspot" id="tourSpot"></div>
+  <div class="tourfigur">
+    <div class="tourblase">
+      <button class="tourx" id="tourX" type="button" aria-label="Rundgang beenden">✕</button>
+      <h3 id="tourTitel"></h3>
+      <p id="tourText"></p>
+      <div class="tourpunkte" id="tourPunkte"></div>
+    </div>
+    <img src="loewe-tour.png" class="tourloewe" alt="Löwi">
+  </div>
+</div>
+
 <div class="lock" id="lock" hidden>
   <div class="lockbox">
     <h2>Loewi</h2>
@@ -2848,6 +2898,7 @@ function zurueckWache(){
 function zurueckSchritt(){
   /* Gesperrt: die Zurück-Taste darf nicht am Code vorbeiführen. */
   if(!$("#lock").hidden) return true;
+  if(typeof tourOffen !== "undefined" && tourOffen){ tourBeenden(); return true; }
   if(!$("#ovl").hidden){ closeModal(); return true; }
   if(typeof fabOffen !== "undefined" && fabOffen){ closeFab(); return true; }
   if(typeof dropOffen !== "undefined" && dropOffen){ closeDrop(); return true; }
@@ -8658,7 +8709,8 @@ function profilOeffnen(){
   box.appendChild(kopf);
   const wrap = document.createElement("div");
   wrap.className = "profilwege";
-  [["Häufige Fragen", () => { closeModal(); profilSeite("faq"); }],
+  [["Neu bei Loewi? Starte jetzt deinen Rundgang!", () => { closeModal(); tourStarten(); }],
+   ["Häufige Fragen", () => { closeModal(); profilSeite("faq"); }],
    ["Daten und Sicherung", () => { closeModal(); profilSeite("daten"); }]
   ].forEach(([txt, tap]) => {
     const b = document.createElement("button");
@@ -8682,6 +8734,109 @@ function profilOeffnen(){
   zu.appendChild(zub);
   box.appendChild(zu);
 }
+
+/* ---------- Rundgang ----------
+   Ein Löwe erklärt fünf zentrale Stellen der App. Jeder Schritt wechselt erst
+   zur richtigen Ansicht, bevor die Stelle eingerahmt wird – „vor“ läuft
+   synchron, daher reicht ein Frame Wartezeit vorm Ausmessen. */
+const TOUR_SCHRITTE = [
+  {
+    titel:"Willkommen bei Loewi!",
+    text:"Ich zeige dir kurz, wo du was findest. Einfach auf den Bildschirm tippen, um weiterzugehen.",
+    vor: () => { db.ui.bereich = "plan"; goView("stunde"); }
+  },
+  {
+    titel:"Klassen & Fächer",
+    text:"Hier oben wählst du Klasse und Fach. Über das Stift-Symbol dahinter legst du neue an.",
+    ziel:"#navAuswahl",
+    vor: () => { db.ui.bereich = "plan"; goView("stunde"); }
+  },
+  {
+    titel:"Plan",
+    text:"Trag einmal deinen Stundenplan ein – danach reicht ein Antippen, um eine Stunde zu erfassen.",
+    ziel:'nav button[data-view="stunde"]',
+    vor: () => { db.ui.bereich = "plan"; goView("stunde"); }
+  },
+  {
+    titel:"Organisation",
+    text:"Was heute ansteht und was noch offen ist, dazu Termine, Aufgaben, Notizen und der Kalender.",
+    ziel:'nav button[data-view="organisation"]',
+    vor: () => goView("organisation")
+  },
+  {
+    titel:"Unterricht",
+    text:"Plane Unterrichtsreihen mit ihren Einheiten – einmal angelegt, in jeder Klasse nutzbar.",
+    ziel:'nav button[data-view="planung"]',
+    vor: () => goView("planung")
+  },
+  {
+    titel:"Daten & Sicherung",
+    text:"Sichere deine Daten regelmäßig als Datei – falls du das Gerät wechselst oder verlierst.",
+    ziel:"#btnBackup",
+    vor: () => profilSeite("daten")
+  },
+  {
+    titel:"Das war's!",
+    text:"Du findest den Rundgang jederzeit wieder im Profil. Viel Freude mit Loewi!",
+    vor: () => { db.ui.bereich = "plan"; goView("stunde"); }
+  }
+];
+let tourOffen = false, tourIndex = 0;
+function tourStarten(){
+  closeModal(); closeFab(); closeDrop();
+  tourOffen = true; tourIndex = 0;
+  $("#tourLayer").hidden = false;
+  zurueckWache();
+  tourZeige();
+}
+function tourBeenden(){
+  if(!tourOffen) return;
+  tourOffen = false;
+  $("#tourLayer").hidden = true;
+  $("#tourSpot").classList.remove("an");
+  db.ui.tourGesehen = true;
+  save();
+}
+function tourWeiter(){
+  if(!tourOffen) return;
+  if(tourIndex >= TOUR_SCHRITTE.length - 1){ tourBeenden(); return; }
+  tourIndex++;
+  tourZeige();
+}
+function tourZeige(){
+  const schritt = TOUR_SCHRITTE[tourIndex];
+  if(schritt.vor) schritt.vor();
+  $("#tourTitel").textContent = schritt.titel;
+  $("#tourText").textContent = schritt.text;
+  const punkte = $("#tourPunkte"); punkte.innerHTML = "";
+  TOUR_SCHRITTE.forEach((s, i) => {
+    const d = document.createElement("span");
+    if(i === tourIndex) d.className = "an";
+    punkte.appendChild(d);
+  });
+  const el = schritt.ziel ? document.querySelector(schritt.ziel) : null;
+  if(!el){ $("#tourSpot").classList.remove("an"); return; }
+  el.scrollIntoView({block:"center"});
+  requestAnimationFrame(tourSpotMessen);
+}
+function tourSpotMessen(){
+  const schritt = TOUR_SCHRITTE[tourIndex];
+  const spot = $("#tourSpot");
+  const el = schritt.ziel ? document.querySelector(schritt.ziel) : null;
+  if(!el){ spot.classList.remove("an"); return; }
+  const r = el.getBoundingClientRect();
+  const pad = 8;
+  spot.style.top = (r.top - pad) + "px";
+  spot.style.left = (r.left - pad) + "px";
+  spot.style.width = (r.width + pad * 2) + "px";
+  spot.style.height = (r.height + pad * 2) + "px";
+  spot.classList.add("an");
+}
+$("#tourLayer").addEventListener("click", tourWeiter);
+$("#tourX").addEventListener("click", ev => { ev.stopPropagation(); tourBeenden(); });
+window.addEventListener("resize", () => {
+  if(tourOffen) tourSpotMessen();
+});
 
 /* ---------- Zahlencode ----------
    Reiner Sichtschutz. Der Code steht im Klartext neben den Daten – er hält
@@ -8802,6 +8957,13 @@ setTimeout(() => {
   const ab = $("#modalBox").querySelector(".actions .act.neutral");
   if(ab) ab.textContent = "Später";
 }, 1200);
+/* Ganz neue Installation, noch nie eine Klasse angelegt und den Rundgang noch
+   nicht gesehen: von selbst starten. Sonst nur über das Profil-Menü. */
+setTimeout(() => {
+  if(db.klassen.length || db.ui.tourGesehen) return;
+  if(!$("#lock").hidden || !$("#ovl").hidden) return;
+  tourStarten();
+}, 900);
 })();
 window.addEventListener("beforeunload", saveJetzt);
 document.addEventListener("visibilitychange", () => {
