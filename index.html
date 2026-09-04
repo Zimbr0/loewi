@@ -973,28 +973,39 @@ body.vertmodus .stundenkarte{cursor:pointer}
 .badge.gehalten{background:var(--good-soft);color:var(--good)}
 
 /* --- Rundgang: abgedunkelte Seite, ein Loch über der erklärten Stelle,
-     Sprechblase am Löwen unten rechts. Klick auf die Fläche geht weiter. */
+     Sprechblase am Löwen. Klick auf die Fläche geht weiter. Die Verdunkelung
+     kommt IMMER nur aus einer einzigen Ebene (nie .tourdim + .tourspot
+     gleichzeitig), sonst wird es an Überlappungen unbeabsichtigt dunkler. */
 .tourlayer{position:fixed;inset:0;z-index:100;cursor:pointer}
-.tourdim{position:fixed;inset:0;background:rgba(12,10,8,.72);
-  transition:opacity .25s ease}
+.tourdim{position:fixed;inset:0;background:rgba(12,10,8,.62);
+  opacity:0;transition:opacity .25s ease}
+.tourdim.an{opacity:1}
 .tourspot{position:fixed;border-radius:14px;pointer-events:none;
-  box-shadow:0 0 0 3px var(--accent), 0 0 0 9999px rgba(12,10,8,.72);
+  box-shadow:0 0 0 9999px rgba(12,10,8,.62);
   transition:top .35s cubic-bezier(.3,.8,.3,1),left .35s cubic-bezier(.3,.8,.3,1),
-    width .35s cubic-bezier(.3,.8,.3,1),height .35s cubic-bezier(.3,.8,.3,1);
+    width .35s cubic-bezier(.3,.8,.3,1),height .35s cubic-bezier(.3,.8,.3,1),
+    opacity .2s ease;
   opacity:0}
 .tourspot.an{opacity:1}
 .tourfigur{position:fixed;right:12px;
   bottom:calc(74px + env(safe-area-inset-bottom));z-index:101;
   display:flex;flex-direction:column;align-items:flex-end;
-  max-width:min(310px,calc(100vw - 24px))}
+  max-width:min(310px,calc(100vw - 24px));
+  transition:top .3s ease,bottom .3s ease}
+.tourfigur.tf-oben{top:calc(12px + env(safe-area-inset-top));bottom:auto;
+  flex-direction:column-reverse}
 .tourblase{position:relative;background:var(--card);border:1px solid var(--line);
   border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:8px;
-  cursor:auto}
+  cursor:auto;max-height:min(46vh,420px);overflow:auto}
+.tourfigur.tf-oben .tourblase{margin-bottom:0;margin-top:8px}
 .tourblase::after{content:"";position:absolute;bottom:-9px;right:38px;
   width:16px;height:16px;background:var(--card);
   border-right:1px solid var(--line);border-bottom:1px solid var(--line);
   transform:rotate(45deg);border-radius:0 0 3px 0}
-.tourblase h3{font-size:15.5px;margin-bottom:4px}
+.tourfigur.tf-oben .tourblase::after{bottom:auto;top:-9px;
+  border-right:0;border-bottom:0;border-left:1px solid var(--line);border-top:1px solid var(--line);
+  border-radius:3px 0 0 0}
+.tourblase h3{font-size:15.5px;margin-bottom:4px;padding-right:22px}
 .tourblase p{font-size:13.5px;color:var(--ink);line-height:1.45;margin:0}
 .tourx{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:8px;
   border:0;background:0;color:var(--muted);display:flex;align-items:center;
@@ -1003,10 +1014,11 @@ body.vertmodus .stundenkarte{cursor:pointer}
 .tourpunkte{display:flex;gap:5px;margin-top:10px}
 .tourpunkte span{width:6px;height:6px;border-radius:999px;background:var(--line)}
 .tourpunkte span.an{background:var(--accent);width:16px;border-radius:999px}
-.tourloewe{width:92px;height:auto;display:block;
+.tourloewe{width:92px;height:auto;display:block;flex:0 0 auto;
   filter:drop-shadow(0 8px 16px rgba(0,0,0,.35))}
-.tourweiter{font-size:11px;color:var(--muted);text-align:right;margin-top:6px;
+.tourweiter{font-size:11px;color:var(--muted);text-align:right;margin-top:10px;
   padding-right:2px}
+.tourwahl{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 </style>
 </head>
 <body>
@@ -2037,7 +2049,9 @@ body.vertmodus .stundenkarte{cursor:pointer}
       <button class="tourx" id="tourX" type="button" aria-label="Rundgang beenden">✕</button>
       <h3 id="tourTitel"></h3>
       <p id="tourText"></p>
+      <div class="tourwahl" id="tourWahl" style="display:none"></div>
       <div class="tourpunkte" id="tourPunkte"></div>
+      <div class="tourweiter" id="tourHinweis" style="display:none">Weiter tippen ›</div>
     </div>
     <img src="loewe-tour.png" class="tourloewe" alt="Löwi">
   </div>
@@ -8736,94 +8750,257 @@ function profilOeffnen(){
 }
 
 /* ---------- Rundgang ----------
-   Ein Löwe erklärt fünf zentrale Stellen der App. Jeder Schritt wechselt erst
-   zur richtigen Ansicht, bevor die Stelle eingerahmt wird – „vor“ läuft
-   synchron, daher reicht ein Frame Wartezeit vorm Ausmessen. */
-const TOUR_SCHRITTE = [
+   Ein Löwe führt durch die App: erst eine Begrüßung, dann eine Auswahl unter
+   den Kategorien, dann je Kategorie so viele Schritte wie nötig nach dem
+   Muster „Wie komme ich dahin? – Was kann ich damit? – Wie mache ich es?“,
+   am Ende die Frage „Noch was?“ – zurück zur Auswahl oder fertig.
+   Jeder Schritt wechselt per „vor“ synchron zur richtigen Ansicht; gemessen
+   wird erst nach einer kurzen Wartezeit, weil aufklappende Bereiche (etwa
+   die Klasse/Fach-Auswahl oben) selbst eine kurze Ein-Animation haben. */
+const TOUR_KATEGORIEN = [
   {
-    titel:"Willkommen bei Loewi!",
-    text:"Ich zeige dir kurz, wo du was findest. Einfach auf den Bildschirm tippen, um weiterzugehen.",
-    vor: () => { db.ui.bereich = "plan"; goView("stunde"); }
+    id:"klassenliste", titel:"Klassenliste",
+    kurz:"Klassen und Fächer anlegen, die Übersicht deiner Klasse",
+    schritte:[
+      { titel:"Wie komme ich dahin?",
+        text:"Unten über den Tab „Klassenliste“ – dort siehst du immer die Klasse, die oben gerade ausgewählt ist.",
+        ziel:'nav button[data-view="uebersicht"]',
+        vor: () => goView("uebersicht") },
+      { titel:"Was zeigt sie mir?",
+        text:"Oben warnt Loewi in Worten, welches Kind einen Blick braucht – etwa Fehlzeiten am Stück oder nachlassende Mitarbeit. Darunter die ganze Klasse mit Fehlstunden, vergessenem Material, Mitarbeits- und Testschnitt.",
+        ziel:"#sumKopf",
+        vor: () => goView("uebersicht") },
+      { titel:"Ein Kind genauer ansehen",
+        text:"Tippe auf eine Zeile: Dort findest du Beobachtungen, gesundheitliche Besonderheiten, Vorfälle und den Verlauf zu diesem Kind – als PDF sicherbar für Elterngespräche.",
+        ziel:"#tblSum",
+        vor: () => goView("uebersicht") },
+      { titel:"Wie lege ich eine Klasse an?",
+        text:"Bevor hier etwas erscheint, brauchst du eine Klasse. Oben über diesen Knopf öffnest du Klasse und Fach – über das Stift-Symbol daneben legst du neue an.",
+        ziel:"#dupEditK",
+        vor: () => { closeDrop(); openDrop(); } },
+      { titel:"Klasse anlegen",
+        text:"Bezeichnung (z. B. 4a) und Anzahl der Kinder reichen. Loewi arbeitet bewusst mit Nummern statt Namen – ein Kürzel kannst du optional ergänzen.",
+        ziel:"#newKlasse",
+        vor: () => { closeDrop(); goView("klassen"); } },
+      { titel:"Fach anlegen",
+        text:"Genauso legst du Fächer an, z. B. Sport oder Deutsch. Jedes Fach hat sein eigenes „was wird vergessen“ – Sportzeug hier, Hausaufgaben dort.",
+        ziel:"#newFach",
+        vor: () => { closeDrop(); goView("klassen"); } },
+      { titel:"Klasse und Fach zusammen wählen",
+        text:"Zurück oben: Tippe Klasse und Fach zusammen an – diese Kombination gilt dann für Plan, Klassenliste und Unterricht, bis du sie wechselst.",
+        ziel:"#navAuswahl",
+        vor: () => { closeDrop(); goView("uebersicht"); } }
+    ]
   },
   {
-    titel:"Klassen & Fächer",
-    text:"Hier oben wählst du Klasse und Fach. Über das Stift-Symbol dahinter legst du neue an.",
-    ziel:"#navAuswahl",
-    vor: () => { db.ui.bereich = "plan"; goView("stunde"); }
+    id:"plan", titel:"Plan",
+    kurz:"Stundenplan eintragen, Stunden erfassen",
+    schritte:[
+      { titel:"Wie komme ich dahin?",
+        text:"Ganz links über den Tab „Plan“ – meist deine Startseite, wenn du die App öffnest.",
+        ziel:'nav button[data-view="stunde"]',
+        vor: () => { db.ui.bereich = "plan"; goView("stunde"); } },
+      { titel:"Tag und Woche",
+        text:"Oben schaltest du zwischen Tages- und Wochenansicht um. Die Pfeile daneben blättern durch die Wochen, die Kalenderwoche steht in der Mitte.",
+        ziel:"#planAnsicht",
+        vor: () => { db.ui.bereich = "plan"; db.ui.planAnsicht = "tag"; goView("stunde"); } },
+      { titel:"Stundenplan einmal eintragen",
+        text:"In der Wochenansicht tippst du auf ein leeres Feld im Raster: Klasse, Fach und Uhrzeit festlegen. Das gilt danach jede Woche – du musst es nicht wiederholen.",
+        ziel:"#planWoche",
+        vor: () => { db.ui.bereich = "plan"; db.ui.planAnsicht = "woche"; goView("stunde"); } },
+      { titel:"Eine Stunde erfassen",
+        text:"Am Schultag tippst du in der Tagesansicht auf die anstehende Stunde. Mitarbeit als +/o/–, dazu krank, vergessen, Notiz und Hausaufgabe – alles in Sekunden. Die gerade laufende Stunde ist deutlich hervorgehoben.",
+        ziel:"#planTag",
+        vor: () => { db.ui.bereich = "plan"; db.ui.planAnsicht = "tag"; goView("stunde"); } },
+      { titel:"Wenn's mal anders läuft",
+        text:"Fällt eine Stunde aus oder vertrittst du eine fremde Klasse: Das trägst du direkt an der jeweiligen Stunde ein – Loewi merkt sich das nur für diesen einen Tag, dein Grundplan bleibt unverändert.",
+        vor: () => { db.ui.bereich = "plan"; goView("stunde"); } }
+    ]
   },
   {
-    titel:"Plan",
-    text:"Trag einmal deinen Stundenplan ein – danach reicht ein Antippen, um eine Stunde zu erfassen.",
-    ziel:'nav button[data-view="stunde"]',
-    vor: () => { db.ui.bereich = "plan"; goView("stunde"); }
+    id:"organisation", titel:"Organisation",
+    kurz:"Kalender, Termine, Aufgaben, Notizen",
+    schritte:[
+      { titel:"Wie komme ich dahin?",
+        text:"Über den Tab „Organisation“ in der Mitte.",
+        ziel:'nav button[data-view="organisation"]',
+        vor: () => goView("organisation") },
+      { titel:"Was steht heute an – was ist noch offen?",
+        text:"Vormittags zeigt Loewi, welche Klassen heute laut Plan drankommen und welche Gesundheitshinweise dabei wichtig sind. Nachmittags wechselt der Block zu dem, was heute noch offen ist: fällige Termine und Aufgaben.",
+        ziel:"#orgHeute",
+        vor: () => goView("organisation") },
+      { titel:"Kalender, Termine, Aufgaben, Notizen",
+        text:"Darunter vier Bereiche zum Umschalten. Kalender zeigt Ferien und freie Tage – an denen taucht im Plan keine Stunde auf. Termine für Konferenzen oder Ausflüge, eine To-do-Liste, und freie Notizen für alles, was sonst nirgends hinpasst.",
+        ziel:"#orgSeg",
+        vor: () => { db.ui.orgSeg = "kalender"; goView("organisation"); } },
+      { titel:"Neues anlegen",
+        text:"In jedem der vier Bereiche legst du oben rechts über das türkise Plus-Symbol Neues an – einen Termin, eine Aufgabe, eine Notiz oder einen freien Tag.",
+        vor: () => { db.ui.orgSeg = "termine"; goView("organisation"); } }
+    ]
   },
   {
-    titel:"Organisation",
-    text:"Was heute ansteht und was noch offen ist, dazu Termine, Aufgaben, Notizen und der Kalender.",
-    ziel:'nav button[data-view="organisation"]',
-    vor: () => goView("organisation")
+    id:"unterricht", titel:"Unterricht",
+    kurz:"Unterrichtsreihen und Einheiten planen",
+    schritte:[
+      { titel:"Wie komme ich dahin?",
+        text:"Über den Tab „Unterricht“ rechts außen.",
+        ziel:'nav button[data-view="planung"]',
+        vor: () => goView("planung") },
+      { titel:"Was ist eine Unterrichtsreihe?",
+        text:"Eine Reihe gehört zum Fach, nicht zur Klasse – du planst sie einmal und setzt sie in jeder Klasse ein. Sie besteht aus Unterrichtseinheiten mit Stundenziel, geplantem Verlauf, Material und Status.",
+        ziel:"#tbReihen",
+        vor: () => goView("planung") },
+      { titel:"Neue Reihe anlegen",
+        text:"Über das grüne Plus oben rechts – dafür muss oben ein Fach gewählt sein, denn Reihen hängen am Fach.",
+        ziel:'button[aria-label="Neue Unterrichtsreihe"]',
+        vor: () => goView("planung") },
+      { titel:"In einer Reihe",
+        text:"Dort fügst du Einheiten hinzu und hältst je Klasse fest, was schon gehalten wurde – dieselbe Reihe kann in einer Klasse fertig, in einer anderen noch offen sein. Über das Teilen-Symbol gibst du die ganze Reihe als Datei an Kolleginnen weiter.",
+        vor: () => goView("planung") }
+    ]
   },
   {
-    titel:"Unterricht",
-    text:"Plane Unterrichtsreihen mit ihren Einheiten – einmal angelegt, in jeder Klasse nutzbar.",
-    ziel:'nav button[data-view="planung"]',
-    vor: () => goView("planung")
-  },
-  {
-    titel:"Daten & Sicherung",
-    text:"Sichere deine Daten regelmäßig als Datei – falls du das Gerät wechselst oder verlierst.",
-    ziel:"#btnBackup",
-    vor: () => profilSeite("daten")
-  },
-  {
-    titel:"Das war's!",
-    text:"Du findest den Rundgang jederzeit wieder im Profil. Viel Freude mit Loewi!",
-    vor: () => { db.ui.bereich = "plan"; goView("stunde"); }
+    id:"daten", titel:"Daten & Sicherung",
+    kurz:"Sichern, exportieren, Gerät wechseln",
+    schritte:[
+      { titel:"Wie komme ich dahin?",
+        text:"Oben rechts über das Profil-Symbol, dann „Daten und Sicherung“.",
+        ziel:"#btnProfil",
+        vor: () => { db.ui.bereich = "plan"; goView("stunde"); } },
+      { titel:"Wo liegen meine Daten überhaupt?",
+        text:"Nur auf diesem Gerät, im Speicher des Browsers – nirgends sonst. Es gibt kein Konto und keine Cloud. Das ist Absicht, aber es heißt auch: Ohne eigene Sicherung sind die Daten weg, wenn das Gerät verloren geht oder der Speicher gelöscht wird.",
+        ziel:"#btnBackup",
+        vor: () => profilSeite("daten") },
+      { titel:"Sicherung erstellen",
+        text:"„Sicherung (.json)“ erzeugt eine Datei mit allem – Klassen, Stunden, Beobachtungen. Optional mit Passwort verschlüsselt. Leg sie regelmäßig irgendwo sicher ab, z. B. per Mail an dich selbst oder in einer Cloud.",
+        ziel:"#btnBackup",
+        vor: () => profilSeite("daten") },
+      { titel:"Excel-Export",
+        text:"Für Auswertungen oder die Schulleitung: eine Excel-Mappe mit Klassenliste, Einzelliste, Stundendoku und – sobald vorhanden – Tests und Planung.",
+        ziel:"#btnExcel",
+        vor: () => profilSeite("daten") },
+      { titel:"Gerät verloren oder gewechselt?",
+        text:"Auf dem neuen Gerät unter „Sicherung einlesen“ die zuletzt gesicherte Datei auswählen – schon ist alles wieder da. Deshalb lohnt sich eine Sicherung, bevor etwas passiert, nicht erst danach.",
+        vor: () => profilSeite("daten") }
+    ]
   }
 ];
-let tourOffen = false, tourIndex = 0;
+let tourOffen = false, tourModus = "intro", tourKatId = null, tourSchrittIdx = 0;
 function tourStarten(){
   closeModal(); closeFab(); closeDrop();
-  tourOffen = true; tourIndex = 0;
+  tourOffen = true; tourModus = "intro"; tourKatId = null; tourSchrittIdx = 0;
   $("#tourLayer").hidden = false;
   zurueckWache();
-  tourZeige();
+  tourZeigeIntro();
 }
 function tourBeenden(){
   if(!tourOffen) return;
   tourOffen = false;
   $("#tourLayer").hidden = true;
   $("#tourSpot").classList.remove("an");
+  $("#tourDim").classList.remove("an");
   db.ui.tourGesehen = true;
   save();
 }
+/* Klick auf die Fläche: nur in der Begrüßung und innerhalb einer Kategorie
+   geht es damit weiter. Auswahl und Abschlussfrage brauchen eine echte Wahl. */
 function tourWeiter(){
   if(!tourOffen) return;
-  if(tourIndex >= TOUR_SCHRITTE.length - 1){ tourBeenden(); return; }
-  tourIndex++;
-  tourZeige();
+  if(tourModus === "intro"){ tourZeigeMenu(); return; }
+  if(tourModus !== "kategorie") return;
+  const kat = TOUR_KATEGORIEN.find(k => k.id === tourKatId);
+  tourSchrittIdx++;
+  if(tourSchrittIdx >= kat.schritte.length){ tourZeigeOutro(); return; }
+  tourZeigeSchritt();
 }
-function tourZeige(){
-  const schritt = TOUR_SCHRITTE[tourIndex];
+function tourKategorieWahl(id){
+  tourModus = "kategorie"; tourKatId = id; tourSchrittIdx = 0;
+  tourZeigeSchritt();
+}
+function tourZeigeIntro(){
+  tourModus = "intro";
+  tourBubbleGrundzustand();
+  $("#tourTitel").textContent = "Willkommen bei Loewi!";
+  $("#tourText").textContent = "Ich bin Löwi und zeige dir, wie die App funktioniert. Einfach auf den Bildschirm tippen, um weiterzugehen.";
+  $("#tourHinweis").style.display = "";
+  tourSpotAus();
+  tourFigurPosition(null);
+}
+function tourZeigeMenu(){
+  tourModus = "menu"; tourKatId = null;
+  tourBubbleGrundzustand();
+  $("#tourTitel").textContent = "Welchen Teil der App soll ich dir genauer erklären?";
+  $("#tourText").textContent = "";
+  const wahl = $("#tourWahl"); wahl.style.display = ""; wahl.innerHTML = "";
+  TOUR_KATEGORIEN.forEach(kat => {
+    const b = document.createElement("button");
+    b.className = "wahlknopf"; b.type = "button";
+    b.innerHTML = "<b>" + esc(kat.titel) + "</b><span>" + esc(kat.kurz) + "</span>";
+    b.addEventListener("click", ev => { ev.stopPropagation(); tourKategorieWahl(kat.id); });
+    wahl.appendChild(b);
+  });
+  tourSpotAus();
+  tourFigurPosition(null);
+}
+function tourZeigeOutro(){
+  tourModus = "outro";
+  tourBubbleGrundzustand();
+  $("#tourTitel").textContent = "Möchtest du noch etwas wissen?";
+  $("#tourText").textContent = "";
+  const wahl = $("#tourWahl"); wahl.style.display = ""; wahl.innerHTML = "";
+  const weiter = document.createElement("button");
+  weiter.className = "wahlknopf"; weiter.type = "button";
+  weiter.innerHTML = "<b>Gerne!</b><span>Zurück zur Auswahl der Kategorien</span>";
+  weiter.addEventListener("click", ev => { ev.stopPropagation(); tourZeigeMenu(); });
+  const fertig = document.createElement("button");
+  fertig.className = "wahlknopf"; fertig.type = "button";
+  fertig.innerHTML = "<b>Fertig</b><span>Rundgang beenden</span>";
+  fertig.addEventListener("click", ev => { ev.stopPropagation(); tourBeenden(); });
+  wahl.appendChild(weiter); wahl.appendChild(fertig);
+  tourSpotAus();
+  tourFigurPosition(null);
+}
+function tourZeigeSchritt(){
+  const kat = TOUR_KATEGORIEN.find(k => k.id === tourKatId);
+  const schritt = kat.schritte[tourSchrittIdx];
   if(schritt.vor) schritt.vor();
+  tourBubbleGrundzustand();
   $("#tourTitel").textContent = schritt.titel;
   $("#tourText").textContent = schritt.text;
-  const punkte = $("#tourPunkte"); punkte.innerHTML = "";
-  TOUR_SCHRITTE.forEach((s, i) => {
+  $("#tourHinweis").style.display = "";
+  const punkte = $("#tourPunkte"); punkte.innerHTML = ""; punkte.style.display = "";
+  kat.schritte.forEach((s, i) => {
     const d = document.createElement("span");
-    if(i === tourIndex) d.className = "an";
+    if(i === tourSchrittIdx) d.className = "an";
     punkte.appendChild(d);
   });
   const el = schritt.ziel ? document.querySelector(schritt.ziel) : null;
-  if(!el){ $("#tourSpot").classList.remove("an"); return; }
-  el.scrollIntoView({block:"center"});
-  requestAnimationFrame(tourSpotMessen);
+  if(el) el.scrollIntoView({block:"center"});
+  setTimeout(tourSpotMessen, 260);
+}
+/* Bubble in den Grundzustand – Auswahl-Knöpfe und Punkte werden von den
+   jeweiligen Funktionen bei Bedarf wieder eingeblendet. */
+function tourBubbleGrundzustand(){
+  $("#tourWahl").style.display = "none";
+  $("#tourWahl").innerHTML = "";
+  $("#tourPunkte").style.display = "none";
+  $("#tourPunkte").innerHTML = "";
+  $("#tourHinweis").style.display = "none";
+}
+function tourSpotAus(){
+  $("#tourSpot").classList.remove("an");
+  $("#tourDim").classList.add("an");
 }
 function tourSpotMessen(){
-  const schritt = TOUR_SCHRITTE[tourIndex];
   const spot = $("#tourSpot");
-  const el = schritt.ziel ? document.querySelector(schritt.ziel) : null;
-  if(!el){ spot.classList.remove("an"); return; }
+  let el = null;
+  if(tourModus === "kategorie"){
+    const kat = TOUR_KATEGORIEN.find(k => k.id === tourKatId);
+    const schritt = kat.schritte[tourSchrittIdx];
+    el = schritt.ziel ? document.querySelector(schritt.ziel) : null;
+  }
+  if(!el){ tourSpotAus(); tourFigurPosition(null); return; }
+  $("#tourDim").classList.remove("an");
   const r = el.getBoundingClientRect();
   const pad = 8;
   spot.style.top = (r.top - pad) + "px";
@@ -8831,6 +9008,14 @@ function tourSpotMessen(){
   spot.style.width = (r.width + pad * 2) + "px";
   spot.style.height = (r.height + pad * 2) + "px";
   spot.classList.add("an");
+  tourFigurPosition(r);
+}
+/* Löwe und Sprechblase weichen der eingerahmten Stelle aus: liegt sie in der
+   unteren Bildschirmhälfte (z. B. die Navigation unten), wandert die Figur
+   nach oben, sonst bleibt sie unten rechts. */
+function tourFigurPosition(rect){
+  const oben = !!rect && rect.top > window.innerHeight * 0.5;
+  document.querySelector(".tourfigur").classList.toggle("tf-oben", oben);
 }
 $("#tourLayer").addEventListener("click", tourWeiter);
 $("#tourX").addEventListener("click", ev => { ev.stopPropagation(); tourBeenden(); });
