@@ -230,6 +230,7 @@ textarea{resize:vertical;min-height:52px}
 .act.ghost{color:var(--muted)}
 .act.danger{color:var(--bad);border-color:var(--line);background:var(--bad-soft)}
 .act.quiet{color:var(--muted);border:0;background:0;min-height:36px;min-width:auto;font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.act:disabled{opacity:.4;cursor:default}
 
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);
@@ -1098,8 +1099,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
     <details class="newbox" id="planBox">
       <summary>Voreinstellungen</summary>
       <div class="inner">
-        <label class="lbl">Zeitraster</label>
-        <p class="hint" style="margin:0 0 10px">Gilt für alle Tage.</p>
+        <h3 style="font-size:15px;font-weight:500">Zeitraster</h3>
         <div id="rasterListe"></div>
         <div class="rasterfuss">
           <span class="mini" id="rasterInfo"></span>
@@ -1111,22 +1111,21 @@ body.vertmodus .stundenkarte{cursor:pointer}
 
         <div class="sep"></div>
         <div class="rowline" style="padding-top:0;border-bottom:0">
-          <h3 style="font-size:15px">Aufsichten und Dienste</h3>
+          <h3 style="font-size:15px;font-weight:500">Aufsichten und Dienste</h3>
           <button class="iconbtn primary" id="btnDienstNeu" aria-label="Dienst hinzufügen">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
           </button>
         </div>
-        <p class="hint" style="margin:0 0 10px">Pausen- und Busaufsicht, Vertretungsdienste.</p>
         <div id="dienstListe"></div>
 
         <div class="sep"></div>
-        <label class="lbl">Ferien und freie Tage</label>
-        <p class="hint" style="margin:0 0 10px">An diesen Tagen zeigt der Plan keine Stunden.</p>
-        <div id="orgFreiListe"></div>
-        <div class="actions" style="margin-top:10px">
-          <button class="act plus mini" id="btnFerienNeu"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Ferien</button>
-          <button class="act plus mini" id="btnFeiertagNeu"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Einzelner Tag</button>
+        <div class="rowline" style="padding-top:0;border-bottom:0">
+          <h3 style="font-size:15px;font-weight:500">Ferien und freie Tage</h3>
+          <button class="iconbtn primary" id="btnFreiNeu" aria-label="Freie Zeit hinzufügen">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
         </div>
+        <div id="orgFreiListe"></div>
       </div>
     </details>
   </div>
@@ -1337,7 +1336,8 @@ body.vertmodus .stundenkarte{cursor:pointer}
       </div>
       <div id="kritKacheln"></div>
       <div class="actions" style="margin-bottom:12px">
-        <button class="act primary" id="btnTestFertig" style="width:100%">Fertig</button>
+        <button class="act primary" id="btnTestWeiter">Weiter</button>
+        <button class="act neutral" id="btnTestFertig">Fertig</button>
       </div>
     </div>
   </div>
@@ -1672,7 +1672,6 @@ body.vertmodus .stundenkarte{cursor:pointer}
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         </button>
       </div>
-      <p class="hint" style="margin:6px 0 0">Konferenzen, Besprechungen, Gedanken.</p>
       <div id="orgNotizen"></div>
     </div>
   </div>
@@ -5527,27 +5526,25 @@ function renderFreiListe(){
   });
 }
 
-function freiDialog(f, alsSpanne){
+function freiDialog(f){
   const neu = !f;
-  const spanne = neu ? !!alsSpanne : !(!f.bis || f.bis === f.von);
   const felder = [
     {key:"titel", label:"Bezeichnung", wert: f ? (f.titel || "") : "",
-     platzhalter: spanne ? "z. B. Herbstferien" : "z. B. Beweglicher Ferientag"},
-    {key:"von", label: spanne ? "Erster Tag" : "Datum", typ:"datum",
-     wert: f ? f.von : heute()}
+     platzhalter:"z. B. Herbstferien oder Beweglicher Ferientag"},
+    {key:"von", label:"Von", typ:"datum", wert: f ? f.von : heute()},
+    {key:"bis", label:"Bis (optional – bei Ferien oder mehreren Tagen)", typ:"datum",
+     wert: f && f.bis && f.bis !== f.von ? f.bis : ""}
   ];
-  if(spanne) felder.push({key:"bis", label:"Letzter Tag", typ:"datum",
-                          wert: f ? (f.bis || f.von) : heute()});
   openModal({
-    titel: neu ? (spanne ? "Ferien eintragen" : "Freien Tag eintragen") : "Freie Zeit",
+    titel: neu ? "Freie Zeit eintragen" : "Freie Zeit",
     felder: felder,
     okText: neu ? "Eintragen" : "Übernehmen",
     onOk: w => {
       const titel = (w.titel || "").trim();
       if(!titel){ toast("Bezeichnung fehlt"); return false; }
       if(!w.von){ toast("Datum fehlt"); return false; }
-      const bis = spanne ? (w.bis || w.von) : w.von;
-      if(bis < w.von){ toast("Der letzte Tag liegt vor dem ersten"); return false; }
+      const bis = (w.bis || "").trim() ? w.bis : w.von;
+      if(bis < w.von){ toast("„Bis“ liegt vor „Von“"); return false; }
       if(neu) freieZeiten().push({id:uid(), titel:titel, von:w.von, bis:bis});
       else { f.titel = titel; f.von = w.von; f.bis = bis; }
       save(); renderAlles(); renderPlanTab(); toast("Gespeichert");
@@ -5581,8 +5578,7 @@ const MONAT_KURZ = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun",
 $("#btnTerminNeu").addEventListener("click", () => terminDialog(null));
 $("#btnTodoNeu").addEventListener("click", () => todoDialog(null));
 $("#btnDienstNeu").addEventListener("click", () => dienstDialog(null));
-$("#btnFerienNeu").addEventListener("click", () => freiDialog(null, true));
-$("#btnFeiertagNeu").addEventListener("click", () => freiDialog(null, false));
+$("#btnFreiNeu").addEventListener("click", () => freiDialog(null));
 document.querySelectorAll("#todoFilter button").forEach(b => {
   b.addEventListener("click", () => {
     db.ui.todoFilter = b.dataset.t; save(); renderTodos(); todoPille();
@@ -6373,6 +6369,7 @@ function renderTestErfassen(t, k){
   }
   $("#btnKindZurueck").disabled = nr <= 1;
   $("#btnKindVor").disabled = nr >= k.count;
+  $("#btnTestWeiter").disabled = nr >= k.count;
 
   const gesetzt = t.kriterien.filter(kr => hatWert(t, nr, kr)).length;
   $("#tstProgress").innerHTML = "Kind <b>" + nr + " von " + k.count + "</b> · " +
@@ -6493,6 +6490,7 @@ $("#tstKind").addEventListener("change", ev => {
   db.ui.testNr = parseInt(ev.target.value, 10) || 1;
   save(); renderTestErfassen(t, k); window.scrollTo(0,0);
 });
+$("#btnTestWeiter").addEventListener("click", () => testKindWechsel(1));
 $("#btnTestFertig").addEventListener("click", () => tstGo("ansicht"));
 
 /* ---------- Übersicht ---------- */
@@ -9050,7 +9048,6 @@ function profilOeffnen(){
   const wrap = document.createElement("div");
   wrap.className = "profilwege";
   [["Neu bei Loewi? Starte jetzt deinen Rundgang!", () => { closeModal(); tourStarten(); }],
-   ["Häufige Fragen", () => { closeModal(); profilSeite("faq"); }],
    ["Daten und Sicherung", () => { closeModal(); profilSeite("daten"); }]
   ].forEach(([txt, tap]) => {
     const b = document.createElement("button");
