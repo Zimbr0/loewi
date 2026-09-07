@@ -675,7 +675,7 @@ button.hpunkt:active{background:var(--surface)}
 .zelle{position:relative}
 .zpunkt{position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;
   background:var(--good);display:block}
-.zelle.ausgef{background:var(--bad-soft);border-color:var(--bad-soft);opacity:.7}
+.zpunkt.aus{background:var(--bad)}
 .zelle.vertretung{background:var(--warn-soft);border-color:var(--warn)}
 .raster th.heute{border-radius:8px 8px 0 0}
 /* Zeitraster: eine Tafel mit fester Spaltenordnung. Die Stundenzahl steht
@@ -1110,12 +1110,14 @@ body.vertmodus .stundenkarte{cursor:pointer}
         </div>
 
         <div class="sep"></div>
-        <label class="lbl">Aufsichten und Dienste</label>
+        <div class="rowline" style="padding-top:0;border-bottom:0">
+          <h3 style="font-size:15px">Aufsichten und Dienste</h3>
+          <button class="iconbtn primary" id="btnDienstNeu" aria-label="Dienst hinzufügen">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
         <p class="hint" style="margin:0 0 10px">Pausen- und Busaufsicht, Vertretungsdienste.</p>
         <div id="dienstListe"></div>
-        <div class="actions" style="margin-top:10px">
-          <button class="act plus mini" id="btnDienstNeu"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Dienst</button>
-        </div>
 
         <div class="sep"></div>
         <label class="lbl">Ferien und freie Tage</label>
@@ -1683,60 +1685,25 @@ body.vertmodus .stundenkarte{cursor:pointer}
 <section class="view" id="v-klassen">
 
 <div id="klListe">
-  <div class="card seitenkopf">
-    <div class="skopf">
-      <h3>Klassen und Fächer</h3>
-      <div class="mini">Klasse antippen, um die Kinder zu bearbeiten.</div>
+  <div class="segrow klein" id="klAnsicht" style="margin-bottom:12px">
+    <span class="pille" id="klPille"></span>
+    <button data-a="klassen" class="on">Klassen</button>
+    <button data-a="faecher">Fächer</button>
+  </div>
+
+  <div id="klKlassenSeite">
+    <div class="topbar" id="tbKlassen"></div>
+    <div class="card kette-oben">
+      <div id="klassenList"></div>
     </div>
   </div>
 
-  <details class="newbox" id="newKlasse">
-    <summary>+ Neue Klasse</summary>
-    <div class="inner">
-    <div class="grid2">
-      <div>
-        <label class="lbl" for="nkName">Bezeichnung</label>
-        <input type="text" id="nkName" placeholder="4a">
-      </div>
-      <div>
-        <label class="lbl" for="nkAnzahl">Anzahl Kinder</label>
-        <input type="number" id="nkAnzahl" min="1" max="40" value="24">
-      </div>
+  <div id="klFaecherSeite" style="display:none">
+    <div class="topbar" id="tbFaecher"></div>
+    <div class="card kette-oben">
+      <div id="fachList"></div>
     </div>
-    <div class="actions" style="margin-top:12px">
-      <button class="act primary" id="btnKlasseAdd" style="width:100%">Klasse anlegen</button>
-    </div>
-    <p class="hint">Klassen sind unabhängig vom Fach.</p>
-    </div>
-  </details>
-
-  <div class="card">
-    <h3 style="font-size:15px;margin-bottom:4px">Vorhandene Klassen</h3>
-    <div id="klassenList"></div>
   </div>
-
-  <details class="newbox" id="newFach">
-    <summary>+ Neues Fach</summary>
-    <div class="inner">
-      <label class="lbl" for="nfName">Bezeichnung</label>
-      <input type="text" id="nfName" placeholder="z. B. Sport">
-      <div style="margin-top:10px">
-        <label class="lbl" for="nfVergessen">Was hier vergessen wird</label>
-        <input type="text" id="nfVergessen" placeholder="z. B. Sportzeug oder Hausaufgaben">
-      </div>
-      <div class="actions" style="margin-top:12px">
-        <button class="act primary" id="btnFachAdd" style="width:100%">Fach anlegen</button>
-      </div>
-      <p class="hint">Ein Fach bündelt seine Unterrichtsreihen. Leer gelassen, schlägt
-        Loewi bei bekannten Fächern selbst etwas vor.</p>
-    </div>
-  </details>
-
-  <div class="card">
-    <h3 style="font-size:15px;margin-bottom:4px">Vorhandene Fächer</h3>
-    <div id="fachList"></div>
-  </div>
-
 </div>
 
 <div id="klKinder" style="display:none">
@@ -1989,6 +1956,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
       </div>
       <div class="actions" style="margin-top:8px">
         <button class="act quiet" id="btnWieLetztes">Wie letztes Mal übernehmen</button>
+        <button class="act quiet" id="btnParallelklasse">Aus Parallelklasse übernehmen</button>
       </div>
       <div class="actions" style="margin-top:12px" id="neu2Actions">
         <button class="act primary" id="btnNeuWeiter">Weiter</button>
@@ -2033,6 +2001,49 @@ body.vertmodus .stundenkarte{cursor:pointer}
     <div class="actions" style="margin-top:12px">
       <button class="act primary" id="btnEinheitAdd">Einheit anlegen</button>
       <button class="act neutral" id="btnEinheitSheetZu">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<div class="fabscrim" id="kScrim"></div>
+<div class="fabsheet" id="kSheet" role="dialog" aria-modal="false" aria-label="Klasse hinzufügen">
+  <div class="fabgriff"></div>
+  <div class="card" style="margin:0">
+    <h3 style="font-size:16px;margin-bottom:10px">Neue Klasse</h3>
+    <div class="grid2">
+      <div>
+        <label class="lbl" for="nkName">Bezeichnung</label>
+        <input type="text" id="nkName" placeholder="4a">
+      </div>
+      <div>
+        <label class="lbl" for="nkAnzahl">Anzahl Kinder</label>
+        <input type="number" id="nkAnzahl" min="1" max="40" value="24">
+      </div>
+    </div>
+    <p class="hint">Klassen sind unabhängig vom Fach.</p>
+    <div class="actions" style="margin-top:12px">
+      <button class="act primary" id="btnKlasseAdd">Klasse anlegen</button>
+      <button class="act neutral" id="btnKlasseSheetZu">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<div class="fabscrim" id="fScrim"></div>
+<div class="fabsheet" id="fSheet" role="dialog" aria-modal="false" aria-label="Fach hinzufügen">
+  <div class="fabgriff"></div>
+  <div class="card" style="margin:0">
+    <h3 style="font-size:16px;margin-bottom:10px">Neues Fach</h3>
+    <label class="lbl" for="nfName">Bezeichnung</label>
+    <input type="text" id="nfName" placeholder="z. B. Sport">
+    <div style="margin-top:10px">
+      <label class="lbl" for="nfVergessen">Was hier vergessen wird</label>
+      <input type="text" id="nfVergessen" placeholder="z. B. Sportzeug oder Hausaufgaben">
+    </div>
+    <p class="hint">Ein Fach bündelt seine Unterrichtsreihen. Leer gelassen, schlägt
+      Loewi bei bekannten Fächern selbst etwas vor.</p>
+    <div class="actions" style="margin-top:12px">
+      <button class="act primary" id="btnFachAdd">Fach anlegen</button>
+      <button class="act neutral" id="btnFachSheetZu">Abbrechen</button>
     </div>
   </div>
 </div>
@@ -2915,6 +2926,8 @@ function zurueckSchritt(){
   if(typeof stdSheetOffen !== "undefined" && stdSheetOffen){ closeStdSheet(); return true; }
   if(typeof rSheetOffen !== "undefined" && rSheetOffen){ closeReiheSheet(); return true; }
   if(typeof eSheetOffen !== "undefined" && eSheetOffen){ closeEinheitSheet(); return true; }
+  if(typeof kSheetOffen !== "undefined" && kSheetOffen){ closeKlasseSheet(); return true; }
+  if(typeof fSheetOffen !== "undefined" && fSheetOffen){ closeFachSheet(); return true; }
   if(db.ui.vertretungModus){
     db.ui.vertretungModus = false;
     document.body.classList.remove("vertmodus");
@@ -3066,13 +3079,14 @@ function renderDrop(){
 }
 $("#navAuswahl").addEventListener("click", toggleDrop);
 $("#dupScrim").addEventListener("click", closeDrop);
-function zurVerwaltung(ziel){
-  closeDrop(); goView("klassen");
-  const el = document.getElementById(ziel);
-  if(el) setTimeout(() => el.scrollIntoView({block:"center", behavior:"smooth"}), 60);
+function zurVerwaltung(ansicht){
+  closeDrop();
+  db.ui.klAnsicht = ansicht;
+  db.ui.klView = "liste";
+  save(); goView("klassen");
 }
-$("#dupEditK").addEventListener("click", () => zurVerwaltung("klassenList"));
-$("#dupEditF").addEventListener("click", () => zurVerwaltung("fachList"));
+$("#dupEditK").addEventListener("click", () => zurVerwaltung("klassen"));
+$("#dupEditF").addEventListener("click", () => zurVerwaltung("faecher"));
 document.addEventListener("keydown", ev => { if(ev.key === "Escape") closeDrop(); });
 
 /* ---------- Klassen ---------- */
@@ -3085,8 +3099,7 @@ $("#btnKlasseAdd").addEventListener("click", () => {
   sortiereStamm();
   db.ui.klasseId = k.id;
   db.ui.stundeId = null; db.ui.stdView = "liste";
-  $("#newKlasse").open = false;
-  $("#nkName").value = "";
+  closeKlasseSheet();
   save(); renderAlles();
   toast("Klasse „" + name + "“ angelegt");
 });
@@ -3114,16 +3127,36 @@ function renderKlassen(){
     renderKuerzel(k);
     return;
   }
+  const ansicht = db.ui.klAnsicht === "faecher" ? "faecher" : "klassen";
+  document.querySelectorAll("#klAnsicht button").forEach(b => {
+    b.classList.toggle("on", b.dataset.a === ansicht);
+  });
+  klPille();
+  $("#klKlassenSeite").style.display = ansicht === "klassen" ? "" : "none";
+  $("#klFaecherSeite").style.display = ansicht === "faecher" ? "" : "none";
+  if(ansicht === "klassen"){
+    seitenkopf($("#tbKlassen"), "Klassen",
+      "Klasse antippen, um die Kinder zu bearbeiten.",
+      plusBtn("Neue Klasse", () => openKlasseSheet()), true);
+    renderKlassenListe();
+  }else{
+    seitenkopf($("#tbFaecher"), "Fächer",
+      "Fach antippen, um es auszuwählen, über den Stift, um es zu bearbeiten.",
+      plusBtn("Neues Fach", () => openFachSheet()), true);
+    renderFachList();
+  }
+}
+function renderKlassenListe(){
   const box = $("#klassenList");
   box.innerHTML = "";
   if(!db.klassen.length){
     box.innerHTML = '<p class="hint">Noch keine Klasse angelegt.</p>';
+    return;
   }
-  renderFachList();
   db.klassen.forEach(k => {
     const anzStd = alleStundenVon(k.id).length;
     const row = document.createElement("div");
-    row.className = "item";
+    row.className = "item tapbar";
     const info = document.createElement("div");
     info.className = "grow";
     info.innerHTML = "<b>" + esc(k.name) + "</b>" +
@@ -3131,16 +3164,58 @@ function renderKlassen(){
       '<div class="sub">' + k.count + " Kinder · " + anzStd +
       (anzStd === 1 ? " Stunde" : " Stunden") + " erfasst" +
       (k.id === db.ui.klasseId ? " · <b>ausgewählt</b>" : "") + "</div>";
-    info.addEventListener("click", () => klGo("kinder", k.id));
     const chev = document.createElement("span");
-    chev.className = "chev";
-    chev.textContent = "›";
+    chev.className = "chev"; chev.textContent = "›";
     row.appendChild(info); row.appendChild(chev);
-    row.classList.add("tapbar");
     row.addEventListener("click", () => klGo("kinder", k.id));
     box.appendChild(row);
   });
 }
+function klPille(){
+  const leiste = $("#klAnsicht"), pille = $("#klPille");
+  const aktiv = leiste.querySelector("button.on");
+  if(!aktiv || !aktiv.offsetWidth) return;
+  pille.style.width = aktiv.offsetWidth + "px";
+  pille.style.transform = "translateX(" + (aktiv.offsetLeft - 4) + "px)";
+}
+document.querySelectorAll("#klAnsicht button").forEach(b => {
+  b.addEventListener("click", () => {
+    db.ui.klAnsicht = b.dataset.a;
+    save(); renderKlassen();
+  });
+});
+window.addEventListener("resize", () => { if(db.ui.view === "klassen") klPille(); });
+let kSheetOffen = false, fSheetOffen = false;
+function openKlasseSheet(){
+  zurueckWache();
+  kSheetOffen = true;
+  $("#nkName").value = ""; $("#nkAnzahl").value = "24";
+  $("#kSheet").classList.add("open");
+  $("#kScrim").classList.add("open");
+}
+function closeKlasseSheet(){
+  if(!kSheetOffen) return;
+  kSheetOffen = false;
+  $("#kSheet").classList.remove("open");
+  $("#kScrim").classList.remove("open");
+}
+$("#kScrim").addEventListener("click", closeKlasseSheet);
+$("#btnKlasseSheetZu").addEventListener("click", closeKlasseSheet);
+function openFachSheet(){
+  zurueckWache();
+  fSheetOffen = true;
+  $("#nfName").value = ""; $("#nfVergessen").value = "";
+  $("#fSheet").classList.add("open");
+  $("#fScrim").classList.add("open");
+}
+function closeFachSheet(){
+  if(!fSheetOffen) return;
+  fSheetOffen = false;
+  $("#fSheet").classList.remove("open");
+  $("#fScrim").classList.remove("open");
+}
+$("#fScrim").addEventListener("click", closeFachSheet);
+$("#btnFachSheetZu").addEventListener("click", closeFachSheet);
 
 function klasseDialog(k){
   openModal({
@@ -3654,6 +3729,35 @@ $("#btnWieLetztes").addEventListener("click", () => {
   if(letzte.einheitId && einheit(letzte.einheitId)) $("#nsEinheit").value = letzte.einheitId;
   toast("Von Std. " + letzte.nr + " übernommen");
 });
+/* Bei Doppelbesetzung: Thema und Einheit von einer anderen Klasse übernehmen,
+   die dasselbe Fach zuletzt (parallel) hatte. */
+$("#btnParallelklasse").addEventListener("click", () => {
+  const k = klasse(db.ui.klasseId);
+  if(!k){ toast("Erst eine Klasse wählen"); return; }
+  const fid = db.ui.fachId || null;
+  const kandidaten = db.klassen.filter(x => x.id !== k.id).map(x => {
+    const vorige = stundenVon(x.id, fid).filter(s => !s.aus);
+    return {klasse:x, letzte: vorige[vorige.length - 1]};
+  }).filter(c => c.letzte);
+  if(!kandidaten.length){ toast("Keine Parallelklasse mit diesem Fach gefunden"); return; }
+  const uebernehmen = c => {
+    $("#nsThema").value = c.letzte.thema || "";
+    if(c.letzte.einheitId && einheit(c.letzte.einheitId)) $("#nsEinheit").value = c.letzte.einheitId;
+    toast("Von " + c.klasse.name + " übernommen");
+  };
+  if(kandidaten.length === 1){ uebernehmen(kandidaten[0]); return; }
+  openModal({
+    titel:"Von welcher Klasse übernehmen?",
+    felder:[{key:"klasseId", label:"Parallelklasse", typ:"select",
+      wert:kandidaten[0].klasse.id,
+      optionen: kandidaten.map(c => ({value:c.klasse.id, label:c.klasse.name}))}],
+    okText:"Übernehmen",
+    onOk: w => {
+      const c = kandidaten.find(x => x.klasse.id === w.klasseId);
+      if(c) uebernehmen(c);
+    }
+  });
+});
 $("#nsEinheit").addEventListener("change", ev => {
   const e = einheit(ev.target.value);
   if(e && e.titel && !$("#nsThema").value.trim()) $("#nsThema").value = e.titel;
@@ -4025,6 +4129,20 @@ function planWoche(){
   if(!db.ui.planWoche) db.ui.planWoche = montagVon(heute());
   return db.ui.planWoche;
 }
+/* Ist seit dem letzten Aufruf ein neuer Tag angebrochen (App über Nacht offen
+   gelassen oder erst am nächsten Tag wieder geöffnet), springen Plan-Woche,
+   Plan-Tag und Kalender von selbst wieder auf heute – ohne eine laufende
+   Wochen- oder Monats-Navigation mitten am Tag zu stören. */
+function heuteWechselPruefen(){
+  const t = heute();
+  if(db.ui.zuletztHeute === t) return;
+  db.ui.zuletztHeute = t;
+  db.ui.planWoche = montagVon(t);
+  const wt = (isoZuDatum(t).getDay() + 6) % 7;
+  db.ui.planTag = wt <= 4 ? wt + 1 : 1;
+  db.ui.kalMonat = t.slice(0, 7);
+  db.ui.kalTag = null;
+}
 function datumFuer(tag){ return plusTage(planWoche(), tag - 1); }
 
 /* ---------- Freie Tage ----------
@@ -4111,6 +4229,7 @@ function planOeffnen(slot, datum){
 
 /* --- Zeichnen --- */
 function renderPlanTab(){
+  heuteWechselPruefen();
   planRaster();
   const woche = planWoche();
   $("#planKW").textContent = "KW " + kalenderwoche(woche);
@@ -4634,7 +4753,8 @@ function planZelle(tag, nr, istHeute){
             (slot._vertretung ? " · Vertretung" : "");
   b.innerHTML = "<b>" + (k ? esc(k.name) : "?") + "</b><span>" +
     (f ? esc(f.name) : "") + "</span>" +
-    (stand.art === "erfasst" ? '<i class="zpunkt"></i>' : "");
+    (stand.art === "erfasst" ? '<i class="zpunkt"></i>' : "") +
+    (stand.art === "ausgef" ? '<i class="zpunkt aus"></i>' : "");
   b.addEventListener("click", () => {
     if(db.ui.planEdit){ slotDialog(tag, nr); return; }
     if(db.ui.vertretungModus){ vertretungWaehlen(slot, datum); return; }
@@ -4904,6 +5024,7 @@ function stundenHeute(datum){
 function notizen(){ if(!Array.isArray(db.notizen)) db.notizen = []; return db.notizen; }
 
 function renderOrganisation(){
+  heuteWechselPruefen();
   renderOrgHeute();
   const seg = db.ui.orgSeg || "kalender";
   document.querySelectorAll("#orgSeg button").forEach(b => {
@@ -7006,8 +7127,6 @@ function vfZeichnen(z, vorhanden){
   }
 
   $("#ovl").hidden = false;
-  const first = box.querySelector("input, select, textarea");
-  if(first) setTimeout(() => first.focus(), 60);
 }
 /* Erst ansehen, nicht gleich bearbeiten – Bearbeiten ist ein eigener Schritt. */
 /* Auf der Kind-Übersicht nur Datum und Ort; Antippen führt – strukturell wie
@@ -7270,8 +7389,6 @@ function openModal(opt){
   else { acts.appendChild(ok); acts.appendChild(ab); }
   box.appendChild(acts);
   $("#ovl").hidden = false;
-  const first = box.querySelector("input, select");
-  if(first) setTimeout(()=>first.focus(), 60);
 }
 $("#ovl").addEventListener("click", ev => { if(ev.target.id === "ovl") closeModal(); });
 document.addEventListener("keydown", ev => { if(ev.key === "Escape") closeModal(); });
@@ -7421,7 +7538,7 @@ function renderFachList(){
     const rs = reihenVon(f.id);
     const anzE = rs.reduce((a,r) => a + einheitenVon(r.id).length, 0);
     const row = document.createElement("div");
-    row.className = "item";
+    row.className = "item tapbar";
     const info = document.createElement("div");
     info.className = "grow";
     info.innerHTML = "<b>" + esc(f.name) + "</b><div class=\"sub\">" + rs.length +
@@ -7511,9 +7628,7 @@ $("#btnFachAdd").addEventListener("click", () => {
     db.tests.forEach(t => { if(!t.fachId) t.fachId = f.id; });
   }
   if(!db.ui.fachId) db.ui.fachId = f.id;
-  $("#nfName").value = "";
-  $("#nfVergessen").value = "";
-  const nbf = $("#newFach"); if(nbf) nbf.open = false;
+  closeFachSheet();
   renumberAll();
   save(); renderAlles();
   toast("Fach „" + name + "“ angelegt");
@@ -8811,17 +8926,17 @@ const TOUR_KATEGORIEN = [
         text:"Hier legst du deine Klassen und Fächer an, wechselst zwischen ihnen, und siehst in der Klassenliste auf einen Blick, wie es der gerade gewählten Klasse geht.",
         vor: () => { closeDrop(); db.ui.bereich = "plan"; goView("stunde"); } },
       { titel:"Klasse anlegen",
-        text:"Über „+ Neue Klasse“: Bezeichnung – z. B. 4a – und Anzahl der Kinder reichen. Loewi arbeitet bewusst mit Nummern statt Namen, ein Kürzel kannst du optional ergänzen.",
-        ziel:"#newKlasse",
-        vor: () => { closeDrop(); goView("klassen"); } },
+        text:"Über das grüne Plus bei „Klassen“: Bezeichnung – z. B. 4a – und Anzahl der Kinder reichen. Loewi arbeitet bewusst mit Nummern statt Namen, ein Kürzel kannst du optional ergänzen.",
+        ziel:"#kSheet",
+        vor: () => { closeDrop(); db.ui.klAnsicht = "klassen"; db.ui.klView = "liste"; goView("klassen"); openKlasseSheet(); } },
       { titel:"Fach anlegen",
-        text:"Genauso bei „+ Neues Fach“: Name und was in diesem Fach typischerweise vergessen wird – Sportzeug bei Sport, Hausaufgaben bei Deutsch.",
-        ziel:"#newFach",
-        vor: () => { closeDrop(); goView("klassen"); } },
+        text:"Genauso über das grüne Plus bei „Fächer“: Name und was in diesem Fach typischerweise vergessen wird – Sportzeug bei Sport, Hausaufgaben bei Deutsch.",
+        ziel:"#fSheet",
+        vor: () => { closeDrop(); closeKlasseSheet(); db.ui.klAnsicht = "faecher"; db.ui.klView = "liste"; goView("klassen"); openFachSheet(); } },
       { titel:"Klasse und Fach auswählen",
         text:"Oben tippst du Klasse und Fach zusammen an. Diese Kombination gilt danach überall in der App – im Plan, in der Klassenliste, im Unterricht – bis du sie wieder wechselst.",
         ziel:"#navAuswahl",
-        vor: () => { closeDrop(); openDrop(); } },
+        vor: () => { closeKlasseSheet(); closeFachSheet(); closeDrop(); openDrop(); } },
       { titel:"Die Klassenliste",
         text:"Unten über den Tab „Klassenliste“: Jedes Kind mit Fehlstunden, vergessenem Material, Mitarbeits- und Testschnitt. Kleine Symbole neben der Nummer fallen zusätzlich auf – ein Kreuz bei einem hinterlegten Gesundheitshinweis, eine Zahl mit „×“, wenn ein Kind mehrfach in Folge gefehlt oder etwas vergessen hat.",
         ziel:"#sumKopf",
@@ -8919,7 +9034,7 @@ function tourStarten(){
 function tourBeenden(){
   if(!tourOffen) return;
   tourOffen = false;
-  closeStdSheet();
+  closeStdSheet(); closeKlasseSheet(); closeFachSheet();
   $("#tourLayer").hidden = true;
   $("#tourSpot").classList.remove("an");
   $("#tourDim").classList.remove("an");
@@ -8943,7 +9058,7 @@ function tourKategorieWahl(id){
 }
 function tourZeigeIntro(){
   tourModus = "intro";
-  closeStdSheet();
+  closeStdSheet(); closeKlasseSheet(); closeFachSheet();
   tourBubbleGrundzustand();
   $("#tourTitel").textContent = "Willkommen bei Loewi!";
   $("#tourText").textContent = "Ich bin Löwi und zeige dir, wie die App funktioniert. Einfach auf den Bildschirm tippen, um weiterzugehen.";
@@ -8953,7 +9068,7 @@ function tourZeigeIntro(){
 }
 function tourZeigeMenu(){
   tourModus = "menu"; tourKatId = null;
-  closeStdSheet();
+  closeStdSheet(); closeKlasseSheet(); closeFachSheet();
   tourBubbleGrundzustand();
   $("#tourTitel").textContent = "Welchen Teil der App soll ich dir genauer erklären?";
   $("#tourText").textContent = "";
@@ -8970,7 +9085,7 @@ function tourZeigeMenu(){
 }
 function tourZeigeOutro(){
   tourModus = "outro";
-  closeStdSheet();
+  closeStdSheet(); closeKlasseSheet(); closeFachSheet();
   tourBubbleGrundzustand();
   $("#tourTitel").textContent = "Möchtest du noch etwas wissen?";
   $("#tourText").textContent = "";
