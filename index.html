@@ -2025,6 +2025,13 @@ body.vertmodus .stundenkarte{cursor:pointer}
       <button class="act primary" id="btnKlasseAdd">Klasse anlegen</button>
       <button class="act neutral" id="btnKlasseSheetZu">Abbrechen</button>
     </div>
+    <div class="sep"></div>
+    <div class="actions">
+      <button class="act neutral" id="btnKlasseImport" style="width:100%">Geteilte Klasse einlesen</button>
+      <input type="file" id="fileKlasse" accept="application/json,.json" style="display:none">
+    </div>
+    <p class="hint">Für eine Klasse aus einer Doppelbesetzung – du wählst danach, ob ersetzt
+      oder nur aktualisiert wird. Deine übrigen Daten bleiben unangetastet.</p>
   </div>
 </div>
 
@@ -3122,7 +3129,9 @@ function renderKlassen(){
     topbar($("#tbKlKinder"), {zurueck:() => klGo("liste"), zurueckText:"Klassen"});
     seitenkopf($("#klKinderKopf"), "Klasse " + k.name,
       k.count + (k.count === 1 ? " Kind" : " Kinder"),
-      stiftBtn("Klasse bearbeiten", () => klasseDialog(k)));
+      kopfKnoepfe(
+        teilenBtn("Klasse teilen", () => klasseTeilen(k)),
+        stiftBtn("Klasse bearbeiten", () => klasseDialog(k))));
     $("#klAnzahl").textContent = "Nr. 1 bis " + k.count;
     renderKuerzel(k);
     return;
@@ -7988,6 +7997,212 @@ function reiheEinfuegen(paket){
       planGo("einheiten", {reiheId:r.id});
       toast("Reihe „" + titel + "“ eingefügt");
     }
+  });
+}
+
+/* ---------- Klasse teilen (Doppelbesetzung) ----------
+   Ein eigenständiges Paket mit allem, was zu einer Klasse gehört – für zwei
+   Lehrkräfte, die dieselbe Klasse führen und ihre Daten abgleichen wollen.
+   „idQuelle" merkt sich die Klassen-Id auf dem abgebenden Gerät, damit
+   Vorfall-Beteiligte beim Einlesen auf die (ggf. andere) lokale Id umgebogen
+   werden können – ohne sie hätte das Zielgerät keine Ahnung, welcher der
+   Beteiligten „diese" Klasse war. */
+const KLASSE_TYP = "loewi-klasse";
+function klassePaket(k){
+  const fachName = fid => { const f = fach(fid); return f ? f.name : null; };
+  const stunden = alleStundenVon(k.id).map(s => Object.assign({}, s, {fachName: fachName(s.fachId)}));
+  const tests = db.tests.filter(t => t.klasseId === k.id)
+    .map(t => Object.assign({}, t, {fachName: fachName(t.fachId)}));
+  return {
+    typ: KLASSE_TYP, version: 1, erstellt: heute(),
+    klasse: {idQuelle:k.id, name:k.name, count:k.count, labels:k.labels || {}, befreit:k.befreit || {}},
+    stunden: stunden,
+    tests: tests,
+    beobachtungen: beobListe().filter(b => b.klasseId === k.id),
+    gesundheit: gesundheitListe().filter(g => g.klasseId === k.id),
+    vorfaelle: vorfaelleListe().filter(v => (v.beteiligte || []).some(b => b.klasseId === k.id))
+  };
+}
+function klasseTeilen(k){
+  if(!k){ toast("Keine Klasse gewählt"); return; }
+  const paket = klassePaket(k);
+  const clean = String(k.name || "Klasse").replace(/[^\wäöüÄÖÜß-]+/g, "_").slice(0, 40);
+  const name = "Klasse_" + clean + ".json";
+  dateiDialog(new TextEncoder().encode(JSON.stringify(paket, null, 1)), name,
+              "application/json", {titel:"Klasse zum Teilen"});
+}
+
+$("#btnKlasseImport").addEventListener("click", () => $("#fileKlasse").click());
+$("#fileKlasse").addEventListener("change", ev => {
+  const datei = ev.target.files && ev.target.files[0];
+  ev.target.value = "";
+  if(!datei) return;
+  const fr = new FileReader();
+  fr.onload = () => {
+    let paket;
+    try{ paket = JSON.parse(fr.result); }
+    catch(err){ toast("Datei nicht lesbar"); return; }
+    if(!paket || paket.typ !== KLASSE_TYP || !paket.klasse){
+      toast("Das ist keine geteilte Klasse");
+      return;
+    }
+    closeKlasseSheet();
+    klasseEinlesenWahl(paket);
+  };
+  fr.onerror = () => toast("Datei nicht lesbar");
+  fr.readAsText(datei);
+});
+
+/* Fach nur über den Namen zuordnen – Fach-Ids sind je Gerät eigenständig. */
+function fachFindOrCreate(name){
+  const n = String(name || "").trim();
+  if(!n) return null;
+  let f = db.faecher.find(x => (x.name || "").trim().toLowerCase() === n.toLowerCase());
+  if(!f){ f = {id:uid(), name:n}; db.faecher.push(f); }
+  return f;
+}
+
+/* Gibt es die Klasse (nach Name) schon, wird gefragt wie eingelesen werden soll.
+   Sonst ist nichts zu entscheiden – die Klasse kommt komplett neu dazu. */
+function klasseEinlesenWahl(paket){
+  const titel = String(paket.klasse.name || "Klasse").slice(0, 40);
+  const vorhanden = db.klassen.find(x => x.name.trim().toLowerCase() === titel.trim().toLowerCase());
+  if(!vorhanden){ klasseEinlesen(paket, null, "ersetzen"); return; }
+  openModal({
+    titel: "Klasse „" + titel + "“ gibt es schon",
+    text: "„Ersetzen“ überschreibt alle Stunden, Tests, Beobachtungen, Gesundheitshinweise " +
+          "und Vorfälle dieser Klasse mit dem Inhalt der Datei. „Aktualisieren“ ergänzt nur, " +
+          "was noch fehlt – Vorhandenes bleibt unverändert.",
+    felder:[{key:"modus", label:"Vorgehen", typ:"select", wert:"aktualisieren",
+      optionen:[
+        {value:"aktualisieren", label:"Klasseneinträge aktualisieren"},
+        {value:"ersetzen", label:"Klasseneinträge komplett ersetzen"}
+      ]}],
+    okText:"Einlesen",
+    onOk: w => { klasseEinlesen(paket, vorhanden, w.modus || "aktualisieren"); }
+  });
+}
+
+function klasseEinlesen(paket, vorhanden, modus){
+  const p = paket;
+  let k = vorhanden;
+  if(!k){
+    k = {id:uid(), name:String(p.klasse.name || "Klasse").slice(0, 40),
+         count: p.klasse.count || 1, labels:{}, befreit:{}};
+    db.klassen.push(k);
+  }
+  const quelleId = p.klasse.idQuelle;
+
+  if(modus === "ersetzen"){
+    k.count = p.klasse.count || k.count || 1;
+    k.labels = Object.assign({}, p.klasse.labels || {});
+    k.befreit = Object.assign({}, p.klasse.befreit || {});
+    db.stunden = db.stunden.filter(s => s.klasseId !== k.id);
+    db.tests = db.tests.filter(t => t.klasseId !== k.id);
+    db.beobachtungen = beobListe().filter(b => b.klasseId !== k.id);
+    db.gesundheit = gesundheitListe().filter(g => g.klasseId !== k.id);
+    db.vorfaelle = vorfaelleListe().filter(v => !(v.beteiligte || []).some(b => b.klasseId === k.id));
+  }else{
+    k.count = Math.max(k.count || 1, p.klasse.count || 1);
+    Object.keys(p.klasse.labels || {}).forEach(nr => { if(!k.labels[nr]) k.labels[nr] = p.klasse.labels[nr]; });
+    Object.keys(p.klasse.befreit || {}).forEach(nr => { if(!k.befreit[nr]) k.befreit[nr] = p.klasse.befreit[nr]; });
+  }
+
+  const zaehler = {stunden:0, tests:0, beobachtungen:0, gesundheit:0, vorfaelle:0};
+
+  (p.stunden || []).forEach(quelle => {
+    const fachObj = quelle.fachName ? fachFindOrCreate(quelle.fachName) : null;
+    const fid = fachObj ? fachObj.id : null;
+    if(modus === "aktualisieren"){
+      const key = (quelle.datum || "") + "|" + (quelle.fachName || "") + "|" +
+        (quelle.aus ? "aus" : (quelle.thema || ""));
+      const gibtsSchon = alleStundenVon(k.id).some(s => {
+        const sf = fach(s.fachId);
+        return (s.datum || "") + "|" + (sf ? sf.name : "") + "|" +
+          (s.aus ? "aus" : (s.thema || "")) === key;
+      });
+      if(gibtsSchon) return;
+    }
+    db.stunden.push({id:uid(), klasseId:k.id, fachId:fid, nr:0, t:quelle.t || Date.now(),
+      datum:quelle.datum || heute(), thema:quelle.thema || "", notiz:quelle.notiz || "",
+      einheitId:null, aus:!!quelle.aus, eintraege: quelle.eintraege || {}});
+    zaehler.stunden++;
+  });
+
+  (p.tests || []).forEach(quelle => {
+    const fachObj = quelle.fachName ? fachFindOrCreate(quelle.fachName) : null;
+    const fid = fachObj ? fachObj.id : null;
+    if(modus === "aktualisieren"){
+      const key = (quelle.datum || "") + "|" + (quelle.fachName || "") + "|" + (quelle.titel || "");
+      const gibtsSchon = db.tests.some(t => {
+        if(t.klasseId !== k.id) return false;
+        const tf = fach(t.fachId);
+        return (t.datum || "") + "|" + (tf ? tf.name : "") + "|" + (t.titel || "") === key;
+      });
+      if(gibtsSchon) return;
+    }
+    db.tests.push({id:uid(), klasseId:k.id, fachId:fid, datum:quelle.datum || heute(),
+      titel:quelle.titel || "", kriterien:quelle.kriterien || [], noten:quelle.noten || {},
+      notizen:quelle.notizen || {}, t:quelle.t || Date.now()});
+    zaehler.tests++;
+  });
+
+  (p.beobachtungen || []).forEach(quelle => {
+    if(modus === "aktualisieren"){
+      const gibtsSchon = beobListe().some(b => b.klasseId === k.id && Number(b.nr) === Number(quelle.nr) &&
+        b.datum === quelle.datum && b.text === quelle.text);
+      if(gibtsSchon) return;
+    }
+    beobListe().push({id:uid(), klasseId:k.id, nr:Number(quelle.nr), datum:quelle.datum || heute(),
+      text:quelle.text || "", t:quelle.t || Date.now()});
+    zaehler.beobachtungen++;
+  });
+
+  (p.gesundheit || []).forEach(quelle => {
+    if(modus === "aktualisieren"){
+      const gibtsSchon = gesundheitListe().some(g => g.klasseId === k.id && Number(g.nr) === Number(quelle.nr) &&
+        g.kategorie === quelle.kategorie && g.hinweis === quelle.hinweis);
+      if(gibtsSchon) return;
+    }
+    gesundheitListe().push({id:uid(), klasseId:k.id, nr:Number(quelle.nr), kategorie:quelle.kategorie || "",
+      hinweis:quelle.hinweis || "", von:quelle.von || "", bis:quelle.bis || "", t:quelle.t || Date.now()});
+    zaehler.gesundheit++;
+  });
+
+  (p.vorfaelle || []).forEach(quelle => {
+    const beteiligte = (quelle.beteiligte || []).map(b =>
+      b.klasseId === quelleId ? {klasseId:k.id, nr:b.nr, rolle:b.rolle} : b);
+    if(modus === "aktualisieren"){
+      const key = (quelle.datum || "") + "|" + (quelle.uhrzeit || "") + "|" + (quelle.ort || "") + "|" +
+        String(quelle.beschreibung || "").slice(0, 50);
+      const gibtsSchon = vorfaelleListe().some(v =>
+        (v.datum || "") + "|" + (v.uhrzeit || "") + "|" + (v.ort || "") + "|" +
+        String(v.beschreibung || "").slice(0, 50) === key);
+      if(gibtsSchon) return;
+    }
+    vorfaelleListe().push(Object.assign({}, quelle, {id:uid(), beteiligte:beteiligte, t:quelle.t || Date.now()}));
+    zaehler.vorfaelle++;
+  });
+
+  renumberAll();
+  save(); renderAlles();
+  if(db.ui.view === "klassen") klGo("kinder", k.id);
+  klasseEinlesenZusammenfassung(modus, k, zaehler);
+}
+
+function klasseEinlesenZusammenfassung(modus, k, zaehler){
+  const teile = [];
+  if(zaehler.stunden) teile.push(zaehler.stunden + (zaehler.stunden === 1 ? " Stunde" : " Stunden"));
+  if(zaehler.tests) teile.push(zaehler.tests + (zaehler.tests === 1 ? " Test" : " Tests"));
+  if(zaehler.beobachtungen)
+    teile.push(zaehler.beobachtungen + " Beobachtung" + (zaehler.beobachtungen === 1 ? "" : "en"));
+  if(zaehler.gesundheit)
+    teile.push(zaehler.gesundheit + " Gesundheitshinweis" + (zaehler.gesundheit === 1 ? "" : "e"));
+  if(zaehler.vorfaelle) teile.push(zaehler.vorfaelle + (zaehler.vorfaelle === 1 ? " Vorfall" : " Vorfälle"));
+  const info = teile.length ? teile.join(", ") + " übernommen." : "Es gab nichts Neues zu übernehmen.";
+  openModal({
+    titel: modus === "ersetzen" ? "Klasse „" + k.name + "“ ersetzt" : "Klasse „" + k.name + "“ aktualisiert",
+    text: info, nurSchliessen:true
   });
 }
 
