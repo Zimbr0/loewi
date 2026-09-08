@@ -9092,6 +9092,7 @@ function profilOeffnen(){
    der vorherige Stand zurück, unverändert. */
 const TOUR_DEMO_KLASSE_ID = "tourdemo-k1";
 const TOUR_DEMO_FACH_ID = "tourdemo-f1";
+const TOUR_DEMO_REIHE_ID = "tourdemo-r1";
 let tourEchtStand = null;
 
 function tourHeuteTag(){
@@ -9120,7 +9121,7 @@ function tourDemoAnlegen(){
   const h = heute(), tag = tourHeuteTag();
   const K1 = TOUR_DEMO_KLASSE_ID, K2 = "tourdemo-k2", K3 = "tourdemo-k3";
   const F1 = TOUR_DEMO_FACH_ID, F2 = "tourdemo-f2", F3 = "tourdemo-f3";
-  const R1 = "tourdemo-r1", R2 = "tourdemo-r2";
+  const R1 = TOUR_DEMO_REIHE_ID, R2 = "tourdemo-r2";
   const eintr = werte => {
     const o = {};
     werte.forEach((m, i) => { o[i + 1] = {m:m, k:false, v:false, n:""}; });
@@ -9402,7 +9403,8 @@ const TOUR_KATEGORIEN = [
         vor: () => goView("planung") },
       { titel:"Eine Einheit anlegen",
         text:"Innerhalb einer Reihe fügst du über dasselbe grüne Plus einzelne Unterrichtseinheiten hinzu: Das Thema der Stunde reicht zum Start, den Rest – Lernziel, Verlauf, Material, Reflexion – füllst du nach und nach aus. Je Klasse hältst du fest, ob die Einheit schon gehalten wurde.",
-        vor: () => goView("planung") }
+        ziel:'button[aria-label="Unterrichtseinheit hinzufügen"]',
+        vor: () => { goView("planung"); planGo("einheiten", {reiheId:TOUR_DEMO_REIHE_ID}); } }
     ]
   },
   {
