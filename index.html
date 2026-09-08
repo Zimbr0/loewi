@@ -9135,28 +9135,37 @@ const TOUR_KATEGORIEN = [
         ziel:"#navAuswahl",
         vor: () => { closeDrop(); db.ui.bereich = "plan"; goView("stunde"); } },
       { titel:"Was kann ich hier machen?",
-        text:"Hier legst du deine Klassen und Fächer an, wechselst zwischen ihnen, und siehst in der Klassenliste auf einen Blick, wie es der gerade gewählten Klasse geht.",
-        vor: () => { closeDrop(); db.ui.bereich = "plan"; goView("stunde"); } },
-      { titel:"Klasse anlegen",
-        text:"Über das grüne Plus bei „Klassen“: Bezeichnung – z. B. 4a – und Anzahl der Kinder reichen. Loewi arbeitet bewusst mit Nummern statt Namen, ein Kürzel kannst du optional ergänzen.",
-        ziel:"#kSheet",
-        vor: () => { closeDrop(); db.ui.klAnsicht = "klassen"; db.ui.klView = "liste"; goView("klassen"); openKlasseSheet(); } },
-      { titel:"Fach anlegen",
-        text:"Genauso über das grüne Plus bei „Fächer“: Name und was in diesem Fach typischerweise vergessen wird – Sportzeug bei Sport, Hausaufgaben bei Deutsch.",
-        ziel:"#fSheet",
-        vor: () => { closeDrop(); closeKlasseSheet(); db.ui.klAnsicht = "faecher"; db.ui.klView = "liste"; goView("klassen"); openFachSheet(); } },
+        text:"Hier kannst du deine Klassen und Fächer selbst anlegen und zwischen ihnen wechseln. Zum Anlegen oder Bearbeiten drücke einfach auf das Stift-Symbol.",
+        ziel:"#dropUp",
+        vor: () => { db.ui.bereich = "plan"; goView("stunde"); closeDrop(); openDrop(); } },
+      { titel:"Klassen und Fächer anlegen",
+        text:"Neue Klassen und Fächer anlegen ist ganz einfach. Wähle dafür oben einfach „Klassen“ oder „Fächer“ aus und klicke anschließend auf das Plus-Symbol.",
+        ziel:"#klAnsicht, #tbKlassen",
+        vor: () => { closeDrop(); db.ui.klAnsicht = "klassen"; db.ui.klView = "liste"; goView("klassen"); } },
       { titel:"Klasse und Fach auswählen",
         text:"Oben tippst du Klasse und Fach zusammen an. Diese Kombination gilt danach überall in der App – im Plan, in der Klassenliste, im Unterricht – bis du sie wieder wechselst.",
-        ziel:"#navAuswahl",
+        ziel:"#dropUp .selchip.on",
         vor: () => { closeKlasseSheet(); closeFachSheet(); closeDrop(); openDrop(); } },
       { titel:"Die Klassenliste",
-        text:"Unten über den Tab „Klassenliste“: Jedes Kind mit Fehlstunden, vergessenem Material, Mitarbeits- und Testschnitt. Kleine Symbole neben der Nummer fallen zusätzlich auf – ein Kreuz bei einem hinterlegten Gesundheitshinweis, eine Zahl mit „×“, wenn ein Kind mehrfach in Folge gefehlt oder etwas vergessen hat.",
-        ziel:"#sumKopf",
+        text:"Unten findest du die Klassenliste. Die Liste ist immer abhängig von der Klasse die du ausgewählt hast. Hier findest du alle Infos zu den Kindern auf einen Blick.",
+        ziel:'nav button[data-view="uebersicht"]',
         vor: () => { closeDrop(); goView("uebersicht"); } },
-      { titel:"Ansicht von einem Kind",
-        text:"Tippe auf eine Zeile: Dort findest du Beobachtungen, gesundheitliche Besonderheiten, Vorfälle und den Verlauf zu diesem Kind – als PDF sicherbar für Elterngespräche.",
+      { titel:"Detailansicht eines Kindes",
+        text:"Tippst du in der Klassenliste auf ein bestimmtes Kind findest du viele zusätzliche Informationen oder kannst diese anlegen.",
         ziel:"#tblSum tbody tr:first-child",
-        vor: () => goView("uebersicht") }
+        vor: () => goView("uebersicht") },
+      { titel:"Detailansicht eines Kindes",
+        text:"In diese Ansicht kannst du die Statistik und komplette Stundenhistorie des Kindes einsehen sowie allgemeine Beobachtungen, gesundheitliche Besonderheiten und Vorfälle eintragen und nachschauen.",
+        ziel:"#sumKind",
+        vor: () => { goView("uebersicht"); sumGo("kind", 1); } },
+      { titel:"Klassen mit KollegInnen teilen",
+        text:"Zwar ist Loewi offline unterwegs, doch ist es manchmal wichtig eine Klasse gemeinsam führen zu können. Hier hilft dir die Möglichkeit eine Klasse zu teilen. Wähle hierfür eine Klasse im Bearbeitungsfenster aus und drücke das Teilen-Symbol.",
+        ziel:'[aria-label="Klasse teilen"]',
+        vor: () => { closeDrop(); const k = db.klassen[0]; if(k) klGo("kinder", k.id); } },
+      { titel:"Geteilte Klasse einpflegen",
+        text:"Um eine geteilte Klasse einzupflegen, legst du eine neue Klasse an (+ Symbol) und wählst „Geteilte Klasse einlesen“. Besteht die geteilte Klasse nicht, so wird sie eingefügt. Besteht bereits eine Klasse mit dem Namen hast du die Möglichkeit deine Daten zu aktualisieren oder komplett zu ersetzen.",
+        ziel:"#btnKlasseImport",
+        vor: () => { closeDrop(); db.ui.klAnsicht = "klassen"; db.ui.klView = "liste"; goView("klassen"); openKlasseSheet(); } }
     ]
   },
   {
@@ -9332,6 +9341,25 @@ function tourZeigeSchritt(){
   if(el) el.scrollIntoView({block:"center"});
   setTimeout(tourSpotMessen, 260);
 }
+/* Ein Ziel kann auch mehrere Elemente treffen (z. B. beide ausgewählten Chips) –
+   dann wird die Hüllkurve über alle sichtbaren Treffer gebildet. Unsichtbare
+   Treffer (display:none) haben eine leere Fläche bei 0/0 und würden die Hülle
+   verfälschen, deshalb fliegen sie raus. */
+function tourZielRect(selector){
+  if(!selector) return null;
+  const els = Array.from(document.querySelectorAll(selector)).filter(el => {
+    const r = el.getBoundingClientRect();
+    return r.width > 0 || r.height > 0;
+  });
+  if(!els.length) return null;
+  let top = Infinity, left = Infinity, right = -Infinity, bottom = -Infinity;
+  els.forEach(el => {
+    const r = el.getBoundingClientRect();
+    top = Math.min(top, r.top); left = Math.min(left, r.left);
+    right = Math.max(right, r.right); bottom = Math.max(bottom, r.bottom);
+  });
+  return {top:top, left:left, width: right - left, height: bottom - top};
+}
 /* Bubble in den Grundzustand – Auswahl-Knöpfe und Punkte werden von den
    jeweiligen Funktionen bei Bedarf wieder eingeblendet. */
 function tourBubbleGrundzustand(){
@@ -9347,15 +9375,14 @@ function tourSpotAus(){
 }
 function tourSpotMessen(){
   const spot = $("#tourSpot");
-  let el = null;
+  let r = null;
   if(tourModus === "kategorie"){
     const kat = TOUR_KATEGORIEN.find(k => k.id === tourKatId);
     const schritt = kat.schritte[tourSchrittIdx];
-    el = schritt.ziel ? document.querySelector(schritt.ziel) : null;
+    r = schritt.ziel ? tourZielRect(schritt.ziel) : null;
   }
-  if(!el){ tourSpotAus(); tourFigurPosition(null); return; }
+  if(!r){ tourSpotAus(); tourFigurPosition(null); return; }
   $("#tourDim").classList.remove("an");
-  const r = el.getBoundingClientRect();
   const pad = 8;
   spot.style.top = (r.top - pad) + "px";
   spot.style.left = (r.left - pad) + "px";
