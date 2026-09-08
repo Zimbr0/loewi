@@ -994,6 +994,10 @@ body.vertmodus .stundenkarte{cursor:pointer}
 .tourblase{position:relative;background:var(--card);border:1px solid var(--line);
   border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:8px;
   cursor:auto;max-height:min(46vh,420px);overflow:auto}
+/* Die Kategorie-Auswahl darf so groß werden, dass alle Kategorien ohne
+   Scrollen passen – nur wenn sie wirklich nicht mehr auf den Bildschirm
+   passt, wird gescrollt. */
+.tourblase.voll{max-height:min(calc(100vh - 130px),640px)}
 .tourfigur.tf-oben .tourblase{margin-bottom:0;margin-top:8px}
 .tourblase::after{content:"";position:absolute;bottom:-9px;right:38px;
   width:16px;height:16px;background:var(--card);
@@ -2743,8 +2747,13 @@ function standMelden(ok){
   flagSaved();
   return ok;
 }
-/* Für den letzten Moment vor dem Schließen: synchron, so weit es geht. */
+/* Für den letzten Moment vor dem Schließen: synchron, so weit es geht.
+   Läuft an save() und dessen tourOffen-Sperre vorbei (beforeunload duldet
+   keine Wartezeit) – deshalb hier dieselbe Sperre noch einmal von Hand,
+   sonst würden beim Schließen/Neuladen während des Rundgangs die
+   Beispieldaten als "echt" gespeichert. */
 function saveJetzt(){
+  if(tourOffen) return;
   try{
     const text = JSON.stringify(db);
     letzterStand = text;
@@ -9343,7 +9352,7 @@ const TOUR_KATEGORIEN = [
         ziel:"#tblSum tbody tr:first-child",
         vor: () => goView("uebersicht") },
       { titel:"Detailansicht eines Kindes",
-        text:"In diese Ansicht kannst du die Statistik und komplette Stundenhistorie des Kindes einsehen sowie allgemeine Beobachtungen, gesundheitliche Besonderheiten und Vorfälle eintragen und nachschauen.",
+        text:"In diese Ansicht kannst du die Statistik und komplette Stundenhistorie des Kindes einsehen sowie allgemeine Beobachtungen, gesundheitliche Besonderheiten und Vorfälle eintragen und nachschauen. Zusätzlich kannst du dir eine komplette Übersicht des Kindes als PDF exportieren lassen.",
         ziel:"#sumKind",
         vor: () => { goView("uebersicht"); sumGo("kind", 1); } },
       { titel:"Klassen mit KollegInnen teilen",
@@ -9419,15 +9428,15 @@ const TOUR_KATEGORIEN = [
         text:"Deine Daten liegen ausschließlich auf diesem Gerät, im Speicher des Browsers – kein Konto, keine Cloud. Das schützt deine Daten, heißt aber auch: Ohne eigene Sicherung sind sie weg, wenn das Gerät verloren geht oder der Speicher gelöscht wird.",
         vor: () => profilSeite("daten") },
       { titel:"Sicherung erstellen",
-        text:"„Sicherung (.json)“ erzeugt eine Datei mit allem – Klassen, Stunden, Beobachtungen. Optional mit Passwort verschlüsselt. Leg sie regelmäßig irgendwo sicher ab, z. B. per Mail an dich selbst oder in einer Cloud.",
+        text:"„Sicherung (.json)“ erzeugt eine Datei mit allem – Klassen, Stunden, Beobachtungen. Vergib dabei immer ein Passwort: Nur damit ist die Datei tatsächlich verschlüsselt und vor fremden Blicken geschützt.",
         ziel:"#btnBackup",
         vor: () => profilSeite("daten") },
       { titel:"Excel-Export",
-        text:"Für Auswertungen oder die Schulleitung: eine Excel-Mappe mit Klassenliste, Einzelliste, Stundendoku und – sobald vorhanden – Tests und Planung.",
+        text:"Für Auswertungen und zur weiteren Bearbeitung kannst du dir deine Daten (Klassenliste, Stundendoku, Tests und Planung) auch als Excel-Tabelle exportieren lassen.",
         ziel:"#btnExcel",
         vor: () => profilSeite("daten") },
       { titel:"Wieder einpflegen",
-        text:"Gerät verloren oder gewechselt? Auf dem neuen Gerät hier die zuletzt gesicherte Datei auswählen – schon ist alles wieder da. Deshalb lohnt sich eine Sicherung, bevor etwas passiert, nicht erst danach.",
+        text:"Falls deine Daten verloren gehen, kannst du hier Sicherungen wieder einpflegen. Denke bitte daran, regelmäßig Sicherungen zu machen. Aber keine Sorge, wenn du länger als eine Woche keine Sicherung angelegt hast, erinnert dich Loewi durch einen orangenen Rahmen um das Profilbild daran.",
         ziel:"#btnRestore",
         vor: () => profilSeite("daten") }
     ]
@@ -9484,6 +9493,7 @@ function tourZeigeMenu(){
   tourModus = "menu"; tourKatId = null;
   closeStdSheet(); closeKlasseSheet(); closeFachSheet();
   tourBubbleGrundzustand();
+  document.querySelector(".tourblase").classList.add("voll");
   $("#tourTitel").textContent = "Welchen Teil der App soll ich dir genauer erklären?";
   $("#tourText").textContent = "";
   const wahl = $("#tourWahl"); wahl.style.display = ""; wahl.innerHTML = "";
@@ -9561,6 +9571,7 @@ function tourBubbleGrundzustand(){
   $("#tourPunkte").style.display = "none";
   $("#tourPunkte").innerHTML = "";
   $("#tourHinweis").style.display = "none";
+  document.querySelector(".tourblase").classList.remove("voll");
 }
 function tourSpotAus(){
   $("#tourSpot").classList.remove("an");
