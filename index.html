@@ -9082,29 +9082,17 @@ function profilOeffnen(){
    wird erst nach einer kurzen Wartezeit, weil aufklappende Bereiche (etwa
    die Klasse/Fach-Auswahl oben) selbst eine kurze Ein-Animation haben. */
 /* ---------- Wizard-Beispieldaten ----------
-   Ohne eigene Daten sieht vieles im Rundgang leer aus (Stundenplan, Klassenliste,
-   Tests …). Deshalb legt der Rundgang beim Start ein eigenes Beispiel-Set an –
-   klar als "Beispiel …" benannt und über feste Ids identifizierbar, damit es sich
-   nie mit echten Daten verwechseln lässt. save() ist währenddessen komplett
-   stillgelegt, sodass nichts davon je auf dem Gerät landet; beim Verlassen des
-   Rundgangs verschwindet exakt dieses Set wieder – unabhängig davon, was an
-   echten Klassen, Notizen usw. daneben steht. */
-const TOUR_DEMO_KLASSE_ID = "tourdemo-klasse";
-const TOUR_DEMO_FACH_ID = "tourdemo-fach";
-const TOUR_DEMO_STUNDE_ID = "tourdemo-stunde";
-const TOUR_DEMO_TEST_ID = "tourdemo-test";
-const TOUR_DEMO_REIHE_ID = "tourdemo-reihe";
-const TOUR_DEMO_EINHEIT_ID = "tourdemo-einheit";
-const TOUR_DEMO_SLOT_ID = "tourdemo-slot";
-const TOUR_DEMO_DIENST_ID = "tourdemo-dienst";
-const TOUR_DEMO_FREI_ID = "tourdemo-frei";
-const TOUR_DEMO_TERMIN_ID = "tourdemo-termin";
-const TOUR_DEMO_TODO_ID = "tourdemo-todo";
-const TOUR_DEMO_NOTIZ_ID = "tourdemo-notiz";
-const TOUR_DEMO_BEOB_ID = "tourdemo-beob";
-const TOUR_DEMO_GESUND_ID = "tourdemo-gesund";
-const TOUR_DEMO_VORFALL_ID = "tourdemo-vorfall";
-let tourEchteKlasseId = null, tourEchteFachId = null;
+   Damit der Rundgang nicht vor leeren Listen steht UND nicht von echten,
+   unvorhersehbaren Daten durcheinandergebracht wird (Anzeige-Bugs durch
+   Sonderfälle in echten Klassen etc.), blendet er die komplette echte
+   Datenbank für seine Dauer aus und ersetzt sie durch ein eigenes, reich
+   gefülltes Beispiel-Set – klar als "Beispiel …" benannt. save() ist
+   währenddessen komplett stillgelegt, sodass nichts davon je auf dem Gerät
+   landet; beim Verlassen des Rundgangs kommt exakt der vorherige Stand
+   zurück, unverändert. */
+const TOUR_DEMO_KLASSE_ID = "tourdemo-k1";
+const TOUR_DEMO_FACH_ID = "tourdemo-f1";
+let tourEchtStand = null;
 
 function tourHeuteTag(){
   const wt = (isoZuDatum(heute()).getDay() + 6) % 7;
@@ -9112,80 +9100,152 @@ function tourHeuteTag(){
 }
 
 function tourDemoAnlegen(){
+  tourEchtStand = {
+    klassen:db.klassen, faecher:db.faecher, stunden:db.stunden, tests:db.tests,
+    reihen:db.reihen, einheiten:db.einheiten, planSlots:db.plan.slots,
+    planDienste:planDienste(), frei:freieZeiten(), termine:termine(), todos:todos(),
+    notizen:notizen(), beobachtungen:beobListe(), gesundheit:gesundheitListe(),
+    vorfaelle:vorfaelleListe(), klasseId:db.ui.klasseId, fachId:db.ui.fachId
+  };
+
   const h = heute(), tag = tourHeuteTag();
+  const K1 = TOUR_DEMO_KLASSE_ID, K2 = "tourdemo-k2", K3 = "tourdemo-k3";
+  const F1 = TOUR_DEMO_FACH_ID, F2 = "tourdemo-f2", F3 = "tourdemo-f3";
+  const R1 = "tourdemo-r1", R2 = "tourdemo-r2";
+  const eintr = werte => {
+    const o = {};
+    werte.forEach((m, i) => { o[i + 1] = {m:m, k:false, v:false, n:""}; });
+    return o;
+  };
 
-  db.klassen.unshift({id:TOUR_DEMO_KLASSE_ID, name:"Beispielklasse", count:3, labels:{}, befreit:{}});
-  db.faecher.unshift({id:TOUR_DEMO_FACH_ID, name:"Beispielfach"});
+  db.klassen = [
+    {id:K1, name:"Beispielklasse 4a", count:24, labels:{}, befreit:{}},
+    {id:K2, name:"Beispielklasse 4b", count:23, labels:{}, befreit:{}},
+    {id:K3, name:"Beispielklasse 3c", count:21, labels:{}, befreit:{}}
+  ];
+  db.faecher = [
+    {id:F1, name:"Beispielfach Mathe"},
+    {id:F2, name:"Beispielfach Deutsch"},
+    {id:F3, name:"Beispielfach Sport"}
+  ];
 
-  db.reihen.push({id:TOUR_DEMO_REIHE_ID, fachId:TOUR_DEMO_FACH_ID, titel:"Beispielreihe",
-                  jahrgang:"", t:Date.now()});
-  db.einheiten.push({id:TOUR_DEMO_EINHEIT_ID, reiheId:TOUR_DEMO_REIHE_ID, nr:1,
-    titel:"Beispieleinheit", ziel:"", inhalt:"", kompetenz:"", methode:"", aufwaermen:"",
-    hauptteil:"", abschluss:"", material:"", link:"", sicherheit:"", diff:"", stat:{},
-    reflexion:"", anpassung:"", t:Date.now()});
+  const einheitLeer = extra => Object.assign({ziel:"", inhalt:"", kompetenz:"", methode:"",
+    aufwaermen:"", hauptteil:"", abschluss:"", material:"", link:"", sicherheit:"", diff:"",
+    reflexion:"", anpassung:""}, extra);
+  db.reihen = [
+    {id:R1, fachId:F1, titel:"Beispielreihe: Einmaleins", jahrgang:"4", t:1},
+    {id:R2, fachId:F2, titel:"Beispielreihe: Lesetraining", jahrgang:"4", t:2}
+  ];
+  db.einheiten = [
+    einheitLeer({id:"tourdemo-e1", reiheId:R1, nr:1, titel:"Einführung", stat:{[K1]:"gehalten"}, t:1}),
+    einheitLeer({id:"tourdemo-e2", reiheId:R1, nr:2, titel:"Übung: Kopfrechnen", stat:{[K1]:"gehalten"}, t:2}),
+    einheitLeer({id:"tourdemo-e3", reiheId:R1, nr:3, titel:"Vertiefung: Malfolgen", stat:{}, t:3}),
+    einheitLeer({id:"tourdemo-e4", reiheId:R2, nr:1, titel:"Lautlesen", stat:{}, t:4}),
+    einheitLeer({id:"tourdemo-e5", reiheId:R2, nr:2, titel:"Textverständnis", stat:{}, t:5})
+  ];
 
-  db.plan.slots.push({id:TOUR_DEMO_SLOT_ID, tag:tag, nr:1, klasseId:TOUR_DEMO_KLASSE_ID,
-                      fachId:TOUR_DEMO_FACH_ID, raum:"Beispielraum"});
-  planDienste().push({id:TOUR_DEMO_DIENST_ID, titel:"Beispiel-Hofaufsicht", tag:tag, nr:0,
-                      ort:"Schulhof"});
+  /* Wickelt sich unabhängig vom Wochentag um Mo–Fr, damit heute garantiert
+     Fach 1 in der 1. Stunde steht – passend zur dokumentierten Beispielstunde. */
+  const slotPlan = [
+    {dTag:0, nr:1, k:K1, f:F1}, {dTag:0, nr:3, k:K2, f:F2},
+    {dTag:1, nr:1, k:K2, f:F2}, {dTag:1, nr:2, k:K3, f:F3},
+    {dTag:2, nr:1, k:K1, f:F1}, {dTag:2, nr:2, k:K3, f:F3},
+    {dTag:3, nr:1, k:K3, f:F3}, {dTag:3, nr:3, k:K1, f:F1},
+    {dTag:4, nr:2, k:K2, f:F2}
+  ];
+  db.plan.slots = slotPlan.map((s, i) => ({id:"tourdemo-slot" + i,
+    tag:((tag - 1 + s.dTag) % 5) + 1, nr:s.nr, klasseId:s.k, fachId:s.f, raum:"Beispielraum"}));
+
+  db.plan.dienste = [
+    {id:"tourdemo-d1", titel:"Beispiel-Hofaufsicht", tag:tag, nr:0, ort:"Schulhof"},
+    {id:"tourdemo-d2", titel:"Beispiel-Busaufsicht", tag:(tag % 5) + 1, nr:2, ort:"Bushaltestelle"}
+  ];
   /* Nicht auf "heute" legen, sonst widerspricht sich "heute frei" mit der
      Beispielstunde, die ja genau heute dokumentiert sein soll. */
-  const freiDatum = plusTage(h, 14);
-  freieZeiten().push({id:TOUR_DEMO_FREI_ID, titel:"Beispiel-Ferientag", von:freiDatum, bis:freiDatum});
+  db.frei = [
+    {id:"tourdemo-fr1", titel:"Beispiel-Ferientag", von:plusTage(h, 7), bis:plusTage(h, 7)},
+    {id:"tourdemo-fr2", titel:"Beispielferien", von:plusTage(h, 21), bis:plusTage(h, 28)}
+  ];
 
-  db.stunden.push({id:TOUR_DEMO_STUNDE_ID, klasseId:TOUR_DEMO_KLASSE_ID, fachId:TOUR_DEMO_FACH_ID,
-    nr:1, t:Date.now(), datum:h, thema:"Beispielstunde", notiz:"", einheitId:TOUR_DEMO_EINHEIT_ID,
-    aus:false, eintraege:{1:{m:"+", k:false, v:false, n:""}, 2:{m:"+", k:false, v:false, n:""},
-    3:{m:"o", k:false, v:false, n:""}}});
+  db.stunden = [
+    {id:"tourdemo-s1", klasseId:K1, fachId:F1, nr:1, t:1, datum:plusTage(h, -14),
+     thema:"Beispielstunde: Einführung Einmaleins", ha:"Übungsblatt 1", notiz:"",
+     einheitId:"tourdemo-e1", aus:false, eintraege:eintr(["+","o","+","o","+"])},
+    {id:"tourdemo-s2", klasseId:K1, fachId:F1, nr:2, t:2, datum:plusTage(h, -7),
+     thema:"Beispielstunde: Übung Kopfrechnen", ha:"", notiz:"",
+     einheitId:"tourdemo-e2", aus:false, eintraege:eintr(["o","+","+","-","o"])},
+    {id:"tourdemo-s3", klasseId:K1, fachId:F1, nr:3, t:3, datum:plusTage(h, -3),
+     thema:"Fortbildung des Kollegiums", ha:"", notiz:"", einheitId:null, aus:true, eintraege:{}},
+    {id:"tourdemo-s4", klasseId:K1, fachId:F1, nr:4, t:4, datum:plusTage(h, -1),
+     thema:"Beispielstunde: Wiederholung", ha:"", notiz:"Vertretung durch Kollegin Schmidt",
+     einheitId:"tourdemo-e2", aus:false, eintraege:eintr(["+","+","o","+","+"])},
+    {id:"tourdemo-s5", klasseId:K1, fachId:F1, nr:5, t:5, datum:h,
+     thema:"Beispielstunde: Vertiefung Malfolgen", ha:"Merkblatt mitbringen", notiz:"",
+     einheitId:"tourdemo-e3", aus:false, eintraege:eintr(["+","o","+","o","+"])}
+  ];
 
-  db.tests.push({id:TOUR_DEMO_TEST_ID, klasseId:TOUR_DEMO_KLASSE_ID, fachId:TOUR_DEMO_FACH_ID,
-    datum:h, titel:"Beispieltest",
-    kriterien:[{id:"tourdemo-krit", name:"Beispielkriterium", typ:"skala"}],
-    noten:{1:{"tourdemo-krit":2}}, notizen:{}, t:Date.now()});
+  db.tests = [
+    {id:"tourdemo-t1", klasseId:K1, fachId:F1, datum:plusTage(h, -10), titel:"Beispieltest: Kopfrechnen",
+     kriterien:[{id:"tourdemo-kr1", name:"Rechengenauigkeit", typ:"skala"},
+                {id:"tourdemo-kr2", name:"Tempo", typ:"skala"}],
+     noten:{1:{"tourdemo-kr1":2, "tourdemo-kr2":3}, 2:{"tourdemo-kr1":1, "tourdemo-kr2":2},
+            3:{"tourdemo-kr1":3, "tourdemo-kr2":3}, 4:{"tourdemo-kr1":2, "tourdemo-kr2":1}},
+     notizen:{}, t:1},
+    {id:"tourdemo-t2", klasseId:K1, fachId:F1, datum:plusTage(h, -2), titel:"Beispieltest: Diktat",
+     kriterien:[{id:"tourdemo-kr3", name:"Rechtschreibung", typ:"skala"}],
+     noten:{1:{"tourdemo-kr3":2}, 2:{"tourdemo-kr3":3}, 3:{"tourdemo-kr3":1}},
+     notizen:{}, t:2}
+  ];
 
-  beobListe().push({id:TOUR_DEMO_BEOB_ID, klasseId:TOUR_DEMO_KLASSE_ID, nr:1, datum:h,
-    text:"Beispielbeobachtung: hilft im Unterricht von sich aus mit.", t:Date.now()});
-  gesundheitListe().push({id:TOUR_DEMO_GESUND_ID, klasseId:TOUR_DEMO_KLASSE_ID, nr:1,
-    kategorie:"Beispiel-Hinweis", hinweis:"So sieht ein Gesundheitshinweis aus.",
-    von:"", bis:"", t:Date.now()});
-  vorfaelleListe().push({id:TOUR_DEMO_VORFALL_ID, t:Date.now(), datum:h, uhrzeit:"", ort:"",
-    beteiligte:[{klasseId:TOUR_DEMO_KLASSE_ID, nr:1, rolle:"betroffen"}],
-    beschreibung:"Beispiel-Vorfalleintrag.", massnahmen:""});
+  db.beobachtungen = [
+    {id:"tourdemo-b1", klasseId:K1, nr:1, datum:plusTage(h, -5),
+     text:"Beispielbeobachtung: hilft im Unterricht von sich aus mit.", t:1},
+    {id:"tourdemo-b2", klasseId:K1, nr:1, datum:plusTage(h, -1),
+     text:"Beispielbeobachtung: hat heute die Regeln gut erklärt.", t:2}
+  ];
+  db.gesundheit = [
+    {id:"tourdemo-g1", klasseId:K1, nr:1, kategorie:"Beispiel-Hinweis",
+     hinweis:"So sieht ein Gesundheitshinweis aus.", von:"", bis:"", t:1}
+  ];
+  db.vorfaelle = [
+    {id:"tourdemo-v1", t:1, datum:plusTage(h, -6), uhrzeit:"", ort:"",
+     beteiligte:[{klasseId:K1, nr:1, rolle:"betroffen"}],
+     beschreibung:"Beispiel-Vorfalleintrag.", massnahmen:""}
+  ];
 
-  /* Bei sortierten Listen muss der Beispieleintrag gezielt vorn landen –
-     ein simples unshift() reicht nicht, wenn nach Datum/Fälligkeit sortiert wird. */
-  termine().unshift({id:TOUR_DEMO_TERMIN_ID, titel:"Beispieltermin – Elternabend",
-    datum:h, zeit:"", ort:"", t:Date.now()});
-  todos().unshift({id:TOUR_DEMO_TODO_ID, titel:"Beispielaufgabe", faellig:h,
-    erledigt:false, t:0});
-  notizen().unshift({id:TOUR_DEMO_NOTIZ_ID, titel:"Beispielnotiz",
-    text:"So sieht eine Notiz aus.", datum:h, t:Number.MAX_SAFE_INTEGER});
+  db.termine = [
+    {id:"tourdemo-te1", titel:"Beispieltermin – Elternabend", datum:h, zeit:"18:00", ort:"Klassenraum", t:1},
+    {id:"tourdemo-te2", titel:"Beispieltermin – Ausflug", datum:plusTage(h, 2), zeit:"", ort:"", t:2},
+    {id:"tourdemo-te3", titel:"Beispieltermin – Zeugniskonferenz", datum:plusTage(h, 5), zeit:"14:00", ort:"Lehrerzimmer", t:3},
+    {id:"tourdemo-te4", titel:"Beispieltermin – Schulfest", datum:plusTage(h, 12), zeit:"", ort:"Schulhof", t:4}
+  ];
+  db.todos = [
+    {id:"tourdemo-to1", titel:"Beispielaufgabe: Elternbrief kopieren", faellig:h, erledigt:false, t:1},
+    {id:"tourdemo-to2", titel:"Beispielaufgabe: Zeugnisse vorbereiten", faellig:plusTage(h, 4), erledigt:false, t:2},
+    {id:"tourdemo-to3", titel:"Beispielaufgabe: Material bestellen", faellig:"", erledigt:false, t:3},
+    {id:"tourdemo-to4", titel:"Beispielaufgabe: Klassenraum dekorieren", faellig:plusTage(h, -2), erledigt:true, t:4}
+  ];
+  db.notizen = [
+    {id:"tourdemo-n1", titel:"Beispielnotiz: Fachkonferenz", text:"So sieht eine Notiz aus.", datum:plusTage(h, -3), t:1},
+    {id:"tourdemo-n2", titel:"Beispielnotiz: Elterngespräch", text:"Kurze Mitschrift eines Gesprächs.", datum:plusTage(h, -1), t:2},
+    {id:"tourdemo-n3", titel:"Beispielnotiz: Ideen für die Projektwoche", text:"Sammlung offener Gedanken.", datum:h, t:3}
+  ];
 
-  tourEchteKlasseId = db.ui.klasseId; tourEchteFachId = db.ui.fachId;
-  db.ui.klasseId = TOUR_DEMO_KLASSE_ID; db.ui.fachId = TOUR_DEMO_FACH_ID;
+  db.ui.klasseId = K1; db.ui.fachId = F1;
   renumberAll();
 }
 
 function tourDemoEntfernen(){
-  const raus = id => x => x.id !== id;
-  db.klassen = db.klassen.filter(raus(TOUR_DEMO_KLASSE_ID));
-  db.faecher = db.faecher.filter(raus(TOUR_DEMO_FACH_ID));
-  db.reihen = db.reihen.filter(raus(TOUR_DEMO_REIHE_ID));
-  db.einheiten = db.einheiten.filter(raus(TOUR_DEMO_EINHEIT_ID));
-  db.plan.slots = db.plan.slots.filter(raus(TOUR_DEMO_SLOT_ID));
-  db.plan.dienste = planDienste().filter(raus(TOUR_DEMO_DIENST_ID));
-  db.frei = freieZeiten().filter(raus(TOUR_DEMO_FREI_ID));
-  db.stunden = db.stunden.filter(raus(TOUR_DEMO_STUNDE_ID));
-  db.tests = db.tests.filter(raus(TOUR_DEMO_TEST_ID));
-  db.beobachtungen = beobListe().filter(raus(TOUR_DEMO_BEOB_ID));
-  db.gesundheit = gesundheitListe().filter(raus(TOUR_DEMO_GESUND_ID));
-  db.vorfaelle = vorfaelleListe().filter(raus(TOUR_DEMO_VORFALL_ID));
-  db.termine = termine().filter(raus(TOUR_DEMO_TERMIN_ID));
-  db.todos = todos().filter(raus(TOUR_DEMO_TODO_ID));
-  db.notizen = notizen().filter(raus(TOUR_DEMO_NOTIZ_ID));
-
-  db.ui.klasseId = tourEchteKlasseId;
-  db.ui.fachId = tourEchteFachId;
+  if(!tourEchtStand) return;
+  db.klassen = tourEchtStand.klassen; db.faecher = tourEchtStand.faecher;
+  db.stunden = tourEchtStand.stunden; db.tests = tourEchtStand.tests;
+  db.reihen = tourEchtStand.reihen; db.einheiten = tourEchtStand.einheiten;
+  db.plan.slots = tourEchtStand.planSlots; db.plan.dienste = tourEchtStand.planDienste;
+  db.frei = tourEchtStand.frei; db.termine = tourEchtStand.termine; db.todos = tourEchtStand.todos;
+  db.notizen = tourEchtStand.notizen; db.beobachtungen = tourEchtStand.beobachtungen;
+  db.gesundheit = tourEchtStand.gesundheit; db.vorfaelle = tourEchtStand.vorfaelle;
+  db.ui.klasseId = tourEchtStand.klasseId; db.ui.fachId = tourEchtStand.fachId;
+  tourEchtStand = null;
   renumberAll();
 }
 
