@@ -2718,6 +2718,7 @@ let letzterStand = "";       /* der zuletzt gewünschte Stand, für die Größe 
    Der Stand wird sofort eingefroren, geschrieben wird gleich danach; kommen
    mehrere Änderungen kurz hintereinander, wird nur die letzte geschrieben. */
 function save(){
+  if(tourOffen) return;   /* Während des Rundgangs stecken Beispieldaten in db – die dürfen nie aufs Gerät. */
   let text;
   try{ text = JSON.stringify(db); }
   catch(e){ storageOk = false; flagSaved(); return; }
@@ -9080,6 +9081,114 @@ function profilOeffnen(){
    Jeder Schritt wechselt per „vor“ synchron zur richtigen Ansicht; gemessen
    wird erst nach einer kurzen Wartezeit, weil aufklappende Bereiche (etwa
    die Klasse/Fach-Auswahl oben) selbst eine kurze Ein-Animation haben. */
+/* ---------- Wizard-Beispieldaten ----------
+   Ohne eigene Daten sieht vieles im Rundgang leer aus (Stundenplan, Klassenliste,
+   Tests …). Deshalb legt der Rundgang beim Start ein eigenes Beispiel-Set an –
+   klar als "Beispiel …" benannt und über feste Ids identifizierbar, damit es sich
+   nie mit echten Daten verwechseln lässt. save() ist währenddessen komplett
+   stillgelegt, sodass nichts davon je auf dem Gerät landet; beim Verlassen des
+   Rundgangs verschwindet exakt dieses Set wieder – unabhängig davon, was an
+   echten Klassen, Notizen usw. daneben steht. */
+const TOUR_DEMO_KLASSE_ID = "tourdemo-klasse";
+const TOUR_DEMO_FACH_ID = "tourdemo-fach";
+const TOUR_DEMO_STUNDE_ID = "tourdemo-stunde";
+const TOUR_DEMO_TEST_ID = "tourdemo-test";
+const TOUR_DEMO_REIHE_ID = "tourdemo-reihe";
+const TOUR_DEMO_EINHEIT_ID = "tourdemo-einheit";
+const TOUR_DEMO_SLOT_ID = "tourdemo-slot";
+const TOUR_DEMO_DIENST_ID = "tourdemo-dienst";
+const TOUR_DEMO_FREI_ID = "tourdemo-frei";
+const TOUR_DEMO_TERMIN_ID = "tourdemo-termin";
+const TOUR_DEMO_TODO_ID = "tourdemo-todo";
+const TOUR_DEMO_NOTIZ_ID = "tourdemo-notiz";
+const TOUR_DEMO_BEOB_ID = "tourdemo-beob";
+const TOUR_DEMO_GESUND_ID = "tourdemo-gesund";
+const TOUR_DEMO_VORFALL_ID = "tourdemo-vorfall";
+let tourEchteKlasseId = null, tourEchteFachId = null;
+
+function tourHeuteTag(){
+  const wt = (isoZuDatum(heute()).getDay() + 6) % 7;
+  return wt <= 4 ? wt + 1 : 1;
+}
+
+function tourDemoAnlegen(){
+  const h = heute(), tag = tourHeuteTag();
+
+  db.klassen.unshift({id:TOUR_DEMO_KLASSE_ID, name:"Beispielklasse", count:3, labels:{}, befreit:{}});
+  db.faecher.unshift({id:TOUR_DEMO_FACH_ID, name:"Beispielfach"});
+
+  db.reihen.push({id:TOUR_DEMO_REIHE_ID, fachId:TOUR_DEMO_FACH_ID, titel:"Beispielreihe",
+                  jahrgang:"", t:Date.now()});
+  db.einheiten.push({id:TOUR_DEMO_EINHEIT_ID, reiheId:TOUR_DEMO_REIHE_ID, nr:1,
+    titel:"Beispieleinheit", ziel:"", inhalt:"", kompetenz:"", methode:"", aufwaermen:"",
+    hauptteil:"", abschluss:"", material:"", link:"", sicherheit:"", diff:"", stat:{},
+    reflexion:"", anpassung:"", t:Date.now()});
+
+  db.plan.slots.push({id:TOUR_DEMO_SLOT_ID, tag:tag, nr:1, klasseId:TOUR_DEMO_KLASSE_ID,
+                      fachId:TOUR_DEMO_FACH_ID, raum:"Beispielraum"});
+  planDienste().push({id:TOUR_DEMO_DIENST_ID, titel:"Beispiel-Hofaufsicht", tag:tag, nr:0,
+                      ort:"Schulhof"});
+  /* Nicht auf "heute" legen, sonst widerspricht sich "heute frei" mit der
+     Beispielstunde, die ja genau heute dokumentiert sein soll. */
+  const freiDatum = plusTage(h, 14);
+  freieZeiten().push({id:TOUR_DEMO_FREI_ID, titel:"Beispiel-Ferientag", von:freiDatum, bis:freiDatum});
+
+  db.stunden.push({id:TOUR_DEMO_STUNDE_ID, klasseId:TOUR_DEMO_KLASSE_ID, fachId:TOUR_DEMO_FACH_ID,
+    nr:1, t:Date.now(), datum:h, thema:"Beispielstunde", notiz:"", einheitId:TOUR_DEMO_EINHEIT_ID,
+    aus:false, eintraege:{1:{m:"+", k:false, v:false, n:""}, 2:{m:"+", k:false, v:false, n:""},
+    3:{m:"o", k:false, v:false, n:""}}});
+
+  db.tests.push({id:TOUR_DEMO_TEST_ID, klasseId:TOUR_DEMO_KLASSE_ID, fachId:TOUR_DEMO_FACH_ID,
+    datum:h, titel:"Beispieltest",
+    kriterien:[{id:"tourdemo-krit", name:"Beispielkriterium", typ:"skala"}],
+    noten:{1:{"tourdemo-krit":2}}, notizen:{}, t:Date.now()});
+
+  beobListe().push({id:TOUR_DEMO_BEOB_ID, klasseId:TOUR_DEMO_KLASSE_ID, nr:1, datum:h,
+    text:"Beispielbeobachtung: hilft im Unterricht von sich aus mit.", t:Date.now()});
+  gesundheitListe().push({id:TOUR_DEMO_GESUND_ID, klasseId:TOUR_DEMO_KLASSE_ID, nr:1,
+    kategorie:"Beispiel-Hinweis", hinweis:"So sieht ein Gesundheitshinweis aus.",
+    von:"", bis:"", t:Date.now()});
+  vorfaelleListe().push({id:TOUR_DEMO_VORFALL_ID, t:Date.now(), datum:h, uhrzeit:"", ort:"",
+    beteiligte:[{klasseId:TOUR_DEMO_KLASSE_ID, nr:1, rolle:"betroffen"}],
+    beschreibung:"Beispiel-Vorfalleintrag.", massnahmen:""});
+
+  /* Bei sortierten Listen muss der Beispieleintrag gezielt vorn landen –
+     ein simples unshift() reicht nicht, wenn nach Datum/Fälligkeit sortiert wird. */
+  termine().unshift({id:TOUR_DEMO_TERMIN_ID, titel:"Beispieltermin – Elternabend",
+    datum:h, zeit:"", ort:"", t:Date.now()});
+  todos().unshift({id:TOUR_DEMO_TODO_ID, titel:"Beispielaufgabe", faellig:h,
+    erledigt:false, t:0});
+  notizen().unshift({id:TOUR_DEMO_NOTIZ_ID, titel:"Beispielnotiz",
+    text:"So sieht eine Notiz aus.", datum:h, t:Number.MAX_SAFE_INTEGER});
+
+  tourEchteKlasseId = db.ui.klasseId; tourEchteFachId = db.ui.fachId;
+  db.ui.klasseId = TOUR_DEMO_KLASSE_ID; db.ui.fachId = TOUR_DEMO_FACH_ID;
+  renumberAll();
+}
+
+function tourDemoEntfernen(){
+  const raus = id => x => x.id !== id;
+  db.klassen = db.klassen.filter(raus(TOUR_DEMO_KLASSE_ID));
+  db.faecher = db.faecher.filter(raus(TOUR_DEMO_FACH_ID));
+  db.reihen = db.reihen.filter(raus(TOUR_DEMO_REIHE_ID));
+  db.einheiten = db.einheiten.filter(raus(TOUR_DEMO_EINHEIT_ID));
+  db.plan.slots = db.plan.slots.filter(raus(TOUR_DEMO_SLOT_ID));
+  db.plan.dienste = planDienste().filter(raus(TOUR_DEMO_DIENST_ID));
+  db.frei = freieZeiten().filter(raus(TOUR_DEMO_FREI_ID));
+  db.stunden = db.stunden.filter(raus(TOUR_DEMO_STUNDE_ID));
+  db.tests = db.tests.filter(raus(TOUR_DEMO_TEST_ID));
+  db.beobachtungen = beobListe().filter(raus(TOUR_DEMO_BEOB_ID));
+  db.gesundheit = gesundheitListe().filter(raus(TOUR_DEMO_GESUND_ID));
+  db.vorfaelle = vorfaelleListe().filter(raus(TOUR_DEMO_VORFALL_ID));
+  db.termine = termine().filter(raus(TOUR_DEMO_TERMIN_ID));
+  db.todos = todos().filter(raus(TOUR_DEMO_TODO_ID));
+  db.notizen = notizen().filter(raus(TOUR_DEMO_NOTIZ_ID));
+
+  db.ui.klasseId = tourEchteKlasseId;
+  db.ui.fachId = tourEchteFachId;
+  renumberAll();
+}
+
 const TOUR_KATEGORIEN = [
   {
     id:"plan", titel:"Plan",
@@ -9161,7 +9270,7 @@ const TOUR_KATEGORIEN = [
       { titel:"Klassen mit KollegInnen teilen",
         text:"Zwar ist Loewi offline unterwegs, doch ist es manchmal wichtig eine Klasse gemeinsam führen zu können. Hier hilft dir die Möglichkeit eine Klasse zu teilen. Wähle hierfür eine Klasse im Bearbeitungsfenster aus und drücke das Teilen-Symbol.",
         ziel:'[aria-label="Klasse teilen"]',
-        vor: () => { closeDrop(); const k = db.klassen[0]; if(k) klGo("kinder", k.id); } },
+        vor: () => { closeDrop(); goView("klassen"); klGo("kinder", TOUR_DEMO_KLASSE_ID); } },
       { titel:"Geteilte Klasse einpflegen",
         text:"Um eine geteilte Klasse einzupflegen, legst du eine neue Klasse an (+ Symbol) und wählst „Geteilte Klasse einlesen“. Besteht die geteilte Klasse nicht, so wird sie eingefügt. Besteht bereits eine Klasse mit dem Namen hast du die Möglichkeit deine Daten zu aktualisieren oder komplett zu ersetzen.",
         ziel:"#btnKlasseImport",
@@ -9248,6 +9357,8 @@ let tourOffen = false, tourModus = "intro", tourKatId = null, tourSchrittIdx = 0
 function tourStarten(){
   closeModal(); closeFab(); closeDrop();
   tourOffen = true; tourModus = "intro"; tourKatId = null; tourSchrittIdx = 0;
+  tourDemoAnlegen();
+  renderAlles();
   $("#tourLayer").hidden = false;
   zurueckWache();
   tourZeigeIntro();
@@ -9255,11 +9366,13 @@ function tourStarten(){
 function tourBeenden(){
   if(!tourOffen) return;
   tourOffen = false;
+  tourDemoEntfernen();
   closeStdSheet(); closeKlasseSheet(); closeFachSheet();
   $("#tourLayer").hidden = true;
   $("#tourSpot").classList.remove("an");
   $("#tourDim").classList.remove("an");
   db.ui.tourGesehen = true;
+  renderAlles();
   save();
 }
 /* Klick auf die Fläche: nur in der Begrüßung und innerhalb einer Kategorie
