@@ -1,0 +1,43 @@
+{
+  "typ": "klassendoku-reihe",
+  "version": 1,
+  "erstellt": "2026-09-13",
+  "fach": "Sport",
+  "reihe": { "titel": "Werfen und Fangen", "jahrgang": "3/4" },
+  "einheiten": [
+    {
+      "nr": 1,
+      "titel": "Grundlagen des Werfens",
+      "ziel": "Die Kinder können einen Ball mit korrektem Wurfarm gezielt auf ein Ziel werfen.",
+      "inhalt": "Wurftechnik, Zielgenauigkeit",
+      "kompetenz": "Bewegen an Geräten – Grundformen des Werfens sicher ausführen",
+      "methode": "Stationenlernen in Kleingruppen",
+      "aufwaermen": "Fangen und Werfen zu zweit mit Softbällen",
+      "hauptteil": "Drei Stationen: Zielwurf auf Kästen, Weitwurf, Partnerwurf mit Prellen",
+      "abschluss": "Kurzer Sitzkreis: Was fiel leicht, was schwer?",
+      "material": "Softbälle, Kästen, Hütchen zur Markierung",
+      "link": "",
+      "sicherheit": "Wurfrichtung immer zur Wand, nie in Laufwege",
+      "diff": "Schwächere: kürzere Wurfdistanz; Stärkere: bewegliches Ziel",
+      "reflexion": "",
+      "anpassung": ""
+    },
+    {
+      "nr": 2,
+      "titel": "Fangen in Bewegung",
+      "ziel": "Die Kinder können einen zugeworfenen Ball auch im Laufen sicher fangen.",
+      "inhalt": "Fangtechnik in Bewegung",
+      "kompetenz": "Bewegen an Geräten – Grundformen des Fangens sicher ausführen",
+      "methode": "Partnerarbeit, anschließend Kleingruppenspiel",
+      "aufwaermen": "Abwerfen im Freien Spielfeld (leichte Variante von Völkerball)",
+      "hauptteil": "Passübungen im Gehen, dann im Laufen; abschließend 3-gegen-3 Zuspiel ohne Dribbeln",
+      "abschluss": "Auslaufen, kurze Reflexionsrunde",
+      "material": "Softbälle, Leibchen für zwei Teams",
+      "link": "",
+      "sicherheit": "Ausreichend Abstand zwischen Gruppen einhalten",
+      "diff": "Ballgröße je nach Sicherheit im Fangen anpassen",
+      "reflexion": "",
+      "anpassung": ""
+    }
+  ]
+}
