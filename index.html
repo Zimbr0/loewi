@@ -366,12 +366,6 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
   border-radius:9px;color:var(--muted);cursor:pointer;display:flex;align-items:center;
   justify-content:center;padding:0}
 .tnote.has{color:var(--accent-dk);border-color:var(--accent)}
-.kritchip{border:1px solid var(--line);background:var(--surface);color:var(--ink);
-  border-radius:999px;padding:7px 14px;font-size:14px;font-weight:650;display:inline-flex;
-  align-items:center;gap:8px}
-.kritchip .typ{font-weight:400;opacity:.75;font-size:11.5px}
-.kritchip .weg{border:0;background:0;color:var(--muted);font-size:16px;line-height:1;
-  cursor:pointer;padding:0 0 0 2px}
 .segrow.klein button{padding:7px 6px;font-size:13px}
 .kritkachel{padding:14px 15px 15px}
 .kritkachel .kk-kopf{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
@@ -1259,38 +1253,8 @@ body.vertmodus .stundenkarte{cursor:pointer}
 
     <!-- Ebene 1: Liste der Tests -->
     <div id="tstListe">
-      <details class="newbox" id="newTest">
-        <summary>+ Neuer Test</summary>
-        <div class="inner">
-          <div class="grid2">
-            <div>
-              <label class="lbl" for="ntDatum">Datum</label>
-              <input type="date" id="ntDatum">
-            </div>
-            <div>
-              <label class="lbl" for="ntTitel">Was wird geprüft</label>
-              <input type="text" id="ntTitel" placeholder="z. B. Weitsprung">
-            </div>
-          </div>
-          <div style="margin-top:12px">
-            <label class="lbl">Worauf schaust du?</label>
-            <div class="segrow klein" id="ntTyp">
-              <button data-t="skala" class="on">Skala 1–6</button>
-              <button data-t="text">Textfeld</button>
-            </div>
-            <div style="display:flex;gap:8px;margin-top:8px">
-              <input type="text" id="ntKrit" placeholder="z. B. Anlauf">
-              <button class="act neutral mini" id="btnKritAdd">Hinzufügen</button>
-            </div>
-            <div class="chiprow" id="ntKritListe" style="margin-top:10px"></div>
-          </div>
-          <div class="actions" style="margin-top:6px">
-            <button class="act primary" id="btnTestAnlegen" style="width:100%">Test anlegen</button>
-          </div>
-          <p class="hint"><b>Skala</b> zählt in den Schnitt, <b>Textfeld</b> nimmt freie Angaben auf und zählt nicht mit.</p>
-        </div>
-      </details>
-      <div class="card">
+      <div class="topbar" id="tbTests"></div>
+      <div class="card kette-oben">
         <div id="testListe"></div>
       </div>
     </div>
@@ -1298,32 +1262,9 @@ body.vertmodus .stundenkarte{cursor:pointer}
     <!-- Ebene 2: Test ansehen -->
     <div id="tstAnsicht" style="display:none">
       <div class="topbar" id="tbTest"></div>
-      <div class="tiles" id="testTiles"></div>
-      <details class="newbox" id="editKrit">
-        <summary>Kriterien ändern</summary>
-        <div class="inner">
-          <div class="segrow klein" id="ekTyp">
-            <button data-t="skala" class="on">Skala 1–6</button>
-            <button data-t="text">Textfeld</button>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <input type="text" id="ekKrit" placeholder="weiteres Kriterium">
-            <button class="act neutral mini" id="btnEkAdd">Hinzufügen</button>
-          </div>
-          <div class="chiprow" id="ekKritListe" style="margin-top:10px"></div>
-          <p class="hint">Ein entferntes Kriterium nimmt seine Eintragungen mit.</p>
-          <div class="sep"></div>
-          <div class="actions">
-            <button class="act neutral mini" id="btnKritVorlageSpeichern">Als Vorlage speichern</button>
-            <button class="act neutral mini" id="btnKritVorlageLaden">Vorlage übernehmen</button>
-          </div>
-          <p class="hint">Einmal die Kriterien einer Reihe anlegen und als Vorlage sichern –
-            bei neuen Tests dann übernehmen statt neu eintippen.</p>
-        </div>
-      </details>
       <div class="card">
         <div style="overflow-x:auto">
-          <table class="ttab" id="tblTest"><thead></thead><tbody></tbody></table>
+          <table class="ttab" id="tblTest"><thead></thead><tbody></tbody><tfoot></tfoot></table>
         </div>
         <p class="hint">Leere Felder zählen nicht. Zeile antippen, um ein Kind zu bewerten.</p>
       </div>
@@ -1333,6 +1274,21 @@ body.vertmodus .stundenkarte{cursor:pointer}
       <div style="text-align:center">
         <button class="act quiet" id="btnTestDel">Test löschen</button>
       </div>
+    </div>
+
+    <!-- Ebene 2b: Kriterien verwalten -->
+    <div id="tstKriterien" style="display:none">
+      <div class="topbar" id="tbTestKrit"></div>
+      <div class="card kette-oben">
+        <div id="testKritListe"></div>
+      </div>
+      <div class="actions">
+        <button class="act neutral mini" id="btnKritVorlageSpeichern">Als Vorlage speichern</button>
+        <button class="act neutral mini" id="btnKritVorlageLaden">Vorlage übernehmen</button>
+      </div>
+      <p class="hint">Einmal die Kriterien einer Reihe anlegen und als Vorlage sichern –
+        bei neuen Tests dann übernehmen statt neu eintippen. Ein entferntes Kriterium
+        nimmt seine Eintragungen mit.</p>
     </div>
 
     <!-- Ebene 3: Bewerten -->
@@ -1360,18 +1316,8 @@ body.vertmodus .stundenkarte{cursor:pointer}
 
     <!-- Ebene 1: Liste der Raster -->
     <div id="kmpListe">
-      <details class="newbox" id="newKomp">
-        <summary>+ Neues Raster</summary>
-        <div class="inner">
-          <label class="lbl" for="nkTitel">Titel</label>
-          <input type="text" id="nkTitel" placeholder="z. B. Schwimmen – Niveaustufen">
-          <div class="actions" style="margin-top:12px">
-            <button class="act primary" id="btnKompAnlegen" style="width:100%">Raster anlegen</button>
-          </div>
-          <p class="hint">Stufen und Kriterien legst du gleich danach in der Raster-Ansicht an.</p>
-        </div>
-      </details>
-      <div class="card">
+      <div class="topbar" id="tbKompListe"></div>
+      <div class="card kette-oben">
         <div id="kompListe"></div>
       </div>
     </div>
@@ -1379,21 +1325,9 @@ body.vertmodus .stundenkarte{cursor:pointer}
     <!-- Ebene 2: Raster ansehen -->
     <div id="kmpAnsicht" style="display:none">
       <div class="topbar" id="tbKomp"></div>
-      <div class="tiles" id="kompTiles"></div>
-      <details class="newbox" id="editStufen">
-        <summary>Stufen &amp; Kriterien ändern</summary>
-        <div class="inner">
-          <div style="display:flex;gap:8px">
-            <input type="text" id="skStufe" placeholder="Name der neuen Stufe">
-            <button class="act neutral mini" id="btnStufeAdd">Hinzufügen</button>
-          </div>
-          <div id="stufenListe" style="margin-top:12px"></div>
-          <p class="hint">Eine Stufe gilt als erreicht, wenn alle ihre Kriterien abgehakt sind.</p>
-        </div>
-      </details>
       <div class="card">
         <div style="overflow-x:auto">
-          <table class="ttab" id="tblKomp"><thead></thead><tbody></tbody></table>
+          <table class="ttab" id="tblKomp"><thead></thead><tbody></tbody><tfoot></tfoot></table>
         </div>
         <p class="hint">Zeile antippen, um ein Kind zu bewerten.</p>
       </div>
@@ -1403,6 +1337,15 @@ body.vertmodus .stundenkarte{cursor:pointer}
       <div style="text-align:center">
         <button class="act quiet" id="btnKompDel">Raster löschen</button>
       </div>
+    </div>
+
+    <!-- Ebene 2b: Stufen & Kriterien verwalten -->
+    <div id="kmpKriterien" style="display:none">
+      <div class="topbar" id="tbKompKrit"></div>
+      <div class="card kette-oben">
+        <div id="stufenListe"></div>
+      </div>
+      <p class="hint">Eine Stufe gilt als erreicht, wenn alle ihre Kriterien abgehakt sind.</p>
     </div>
 
     <!-- Ebene 3: Bewerten -->
@@ -2137,6 +2080,44 @@ body.vertmodus .stundenkarte{cursor:pointer}
     <div class="actions" style="margin-top:12px">
       <button class="act primary" id="btnFachAdd">Fach anlegen</button>
       <button class="act neutral" id="btnFachSheetZu">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<div class="fabscrim" id="tScrim"></div>
+<div class="fabsheet" id="tSheet" role="dialog" aria-modal="false" aria-label="Test hinzufügen">
+  <div class="fabgriff"></div>
+  <div class="card" style="margin:0">
+    <h3 style="font-size:16px;margin-bottom:10px">Neuer Test</h3>
+    <div class="grid2">
+      <div>
+        <label class="lbl" for="ntDatum">Datum</label>
+        <input type="date" id="ntDatum">
+      </div>
+      <div>
+        <label class="lbl" for="ntTitel">Was wird geprüft</label>
+        <input type="text" id="ntTitel" placeholder="z. B. Weitsprung">
+      </div>
+    </div>
+    <p class="hint">Kriterien legst du gleich danach in der Test-Ansicht an.</p>
+    <div class="actions" style="margin-top:12px">
+      <button class="act primary" id="btnTestAnlegen">Test anlegen</button>
+      <button class="act neutral" id="btnTestSheetZu">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<div class="fabscrim" id="kompScrim"></div>
+<div class="fabsheet" id="kompSheet" role="dialog" aria-modal="false" aria-label="Raster hinzufügen">
+  <div class="fabgriff"></div>
+  <div class="card" style="margin:0">
+    <h3 style="font-size:16px;margin-bottom:10px">Neues Raster</h3>
+    <label class="lbl" for="nkrTitel">Titel</label>
+    <input type="text" id="nkrTitel" placeholder="z. B. Schwimmen – Niveaustufen">
+    <p class="hint">Stufen und Kriterien legst du gleich danach an.</p>
+    <div class="actions" style="margin-top:12px">
+      <button class="act primary" id="btnKompAnlegen">Raster anlegen</button>
+      <button class="act neutral" id="btnKompSheetZu">Abbrechen</button>
     </div>
   </div>
 </div>
@@ -3036,6 +3017,8 @@ function zurueckSchritt(){
   if(typeof eSheetOffen !== "undefined" && eSheetOffen){ closeEinheitSheet(); return true; }
   if(typeof kSheetOffen !== "undefined" && kSheetOffen){ closeKlasseSheet(); return true; }
   if(typeof fSheetOffen !== "undefined" && fSheetOffen){ closeFachSheet(); return true; }
+  if(typeof tSheetOffen !== "undefined" && tSheetOffen){ closeTestSheet(); return true; }
+  if(typeof kompSheetOffen !== "undefined" && kompSheetOffen){ closeKompSheet(); return true; }
   if(db.ui.vertretungModus){
     db.ui.vertretungModus = false;
     document.body.classList.remove("vertmodus");
@@ -3046,10 +3029,10 @@ function zurueckSchritt(){
   if(v === "stunde"){
     if(db.ui.bereich === "stunden" && db.ui.stdView !== "liste"){ stdGo("liste"); return true; }
     if(db.ui.bereich === "leistung" && db.ui.leistView !== "kompetenzen" && db.ui.tstView !== "liste"){
-      tstGo("liste"); return true;
+      tstGo(db.ui.tstView === "kriterien" ? "ansicht" : "liste"); return true;
     }
     if(db.ui.bereich === "leistung" && db.ui.leistView === "kompetenzen" && db.ui.rstView !== "liste"){
-      kompGo("liste"); return true;
+      kompGo(db.ui.rstView === "kriterien" ? "ansicht" : "liste"); return true;
     }
     if(db.ui.bereich === "plan" && db.ui.planEdit){
       db.ui.planEdit = false; save(); renderPlanTab(); return true;
@@ -6135,95 +6118,285 @@ function kindFertig(t, nr){
 }
 function notenKlasse(v){ return v <= 2 ? "gut" : (v <= 4 ? "mittel" : "schwach"); }
 function kommaZahl(v){ return v === null || v === undefined ? "–" : String(v).replace(".", ","); }
-
-/* ---------- Kriterien zusammenstellen ----------
-   Gleiche Bausteine beim Anlegen und beim späteren Ändern. */
-let neueKriterien = [];
-function typWahl(id){
-  const el = document.getElementById(id);
-  const b = el.querySelector("button.on");
-  return b ? b.dataset.t : "skala";
+/* Schnitt EINES Kriteriums über die ganze Klasse – für die Tabellen-Fußzeile. */
+function kritSchnitt(t, k, kr){
+  if(!k || kr.typ === "text") return null;
+  const werte = [];
+  for(let i = 1; i <= k.count; i++){
+    const w = t.noten[i] && t.noten[i][kr.id];
+    if(typeof w === "number") werte.push(w);
+  }
+  if(!werte.length) return null;
+  return Math.round(werte.reduce((a,b) => a + b, 0) / werte.length * 10) / 10;
 }
-function typKnoepfe(id){
-  document.querySelectorAll("#" + id + " button").forEach(b => {
-    b.addEventListener("click", () => {
-      document.querySelectorAll("#" + id + " button").forEach(x => x.classList.remove("on"));
-      b.classList.add("on");
-    });
+
+/* Wie lang ein Kriterium höchstens sein darf – manche (Schwimm-Niveaustufen,
+   Kompetenzraster-Vorgaben) sind ganze Sätze, kein Stichwort. */
+const KRIT_MAX = 1000;
+
+function tstGo(view, testId){
+  zurueckWache();
+  db.ui.tstView = view;
+  if(testId !== undefined) db.ui.testId = testId;
+  save(); renderStunde(); window.scrollTo(0,0);
+}
+
+/* Der Balken gleitet unter den gewählten Knopf – Breite und Weg
+   ergeben sich aus dem tatsächlichen Knopf, damit es bei jeder Textlänge sitzt. */
+function segPille(){
+  const leiste = $("#stdSeg"), pille = $("#stdSegPille");
+  if(!leiste || !pille) return;
+  const aktiv = leiste.querySelector("button.on");
+  if(!aktiv) return;
+  const breite = aktiv.offsetWidth;
+  if(!breite) return;                       // Ansicht noch nicht sichtbar
+  pille.style.width = breite + "px";
+  pille.style.transform = "translateX(" + (aktiv.offsetLeft - 4) + "px)";
+}
+window.addEventListener("resize", segPille);
+document.querySelectorAll("#stdSeg button").forEach(b => {
+  b.addEventListener("click", () => {
+    db.ui.bereich = b.dataset.b;
+    disarmDelete();
+    save(); renderStunde(); window.scrollTo(0,0);
   });
-}
-typKnoepfe("ntTyp"); typKnoepfe("ekTyp");
+});
 
-function kritChips(hostId, liste, entfernen){
-  const host = document.getElementById(hostId);
-  host.innerHTML = "";
-  if(!liste.length){
-    const p = document.createElement("div");
-    p.className = "dupempty";
-    p.textContent = "Noch kein Kriterium.";
-    host.appendChild(p);
+function renderTests(){
+  const k = klasse(db.ui.klasseId);
+  let v = db.ui.tstView || "liste";
+  const t = test(db.ui.testId);
+  if((v === "ansicht" || v === "erfassen" || v === "kriterien") && (!t || !k)){
+    v = "liste"; db.ui.tstView = "liste";
+  }
+  $("#tstListe").style.display     = v === "liste" ? "" : "none";
+  $("#tstAnsicht").style.display   = v === "ansicht" ? "" : "none";
+  $("#tstKriterien").style.display = v === "kriterien" ? "" : "none";
+  $("#tstErfassen").style.display  = v === "erfassen" ? "" : "none";
+  if(v === "liste") renderTestListe(k);
+  if(v === "ansicht") renderTestAnsicht(t, k);
+  if(v === "kriterien") renderTestKritListe(t);
+  if(v === "erfassen") renderTestErfassen(t, k);
+}
+
+/* --- Ebene 1: Liste – gleiche Bauart wie die Unterrichtsreihen-Liste --- */
+function renderTestListe(k){
+  seitenkopf($("#tbTests"), "Tests",
+    k ? ("Klasse " + k.name) : "Erst unten über Auswahl eine Klasse wählen",
+    plusBtn("Neuer Test", () => openTestSheet()), true);
+  const box = $("#testListe"); box.innerHTML = "";
+  if(!k){
+    box.innerHTML = '<p class="hint">Erst unten über <b>Auswahl</b> eine Klasse wählen.</p>';
     return;
   }
-  liste.forEach((kr, i) => {
-    const chip = document.createElement("span");
-    chip.className = "kritchip";
-    chip.innerHTML = esc(kr.name) +
-      '<span class="typ">' + (kr.typ === "text" ? "Text" : "1–6") + "</span>";
-    const weg = document.createElement("button");
-    weg.className = "weg"; weg.type = "button";
-    weg.setAttribute("aria-label", "„" + kr.name + "“ entfernen");
-    weg.textContent = "✕";
-    weg.addEventListener("click", () => entfernen(i));
-    chip.appendChild(weg);
-    host.appendChild(chip);
+  const list = testsVon(k.id);
+  if(!list.length){
+    box.innerHTML = '<p class="hint">Noch kein Test angelegt. Oben über das Plus-Symbol anlegen – ' +
+      'du bestimmst selbst, worauf du schaust.</p>';
+    return;
+  }
+  list.slice().reverse().forEach(t => {
+    const fo = testFortschritt(t, k);
+    const schnitt = testKlasseSchnitt(t, k);
+    const row = document.createElement("div");
+    row.className = "item";
+    row.innerHTML = '<div class="grow"><b>' + esc(t.titel || "Ohne Titel") + "</b>" +
+      '<div class="sub">' + deDate(t.datum) + " · " +
+      t.kriterien.length + (t.kriterien.length === 1 ? " Kriterium" : " Kriterien") +
+      " · " + fo.gesetzt + "/" + fo.gesamt + " bewertet" +
+      (schnitt === null ? "" : " · Ø " + kommaZahl(schnitt)) +
+      "</div></div><div class=\"chev\">›</div>";
+    row.addEventListener("click", () => tstGo("ansicht", t.id));
+    box.appendChild(row);
   });
 }
-function renderNeueKriterien(){
-  kritChips("ntKritListe", neueKriterien, i => {
-    neueKriterien.splice(i, 1); renderNeueKriterien();
-  });
+
+/* ---- Einschub von unten: neuer Test ---- */
+let tSheetOffen = false;
+function openTestSheet(){
+  const k = klasse(db.ui.klasseId);
+  if(!k){ toast("Erst eine Klasse wählen"); return; }
+  zurueckWache();
+  tSheetOffen = true;
+  $("#ntTitel").value = "";
+  $("#ntDatum").value = heute();
+  $("#tSheet").classList.add("open");
+  $("#tScrim").classList.add("open");
 }
-$("#btnKritAdd").addEventListener("click", () => {
-  const name = $("#ntKrit").value.trim();
-  if(!name){ toast("Erst einen Namen eintippen"); return; }
-  if(neueKriterien.length >= 12){ toast("Zwölf Kriterien sind genug"); return; }
-  neueKriterien.push({id:uid(), name:name.slice(0,60), typ:typWahl("ntTyp")});
-  $("#ntKrit").value = "";
-  renderNeueKriterien();
-  $("#ntKrit").focus();
-});
-$("#ntKrit").addEventListener("keydown", ev => {
-  if(ev.key === "Enter"){ ev.preventDefault(); $("#btnKritAdd").click(); }
+function closeTestSheet(){
+  if(!tSheetOffen) return;
+  tSheetOffen = false;
+  $("#tSheet").classList.remove("open");
+  $("#tScrim").classList.remove("open");
+}
+$("#tScrim").addEventListener("click", closeTestSheet);
+$("#btnTestSheetZu").addEventListener("click", closeTestSheet);
+$("#btnTestAnlegen").addEventListener("click", () => {
+  const k = klasse(db.ui.klasseId);
+  if(!k){ toast("Erst eine Klasse wählen"); return; }
+  const titel = $("#ntTitel").value.trim();
+  if(!titel){ toast("Womit soll der Test überschrieben sein?"); return; }
+  const t = {id:uid(), klasseId:k.id, fachId: db.ui.fachId || null,
+             datum: $("#ntDatum").value || heute(), titel: titel,
+             kriterien:[], noten:{}, notizen:{}, t:Date.now()};
+  db.tests.push(t);
+  closeTestSheet();
+  save(); tstGo("ansicht", t.id);
+  toast("Test „" + titel + "“ angelegt");
 });
 
-function renderEkKriterien(t){
-  kritChips("ekKritListe", t.kriterien, i => {
-    if(t.kriterien.length <= 1){ toast("Mindestens ein Kriterium muss bleiben"); return; }
-    const kr = t.kriterien[i];
-    merkeStand();
-    t.kriterien.splice(i, 1);
-    Object.keys(t.noten).forEach(nr => { delete t.noten[nr][kr.id]; });
-    save(); renderStunde(); toastUndo("„" + kr.name + "“ entfernt");
+/* --- Ebene 2: Ansehen --- */
+function renderTestAnsicht(t, k){
+  unterkopf($("#tbTest"), {
+    zurueck: () => tstGo("liste"), zurueckText: "Tests",
+    titel: t.titel || "Test",
+    sub: deDate(t.datum) + (k ? " · Klasse " + k.name : ""),
+    aktion: kopfKnoepfe(
+      plusBtn("Kriterien bearbeiten", () => tstGo("kriterien")),
+      stiftBtn("Test bearbeiten", () => testDialog(t)))
+  });
+  const tab = $("#tblTest");
+  const kopf = tab.querySelector("thead"), leib = tab.querySelector("tbody"),
+        fuss = tab.querySelector("tfoot");
+  kopf.innerHTML = ""; leib.innerHTML = ""; fuss.innerHTML = "";
+  if(!k) return;
+  const hatNotizen = Object.keys(t.notizen || {}).some(nr => String(t.notizen[nr]).trim());
+  if(!t.kriterien.length){
+    leib.innerHTML = '<tr><td class="links" style="padding:12px 0">' +
+      '<span class="mini">Noch kein Kriterium – oben über das Plus-Symbol anlegen.</span></td></tr>';
+    return;
+  }
+  let hr = '<tr><th class="links">Nr.</th>';
+  t.kriterien.forEach(kr => {
+    hr += "<th>" + esc(kr.name.slice(0,40)) + (kr.name.length > 40 ? "…" : "") +
+      (kr.typ === "text" ? " ✎" : "") + "</th>";
+  });
+  hr += "<th>Ø</th>" + (hatNotizen ? '<th class="bem">Bemerkung</th>' : "") + "</tr>";
+  kopf.innerHTML = hr;
+  for(let i = 1; i <= k.count; i++){
+    const schn = testKindSchnitt(t, i);
+    let zeile = '<td class="links">' + i +
+      (k.labels[i] ? ' <span class="mini">' + esc(k.labels[i]) + "</span>" : "") + "</td>";
+    t.kriterien.forEach(kr => {
+      zeile += "<td>" + esc(zeigeWert(t, i, kr)) + "</td>";
+    });
+    zeile += '<td class="stark">' + (schn === null ? "" : kommaZahl(schn)) + "</td>";
+    if(hatNotizen){
+      const bem = (t.notizen && t.notizen[i]) ? t.notizen[i] : "";
+      zeile += '<td class="bem">' + esc(bem) + "</td>";
+    }
+    const tr = document.createElement("tr");
+    tr.innerHTML = zeile;
+    leib.appendChild(tr);
+  }
+  /* Kleine, unauffällige Zusammenfassung als Tabellen-Fuß statt Kacheln oben. */
+  const fo = testFortschritt(t, k);
+  const schnitt = testKlasseSchnitt(t, k);
+  let fr = '<tr><td class="links" style="border-top:1.5px solid var(--muted)">' +
+    '<span class="mini">' + fo.gesetzt + "/" + fo.gesamt + '</span></td>';
+  t.kriterien.forEach(kr => {
+    let wert;
+    if(kr.typ === "text"){
+      let n = 0; for(let i = 1; i <= k.count; i++){ if(hatWert(t, i, kr)) n++; }
+      wert = n + "/" + k.count;
+    }else{
+      const s = kritSchnitt(t, k, kr);
+      wert = s === null ? "–" : kommaZahl(s);
+    }
+    fr += '<td style="border-top:1.5px solid var(--muted)"><span class="mini">' + wert + "</span></td>";
+  });
+  fr += '<td class="stark" style="border-top:1.5px solid var(--muted)"><span class="mini">' +
+    (schnitt === null ? "–" : kommaZahl(schnitt)) + "</span></td>";
+  if(hatNotizen) fr += '<td style="border-top:1.5px solid var(--muted)"></td>';
+  fr += "</tr>";
+  fuss.innerHTML = fr;
+}
+$("#btnTestErfassen").addEventListener("click", () => tstGo("erfassen"));
+$("#btnTestDel").addEventListener("click", () => {
+  const t = test(db.ui.testId);
+  if(!t){ toast("Kein Test gewählt"); return; }
+  const k = klasse(t.klasseId);
+  const fo = testFortschritt(t, k);
+  frageLoeschen("Test „" + (t.titel || "ohne Titel") + "“ löschen?",
+    fo.gesetzt ? "Die " + fo.gesetzt + " Bewertungen darin gehen verloren."
+               : "Der Test ist noch leer.",
+    () => {
+      db.tests = db.tests.filter(x => x.id !== t.id);
+      db.ui.testId = null;
+      save(); tstGo("liste"); toastUndo("Test gelöscht");
+    });
+});
+function testDialog(t){
+  openModal({
+    titel: "Test bearbeiten",
+    text: "Die Kriterien änderst du über das Plus-Symbol in der Test-Ansicht.",
+    felder: [
+      {key:"titel", label:"Was wird geprüft", wert:t.titel},
+      {key:"datum", label:"Datum (JJJJ-MM-TT)", wert:t.datum}
+    ],
+    onOk: w => {
+      const ti = (w.titel || "").trim();
+      if(!ti){ toast("Titel fehlt"); return false; }
+      t.titel = ti;
+      if(/^\d{4}-\d{2}-\d{2}$/.test((w.datum || "").trim())) t.datum = w.datum.trim();
+      save(); renderStunde(); toast("Gespeichert");
+    }
   });
 }
-$("#btnEkAdd").addEventListener("click", () => {
-  const t = test(db.ui.testId); if(!t) return;
-  const name = $("#ekKrit").value.trim();
-  if(!name){ toast("Erst einen Namen eintippen"); return; }
-  if(t.kriterien.length >= 12){ toast("Zwölf Kriterien sind genug"); return; }
-  t.kriterien.push({id:uid(), name:name.slice(0,60), typ:typWahl("ekTyp")});
-  $("#ekKrit").value = "";
-  save(); renderStunde();
-  toast("„" + name + "“ ergänzt");
-});
-$("#ekKrit").addEventListener("keydown", ev => {
-  if(ev.key === "Enter"){ ev.preventDefault(); $("#btnEkAdd").click(); }
-});
 
-/* ---- Kriterienvorlagen: einmal pro Reihe anlegen, statt jedes Mal neu tippen. ---- */
-function kriterienVorlagenListe(){
-  if(!Array.isArray(db.kriterienVorlagen)) db.kriterienVorlagen = [];
-  return db.kriterienVorlagen;
+/* --- Ebene 2b: Kriterien verwalten – eigene Seite, volle Zeilen statt Chips,
+   damit auch ein ganzer Satz (Schwimm-Niveaustufen o.ä.) lesbar bleibt. ---- */
+function renderTestKritListe(t){
+  unterkopf($("#tbTestKrit"), {
+    zurueck: () => tstGo("ansicht"), zurueckText: "Test",
+    titel: "Kriterien", sub: t.titel || "Test",
+    aktion: plusBtn("Kriterium hinzufügen", () => testKritDialog(t, null)),
+    verbunden: true
+  });
+  const box = $("#testKritListe"); box.innerHTML = "";
+  if(!t.kriterien.length){
+    box.innerHTML = '<p class="hint" style="margin:0">Noch kein Kriterium – oben über das ' +
+      'Plus-Symbol anlegen.</p>';
+    return;
+  }
+  t.kriterien.forEach((kr, i) => box.appendChild(kritZeile(kr, i, t.kriterien, {
+    typLabel: kr.typ === "text" ? "Textfeld" : "Skala 1–6",
+    bearbeiten: () => testKritDialog(t, kr),
+    entfernen: () => {
+      merkeStand();
+      t.kriterien.splice(i, 1);
+      Object.keys(t.noten).forEach(nr => { if(t.noten[nr]) delete t.noten[nr][kr.id]; });
+      save(); renderStunde();
+      toastUndo("Kriterium entfernt");
+    }
+  })));
+}
+function testKritDialog(t, kr){
+  const neu = !kr;
+  openModal({
+    titel: neu ? "Kriterium hinzufügen" : "Kriterium bearbeiten",
+    felder: [
+      {key:"name", label:"Kriterium", typ:"text2",
+       wert: kr ? kr.name : "", platzhalter:"z. B. Anlauf"},
+      {key:"typ", label:"Worauf schaust du?", typ:"select",
+       wert: kr ? kr.typ : "skala",
+       optionen:[{value:"skala", label:"Skala 1–6"}, {value:"text", label:"Textfeld"}]}
+    ],
+    okText: neu ? "Hinzufügen" : "Speichern",
+    onOk: w => {
+      const name = (w.name || "").trim();
+      if(!name){ toast("Name fehlt"); return false; }
+      if(neu){
+        if(t.kriterien.length >= 12){ toast("Zwölf Kriterien sind genug"); return false; }
+        t.kriterien.push({id:uid(), name:name.slice(0, KRIT_MAX), typ:w.typ || "skala"});
+        toast("Kriterium hinzugefügt");
+      }else{
+        kr.name = name.slice(0, KRIT_MAX); kr.typ = w.typ || "skala";
+        toast("Gespeichert");
+      }
+      save(); renderStunde();
+    }
+  });
 }
 $("#btnKritVorlageSpeichern").addEventListener("click", () => {
   const t = test(db.ui.testId); if(!t) return;
@@ -6270,181 +6443,53 @@ $("#btnKritVorlageLaden").addEventListener("click", () => {
     }
   });
 });
-
-function tstGo(view, testId){
-  zurueckWache();
-  db.ui.tstView = view;
-  if(testId !== undefined) db.ui.testId = testId;
-  save(); renderStunde(); window.scrollTo(0,0);
+/* ---- Kriterienvorlagen: einmal pro Reihe anlegen, statt jedes Mal neu tippen. ---- */
+function kriterienVorlagenListe(){
+  if(!Array.isArray(db.kriterienVorlagen)) db.kriterienVorlagen = [];
+  return db.kriterienVorlagen;
 }
 
-/* Der Balken gleitet unter den gewählten Knopf – Breite und Weg
-   ergeben sich aus dem tatsächlichen Knopf, damit es bei jeder Textlänge sitzt. */
-function segPille(){
-  const leiste = $("#stdSeg"), pille = $("#stdSegPille");
-  if(!leiste || !pille) return;
-  const aktiv = leiste.querySelector("button.on");
-  if(!aktiv) return;
-  const breite = aktiv.offsetWidth;
-  if(!breite) return;                       // Ansicht noch nicht sichtbar
-  pille.style.width = breite + "px";
-  pille.style.transform = "translateX(" + (aktiv.offsetLeft - 4) + "px)";
-}
-window.addEventListener("resize", segPille);
-document.querySelectorAll("#stdSeg button").forEach(b => {
-  b.addEventListener("click", () => {
-    db.ui.bereich = b.dataset.b;
-    disarmDelete();
-    save(); renderStunde(); window.scrollTo(0,0);
-  });
-});
+/* Eine Kriterium-Zeile, wiederverwendet von Tests und Kompetenzen: voller
+   Zeilentext (damit auch ein ganzer Satz lesbar bleibt) + rauf/runter zum
+   Umsortieren + Löschen. Antippen des Textes öffnet die Bearbeitung. */
+function kritZeile(kr, i, liste, opt){
+  const z = document.createElement("div");
+  z.className = "beobzeile";
+  const txt = document.createElement("button");
+  txt.type = "button";
+  txt.style.cssText = "flex:1;min-width:0;text-align:left;border:0;background:0;padding:0;" +
+    "font:inherit;color:inherit;cursor:pointer";
+  txt.innerHTML = "<b style=\"font-weight:600;display:block;white-space:normal\">" +
+    esc(kr.name) + "</b>" +
+    (opt.typLabel ? '<span class="mini">' + opt.typLabel + "</span>" : "");
+  txt.addEventListener("click", opt.bearbeiten);
+  z.appendChild(txt);
 
-function renderTests(){
-  const k = klasse(db.ui.klasseId);
-  let v = db.ui.tstView || "liste";
-  const t = test(db.ui.testId);
-  if((v === "ansicht" || v === "erfassen") && (!t || !k)){ v = "liste"; db.ui.tstView = "liste"; }
-  $("#tstListe").style.display    = v === "liste" ? "" : "none";
-  $("#tstAnsicht").style.display  = v === "ansicht" ? "" : "none";
-  $("#tstErfassen").style.display = v === "erfassen" ? "" : "none";
-  if(v === "liste") renderTestListe(k);
-  if(v === "ansicht") renderTestAnsicht(t, k);
-  if(v === "erfassen") renderTestErfassen(t, k);
-}
-
-/* --- Ebene 1: Liste --- */
-function renderTestListe(k){
-  const box = $("#testListe"); box.innerHTML = "";
-  const nb = $("#newTest");
-  if(!k){
-    nb.style.display = "none";
-    box.innerHTML = '<p class="hint">Erst unten über <b>Auswahl</b> eine Klasse wählen.</p>';
-    return;
-  }
-  nb.style.display = "";
-  if(!$("#ntDatum").value) $("#ntDatum").value = heute();
-  renderNeueKriterien();
-  const list = testsVon(k.id);
-  if(!list.length){
-    box.innerHTML = '<p class="hint">Noch kein Test angelegt. Oben auf „+ Neuer Test“ tippen – ' +
-      'du bestimmst selbst, worauf du schaust.</p>';
-    return;
-  }
-  list.slice().reverse().forEach(t => {
-    const fo = testFortschritt(t, k);
-    const schnitt = testKlasseSchnitt(t, k);
-    const row = document.createElement("div");
-    row.className = "item";
-    row.innerHTML = '<div class="grow"><b>' + esc(t.titel || "Ohne Titel") + "</b>" +
-      '<div class="sub">' + deDate(t.datum) + " · " +
-      t.kriterien.length + (t.kriterien.length === 1 ? " Kriterium" : " Kriterien") +
-      " · " + fo.gesetzt + "/" + fo.gesamt + " bewertet" +
-      (schnitt === null ? "" : " · Ø " + kommaZahl(schnitt)) +
-      "</div></div><div class=\"chev\">›</div>";
-    row.addEventListener("click", () => tstGo("ansicht", t.id));
-    box.appendChild(row);
+  const knoepfe = document.createElement("div");
+  knoepfe.style.cssText = "display:flex;gap:4px;flex:0 0 auto";
+  const hoch = document.createElement("button");
+  hoch.className = "iconbtn"; hoch.type = "button"; hoch.textContent = "↑";
+  hoch.setAttribute("aria-label", "„" + kr.name.slice(0,40) + "“ nach oben");
+  hoch.disabled = i === 0;
+  hoch.addEventListener("click", () => {
+    [liste[i-1], liste[i]] = [liste[i], liste[i-1]];
+    save(); renderStunde();
   });
-}
-
-$("#btnTestAnlegen").addEventListener("click", () => {
-  const k = klasse(db.ui.klasseId);
-  if(!k){ toast("Erst eine Klasse wählen"); return; }
-  const titel = $("#ntTitel").value.trim();
-  if(!titel){ toast("Womit soll der Test überschrieben sein?"); return; }
-  if(!neueKriterien.length){ toast("Mindestens ein Kriterium hinzufügen"); return; }
-  const t = {id:uid(), klasseId:k.id, fachId: db.ui.fachId || null,
-             datum: $("#ntDatum").value || heute(), titel: titel,
-             kriterien: neueKriterien.slice(0, 12),
-             noten:{}, notizen:{}, t:Date.now()};
-  db.tests.push(t);
-  neueKriterien = [];
-  renderNeueKriterien();
-  $("#ntTitel").value = ""; $("#ntKrit").value = ""; $("#ntDatum").value = heute();
-  $("#newTest").open = false;
-  db.ui.testNr = 1;
-  save(); tstGo("erfassen", t.id);
-  toast("Test „" + titel + "“ angelegt");
-});
-
-/* --- Ebene 2: Ansehen --- */
-function renderTestAnsicht(t, k){
-  unterkopf($("#tbTest"), {
-    zurueck: () => tstGo("liste"), zurueckText: "Tests",
-    titel: t.titel || "Test",
-    sub: deDate(t.datum) + (k ? " · Klasse " + k.name : ""),
-    aktion: stiftBtn("Test bearbeiten", () => testDialog(t))
+  const runter = document.createElement("button");
+  runter.className = "iconbtn"; runter.type = "button"; runter.textContent = "↓";
+  runter.setAttribute("aria-label", "„" + kr.name.slice(0,40) + "“ nach unten");
+  runter.disabled = i === liste.length - 1;
+  runter.addEventListener("click", () => {
+    [liste[i+1], liste[i]] = [liste[i], liste[i+1]];
+    save(); renderStunde();
   });
-  const fo = testFortschritt(t, k);
-  const schnitt = testKlasseSchnitt(t, k);
-  const tiles = $("#testTiles"); tiles.innerHTML = "";
-  [["bewertet", fo.gesetzt + "/" + fo.gesamt],
-   ["Kriterien", t.kriterien.length],
-   ["Ø Klasse", kommaZahl(schnitt)]].forEach(x => {
-    const d = document.createElement("div"); d.className = "tile";
-    d.innerHTML = "<b>" + x[1] + "</b><span>" + x[0] + "</span>";
-    tiles.appendChild(d);
-  });
-
-  renderEkKriterien(t);
-  const tab = $("#tblTest");
-  const kopf = tab.querySelector("thead"), leib = tab.querySelector("tbody");
-  kopf.innerHTML = ""; leib.innerHTML = "";
-  if(!k) return;
-  const hatNotizen = Object.keys(t.notizen || {}).some(nr => String(t.notizen[nr]).trim());
-  let hr = '<tr><th class="links">Nr.</th>';
-  t.kriterien.forEach(kr => {
-    hr += "<th>" + esc(kr.name) + (kr.typ === "text" ? " ✎" : "") + "</th>";
-  });
-  hr += "<th>Ø</th>" + (hatNotizen ? '<th class="bem">Bemerkung</th>' : "") + "</tr>";
-  kopf.innerHTML = hr;
-  for(let i = 1; i <= k.count; i++){
-    const schn = testKindSchnitt(t, i);
-    let zeile = '<td class="links">' + i +
-      (k.labels[i] ? ' <span class="mini">' + esc(k.labels[i]) + "</span>" : "") + "</td>";
-    t.kriterien.forEach(kr => {
-      zeile += "<td>" + esc(zeigeWert(t, i, kr)) + "</td>";
-    });
-    zeile += '<td class="stark">' + (schn === null ? "" : kommaZahl(schn)) + "</td>";
-    if(hatNotizen){
-      const bem = (t.notizen && t.notizen[i]) ? t.notizen[i] : "";
-      zeile += '<td class="bem">' + esc(bem) + "</td>";
-    }
-    const tr = document.createElement("tr");
-    tr.innerHTML = zeile;
-    leib.appendChild(tr);
-  }
-}
-$("#btnTestErfassen").addEventListener("click", () => tstGo("erfassen"));
-$("#btnTestDel").addEventListener("click", () => {
-  const t = test(db.ui.testId);
-  if(!t){ toast("Kein Test gewählt"); return; }
-  const k = klasse(t.klasseId);
-  const fo = testFortschritt(t, k);
-  frageLoeschen("Test „" + (t.titel || "ohne Titel") + "“ löschen?",
-    fo.gesetzt ? "Die " + fo.gesetzt + " Bewertungen darin gehen verloren."
-               : "Der Test ist noch leer.",
-    () => {
-      db.tests = db.tests.filter(x => x.id !== t.id);
-      db.ui.testId = null;
-      save(); tstGo("liste"); toastUndo("Test gelöscht");
-    });
-});
-function testDialog(t){
-  openModal({
-    titel: "Test bearbeiten",
-    text: "Die Kriterien änderst du in der Test-Ansicht unter „Kriterien ändern“.",
-    felder: [
-      {key:"titel", label:"Was wird geprüft", wert:t.titel},
-      {key:"datum", label:"Datum (JJJJ-MM-TT)", wert:t.datum}
-    ],
-    onOk: w => {
-      const ti = (w.titel || "").trim();
-      if(!ti){ toast("Titel fehlt"); return false; }
-      t.titel = ti;
-      if(/^\d{4}-\d{2}-\d{2}$/.test((w.datum || "").trim())) t.datum = w.datum.trim();
-      save(); renderStunde(); toast("Gespeichert");
-    }
-  });
+  const weg = document.createElement("button");
+  weg.className = "iconbtn"; weg.type = "button"; weg.textContent = "✕";
+  weg.setAttribute("aria-label", "„" + kr.name.slice(0,40) + "“ entfernen");
+  weg.addEventListener("click", opt.entfernen);
+  knoepfe.appendChild(hoch); knoepfe.appendChild(runter); knoepfe.appendChild(weg);
+  z.appendChild(knoepfe);
+  return z;
 }
 
 /* --- Ebene 3: Bewerten – ein Kind, alle Kriterien ---
@@ -6683,28 +6728,32 @@ function renderKompetenzen(){
   const k = klasse(db.ui.klasseId);
   let v = db.ui.rstView || "liste";
   const r = kompraster(db.ui.komprasterId);
-  if((v === "ansicht" || v === "erfassen") && (!r || !k)){ v = "liste"; db.ui.rstView = "liste"; }
-  $("#kmpListe").style.display    = v === "liste" ? "" : "none";
-  $("#kmpAnsicht").style.display  = v === "ansicht" ? "" : "none";
-  $("#kmpErfassen").style.display = v === "erfassen" ? "" : "none";
+  if((v === "ansicht" || v === "erfassen" || v === "kriterien") && (!r || !k)){
+    v = "liste"; db.ui.rstView = "liste";
+  }
+  $("#kmpListe").style.display     = v === "liste" ? "" : "none";
+  $("#kmpAnsicht").style.display   = v === "ansicht" ? "" : "none";
+  $("#kmpKriterien").style.display = v === "kriterien" ? "" : "none";
+  $("#kmpErfassen").style.display  = v === "erfassen" ? "" : "none";
   if(v === "liste") renderKompListe(k);
   if(v === "ansicht") renderKompAnsicht(r, k);
+  if(v === "kriterien") renderKompKritListe(r);
   if(v === "erfassen") renderKompErfassen(r, k);
 }
 
-/* --- Ebene 1: Liste --- */
+/* --- Ebene 1: Liste – gleiche Bauart wie die Unterrichtsreihen-Liste --- */
 function renderKompListe(k){
+  seitenkopf($("#tbKompListe"), "Kompetenzen",
+    k ? ("Klasse " + k.name) : "Erst unten über Auswahl eine Klasse wählen",
+    plusBtn("Neues Raster", () => openKompSheet()), true);
   const box = $("#kompListe"); box.innerHTML = "";
-  const nb = $("#newKomp");
   if(!k){
-    nb.style.display = "none";
     box.innerHTML = '<p class="hint">Erst unten über <b>Auswahl</b> eine Klasse wählen.</p>';
     return;
   }
-  nb.style.display = "";
   const list = komprasterVon(k.id);
   if(!list.length){
-    box.innerHTML = '<p class="hint">Noch kein Raster angelegt. Oben auf „+ Neues Raster“ tippen – ' +
+    box.innerHTML = '<p class="hint">Noch kein Raster angelegt. Oben über das Plus-Symbol anlegen – ' +
       'Stufen und Kriterien legst du danach selbst fest.</p>';
     return;
   }
@@ -6720,56 +6769,67 @@ function renderKompListe(k){
     box.appendChild(row);
   });
 }
+
+/* ---- Einschub von unten: neues Raster ---- */
+let kompSheetOffen = false;
+function openKompSheet(){
+  const k = klasse(db.ui.klasseId);
+  if(!k){ toast("Erst eine Klasse wählen"); return; }
+  zurueckWache();
+  kompSheetOffen = true;
+  $("#nkrTitel").value = "";
+  $("#kompSheet").classList.add("open");
+  $("#kompScrim").classList.add("open");
+}
+function closeKompSheet(){
+  if(!kompSheetOffen) return;
+  kompSheetOffen = false;
+  $("#kompSheet").classList.remove("open");
+  $("#kompScrim").classList.remove("open");
+}
+$("#kompScrim").addEventListener("click", closeKompSheet);
+$("#btnKompSheetZu").addEventListener("click", closeKompSheet);
 $("#btnKompAnlegen").addEventListener("click", () => {
   const k = klasse(db.ui.klasseId);
   if(!k){ toast("Erst eine Klasse wählen"); return; }
-  const titel = $("#nkTitel").value.trim();
+  const titel = $("#nkrTitel").value.trim();
   if(!titel){ toast("Titel fehlt"); return; }
   const r = {id:uid(), klasseId:k.id, fachId: db.ui.fachId || null,
              titel: titel, stufen:[], erreicht:{}, t:Date.now()};
   db.kompetenzraster.push(r);
-  $("#nkTitel").value = "";
-  $("#newKomp").open = false;
+  closeKompSheet();
   save(); kompGo("ansicht", r.id);
   toast("Raster „" + titel + "“ angelegt");
 });
-$("#nkTitel").addEventListener("keydown", ev => {
-  if(ev.key === "Enter"){ ev.preventDefault(); $("#btnKompAnlegen").click(); }
-});
 
-/* --- Ebene 2: Ansehen + Stufen/Kriterien pflegen --- */
+/* --- Ebene 2: Ansehen --- */
 function renderKompAnsicht(r, k){
   unterkopf($("#tbKomp"), {
     zurueck: () => kompGo("liste"), zurueckText: "Kompetenzen",
     titel: r.titel || "Raster",
     sub: k ? "Klasse " + k.name : "",
-    aktion: stiftBtn("Raster bearbeiten", () => kompDialog(r))
+    aktion: kopfKnoepfe(
+      plusBtn("Stufen bearbeiten", () => kompGo("kriterien")),
+      stiftBtn("Raster bearbeiten", () => kompDialog(r)))
   });
-  const alle = alleKriterien(r);
-  const fo = kompRasterFortschritt(r, k);
-  const tiles = $("#kompTiles"); tiles.innerHTML = "";
-  [["abgehakt", fo.gesetzt + "/" + fo.gesamt],
-   ["Kriterien", alle.length],
-   ["Stufen", (r.stufen || []).length]].forEach(x => {
-    const d = document.createElement("div"); d.className = "tile";
-    d.innerHTML = "<b>" + x[1] + "</b><span>" + x[0] + "</span>";
-    tiles.appendChild(d);
-  });
-
-  renderStufenListe(r);
-
   const tab = $("#tblKomp");
-  const kopf = tab.querySelector("thead"), leib = tab.querySelector("tbody");
-  kopf.innerHTML = ""; leib.innerHTML = "";
+  const kopf = tab.querySelector("thead"), leib = tab.querySelector("tbody"),
+        fuss = tab.querySelector("tfoot");
+  kopf.innerHTML = ""; leib.innerHTML = ""; fuss.innerHTML = "";
   if(!k) return;
+  if(!(r.stufen || []).length){
+    leib.innerHTML = '<tr><td class="links" style="padding:12px 0">' +
+      '<span class="mini">Noch keine Stufe – oben über das Plus-Symbol anlegen.</span></td></tr>';
+    return;
+  }
   let hr = '<tr><th class="links">Nr.</th>';
-  (r.stufen || []).forEach(s => { hr += "<th>" + esc(s.titel) + "</th>"; });
+  r.stufen.forEach(s => { hr += "<th>" + esc(s.titel.slice(0,24)) + (s.titel.length > 24 ? "…" : "") + "</th>"; });
   hr += "<th>Stufe</th></tr>";
   kopf.innerHTML = hr;
   for(let i = 1; i <= k.count; i++){
     let zeile = '<td class="links">' + i +
       (k.labels[i] ? ' <span class="mini">' + esc(k.labels[i]) + "</span>" : "") + "</td>";
-    (r.stufen || []).forEach(s => {
+    r.stufen.forEach(s => {
       const ok = stufeVollstaendig(s, r, i);
       const anz = s.kriterien.filter(kr => kriteriumErreicht(r, i, kr)).length;
       zeile += "<td>" + (ok ? "✓" : (s.kriterien.length ? anz + "/" + s.kriterien.length : "–")) + "</td>";
@@ -6782,11 +6842,26 @@ function renderKompAnsicht(r, k){
     tr.style.cursor = "pointer";
     leib.appendChild(tr);
   }
+  /* Kleine, unauffällige Zusammenfassung als Tabellen-Fuß statt Kacheln oben. */
+  const fo = kompRasterFortschritt(r, k);
+  let summeStufen = 0;
+  let fr = '<tr><td class="links" style="border-top:1.5px solid var(--muted)">' +
+    '<span class="mini">' + fo.gesetzt + "/" + fo.gesamt + '</span></td>';
+  r.stufen.forEach(s => {
+    let n = 0;
+    for(let i = 1; i <= k.count; i++){ if(stufeVollstaendig(s, r, i)) n++; }
+    fr += '<td style="border-top:1.5px solid var(--muted)"><span class="mini">' + n + "/" + k.count + '</span></td>';
+  });
+  for(let i = 1; i <= k.count; i++){ summeStufen += rasterKindStufe(r, i); }
+  const avg = k.count ? Math.round(summeStufen / k.count * 10) / 10 : null;
+  fr += '<td class="stark" style="border-top:1.5px solid var(--muted)"><span class="mini">Ø ' +
+    (avg === null ? "–" : kommaZahl(avg)) + "</span></td></tr>";
+  fuss.innerHTML = fr;
 }
 function kompDialog(r){
   openModal({
     titel: "Raster bearbeiten",
-    text: "Stufen und Kriterien änderst du weiter unten in der Raster-Ansicht.",
+    text: "Stufen und Kriterien änderst du über das Plus-Symbol in der Raster-Ansicht.",
     felder: [{key:"titel", label:"Titel", wert:r.titel}],
     onOk: w => {
       const ti = (w.titel || "").trim();
@@ -6812,104 +6887,148 @@ $("#btnKompDel").addEventListener("click", () => {
     });
 });
 
-/* Kriterien-Chips ohne die Skala/Text-Markierung der Tests – hier ist
-   jedes Kriterium gleich: entweder erreicht oder nicht. */
-function stufeKritChips(hostEl, liste, entfernen){
-  hostEl.innerHTML = "";
-  if(!liste.length){
-    const p = document.createElement("div");
-    p.className = "dupempty";
-    p.textContent = "Noch kein Kriterium.";
-    hostEl.appendChild(p);
-    return;
-  }
-  liste.forEach((kr, i) => {
-    const chip = document.createElement("span");
-    chip.className = "kritchip";
-    chip.textContent = kr.name;
-    const weg = document.createElement("button");
-    weg.className = "weg"; weg.type = "button";
-    weg.setAttribute("aria-label", "„" + kr.name + "“ entfernen");
-    weg.textContent = "✕";
-    weg.addEventListener("click", () => entfernen(i));
-    chip.appendChild(weg);
-    hostEl.appendChild(chip);
+/* --- Ebene 2b: Stufen & Kriterien verwalten – eigene Seite. Stufen sind
+   Zeilen wie ein Kriterium (rauf/runter/löschen/antippen zum Umbenennen),
+   ihre Kriterien hängen sichtbar eingerückt darunter. ---- */
+function stufeDialog(r, stufe){
+  const neu = !stufe;
+  openModal({
+    titel: neu ? "Stufe hinzufügen" : "Stufe bearbeiten",
+    felder: [{key:"titel", label:"Name der Stufe", wert: stufe ? stufe.titel : "",
+              platzhalter:"z. B. Niveaustufe 1"}],
+    okText: neu ? "Hinzufügen" : "Speichern",
+    onOk: w => {
+      const titel = (w.titel || "").trim();
+      if(!titel){ toast("Name fehlt"); return false; }
+      if(neu){
+        r.stufen.push({id:uid(), titel:titel.slice(0, KRIT_MAX), kriterien:[]});
+        toast("Stufe „" + titel + "“ angelegt");
+      }else{
+        stufe.titel = titel.slice(0, KRIT_MAX);
+        toast("Gespeichert");
+      }
+      save(); renderStunde();
+    }
   });
 }
-function renderStufenListe(r){
+function kompKritDialog(r, stufe, kr){
+  const neu = !kr;
+  openModal({
+    titel: neu ? "Kriterium hinzufügen" : "Kriterium bearbeiten",
+    text: neu ? ("In Stufe „" + stufe.titel + "“.") : undefined,
+    felder: [{key:"name", label:"Kriterium", typ:"text2",
+              wert: kr ? kr.name : "", platzhalter:"z. B. Kann 25m schwimmen"}],
+    okText: neu ? "Hinzufügen" : "Speichern",
+    onOk: w => {
+      const name = (w.name || "").trim();
+      if(!name){ toast("Name fehlt"); return false; }
+      if(neu){
+        if(stufe.kriterien.length >= 12){ toast("Zwölf Kriterien sind genug"); return false; }
+        stufe.kriterien.push({id:uid(), name:name.slice(0, KRIT_MAX)});
+        toast("Kriterium hinzugefügt");
+      }else{
+        kr.name = name.slice(0, KRIT_MAX);
+        toast("Gespeichert");
+      }
+      save(); renderStunde();
+    }
+  });
+}
+function stufeZeile(r, stufe, si){
+  const anz = stufe.kriterien.length;
+  const z = document.createElement("div");
+  z.className = "beobzeile";
+  const txt = document.createElement("button");
+  txt.type = "button";
+  txt.style.cssText = "flex:1;min-width:0;text-align:left;border:0;background:0;padding:0;" +
+    "font:inherit;color:inherit;cursor:pointer";
+  txt.innerHTML = "<b style=\"font-weight:700;display:block;white-space:normal\">" +
+    esc(stufe.titel) + "</b>" +
+    '<span class="mini">' + anz + (anz === 1 ? " Kriterium" : " Kriterien") + "</span>";
+  txt.addEventListener("click", () => stufeDialog(r, stufe));
+  z.appendChild(txt);
+
+  const knoepfe = document.createElement("div");
+  knoepfe.style.cssText = "display:flex;gap:4px;flex:0 0 auto";
+  const hoch = document.createElement("button");
+  hoch.className = "iconbtn"; hoch.type = "button"; hoch.textContent = "↑";
+  hoch.setAttribute("aria-label", "Stufe „" + stufe.titel.slice(0,40) + "“ nach oben");
+  hoch.disabled = si === 0;
+  hoch.addEventListener("click", () => {
+    [r.stufen[si-1], r.stufen[si]] = [r.stufen[si], r.stufen[si-1]];
+    save(); renderStunde();
+  });
+  const runter = document.createElement("button");
+  runter.className = "iconbtn"; runter.type = "button"; runter.textContent = "↓";
+  runter.setAttribute("aria-label", "Stufe „" + stufe.titel.slice(0,40) + "“ nach unten");
+  runter.disabled = si === r.stufen.length - 1;
+  runter.addEventListener("click", () => {
+    [r.stufen[si+1], r.stufen[si]] = [r.stufen[si], r.stufen[si+1]];
+    save(); renderStunde();
+  });
+  const weg = document.createElement("button");
+  weg.className = "iconbtn"; weg.type = "button"; weg.textContent = "✕";
+  weg.setAttribute("aria-label", "Stufe „" + stufe.titel.slice(0,40) + "“ entfernen");
+  weg.addEventListener("click", () => {
+    merkeStand();
+    r.stufen.splice(si, 1);
+    save(); renderStunde();
+    toastUndo("Stufe „" + stufe.titel + "“ entfernt");
+  });
+  knoepfe.appendChild(hoch); knoepfe.appendChild(runter); knoepfe.appendChild(weg);
+  z.appendChild(knoepfe);
+  return z;
+}
+function renderKompKritListe(r){
+  unterkopf($("#tbKompKrit"), {
+    zurueck: () => kompGo("ansicht"), zurueckText: "Raster",
+    titel: "Stufen & Kriterien", sub: r.titel || "Raster",
+    aktion: plusBtn("Neue Stufe", () => stufeDialog(r, null)),
+    verbunden: true
+  });
   const box = $("#stufenListe"); box.innerHTML = "";
   if(!r.stufen.length){
-    const p = document.createElement("p");
-    p.className = "hint"; p.textContent = "Noch keine Stufe angelegt.";
-    box.appendChild(p);
+    box.innerHTML = '<p class="hint" style="margin:0">Noch keine Stufe – oben über das ' +
+      'Plus-Symbol anlegen.</p>';
     return;
   }
   r.stufen.forEach((stufe, si) => {
     if(si > 0){
-      const sep = document.createElement("div");
-      sep.className = "sep";
+      const sep = document.createElement("div"); sep.className = "sep";
       box.appendChild(sep);
     }
-    const kopf = document.createElement("div");
-    kopf.className = "rowline";
-    kopf.style.cssText = "padding-top:" + (si === 0 ? "0" : "11px") + ";border-bottom:0";
-    kopf.innerHTML = '<h3 style="font-size:14px">' + esc(stufe.titel) + "</h3>";
-    const weg = document.createElement("button");
-    weg.className = "iconbtn"; weg.type = "button";
-    weg.setAttribute("aria-label", "Stufe „" + stufe.titel + "“ entfernen");
-    weg.textContent = "✕";
-    weg.addEventListener("click", () => {
-      merkeStand();
-      r.stufen.splice(si, 1);
-      save(); renderStunde();
-      toastUndo("Stufe „" + stufe.titel + "“ entfernt");
-    });
-    kopf.appendChild(weg);
-    box.appendChild(kopf);
+    box.appendChild(stufeZeile(r, stufe, si));
 
-    const zeile = document.createElement("div");
-    zeile.style.cssText = "display:flex;gap:8px";
-    const inp = document.createElement("input");
-    inp.type = "text"; inp.placeholder = "weiteres Kriterium";
-    const add = document.createElement("button");
-    add.className = "act neutral mini"; add.type = "button"; add.textContent = "Hinzufügen";
-    const hinzufuegen = () => {
-      const name = inp.value.trim();
-      if(!name){ toast("Erst einen Namen eintippen"); return; }
-      if(stufe.kriterien.length >= 12){ toast("Zwölf Kriterien sind genug"); return; }
-      stufe.kriterien.push({id:uid(), name:name.slice(0,60)});
-      save(); renderStunde();
-    };
-    add.addEventListener("click", hinzufuegen);
-    inp.addEventListener("keydown", ev => { if(ev.key === "Enter"){ ev.preventDefault(); hinzufuegen(); } });
-    zeile.appendChild(inp); zeile.appendChild(add);
-    box.appendChild(zeile);
-
-    const chiprow = document.createElement("div");
-    chiprow.className = "chiprow"; chiprow.style.marginTop = "10px";
-    box.appendChild(chiprow);
-    stufeKritChips(chiprow, stufe.kriterien, i => {
-      const kr = stufe.kriterien[i];
-      merkeStand();
-      stufe.kriterien.splice(i, 1);
-      Object.keys(r.erreicht).forEach(nr => { if(r.erreicht[nr]) delete r.erreicht[nr][kr.id]; });
-      save(); renderStunde();
-      toastUndo("„" + kr.name + "“ entfernt");
-    });
+    const unterbox = document.createElement("div");
+    unterbox.style.cssText = "margin-left:14px;border-left:2px solid var(--line);padding-left:10px";
+    if(!stufe.kriterien.length){
+      const p = document.createElement("p");
+      p.className = "hint"; p.style.margin = "8px 0";
+      p.textContent = "Noch kein Kriterium in dieser Stufe.";
+      unterbox.appendChild(p);
+    }else{
+      stufe.kriterien.forEach((kr, ki) => unterbox.appendChild(kritZeile(kr, ki, stufe.kriterien, {
+        bearbeiten: () => kompKritDialog(r, stufe, kr),
+        entfernen: () => {
+          merkeStand();
+          stufe.kriterien.splice(ki, 1);
+          Object.keys(r.erreicht).forEach(nr => { if(r.erreicht[nr]) delete r.erreicht[nr][kr.id]; });
+          save(); renderStunde();
+          toastUndo("Kriterium entfernt");
+        }
+      })));
+    }
+    const addZeile = document.createElement("div");
+    addZeile.style.cssText = "padding:8px 0";
+    const addBtn = document.createElement("button");
+    addBtn.className = "act neutral mini"; addBtn.type = "button";
+    addBtn.textContent = "+ Kriterium hinzufügen";
+    addBtn.addEventListener("click", () => kompKritDialog(r, stufe, null));
+    addZeile.appendChild(addBtn);
+    unterbox.appendChild(addZeile);
+    box.appendChild(unterbox);
   });
 }
-$("#btnStufeAdd").addEventListener("click", () => {
-  const r = kompraster(db.ui.komprasterId); if(!r) return;
-  const name = $("#skStufe").value.trim();
-  if(!name){ toast("Erst einen Namen eintippen"); return; }
-  r.stufen.push({id:uid(), titel:name.slice(0,60), kriterien:[]});
-  $("#skStufe").value = "";
-  save(); renderStunde();
-  toast("Stufe „" + name + "“ angelegt");
-});
-$("#skStufe").addEventListener("keydown", ev => {
-  if(ev.key === "Enter"){ ev.preventDefault(); $("#btnStufeAdd").click(); }
-});
 
 /* --- Ebene 3: Bewerten – ein Kind, alle Stufen --- */
 function renderKompErfassen(r, k){
