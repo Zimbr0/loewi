@@ -1069,7 +1069,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
     <span class="pille" id="stdSegPille"></span>
     <button data-b="plan" class="on">Plan</button>
     <button data-b="stunden">Stunden</button>
-    <button data-b="tests">Tests</button>
+    <button data-b="leistung">Leistung</button>
     <button data-b="teams" id="segTeams" style="display:none">Teams</button>
   </div>
 
@@ -1245,8 +1245,17 @@ body.vertmodus .stundenkarte{cursor:pointer}
   </div>
   </div><!-- /bereichStunden -->
 
+  <!-- ============ LEISTUNG (Tests & Kompetenzen) ============ -->
+  <div id="bereichLeistung" style="display:none">
+
+  <div class="segrow klein" id="leistSeg">
+    <span class="pille" id="leistPille"></span>
+    <button data-l="tests" class="on">Tests</button>
+    <button data-l="kompetenzen">Kompetenzen</button>
+  </div>
+
   <!-- ============ TESTS ============ -->
-  <div id="bereichTests" style="display:none">
+  <div id="bereichTests">
 
     <!-- Ebene 1: Liste der Tests -->
     <div id="tstListe">
@@ -1344,6 +1353,79 @@ body.vertmodus .stundenkarte{cursor:pointer}
         <button class="act neutral" id="btnTestFertig">Fertig</button>
       </div>
     </div>
+  </div>
+
+  <!-- ============ KOMPETENZEN ============ -->
+  <div id="bereichKompetenzen" style="display:none">
+
+    <!-- Ebene 1: Liste der Raster -->
+    <div id="kmpListe">
+      <details class="newbox" id="newKomp">
+        <summary>+ Neues Raster</summary>
+        <div class="inner">
+          <label class="lbl" for="nkTitel">Titel</label>
+          <input type="text" id="nkTitel" placeholder="z. B. Schwimmen – Niveaustufen">
+          <div class="actions" style="margin-top:12px">
+            <button class="act primary" id="btnKompAnlegen" style="width:100%">Raster anlegen</button>
+          </div>
+          <p class="hint">Stufen und Kriterien legst du gleich danach in der Raster-Ansicht an.</p>
+        </div>
+      </details>
+      <div class="card">
+        <div id="kompListe"></div>
+      </div>
+    </div>
+
+    <!-- Ebene 2: Raster ansehen -->
+    <div id="kmpAnsicht" style="display:none">
+      <div class="topbar" id="tbKomp"></div>
+      <div class="tiles" id="kompTiles"></div>
+      <details class="newbox" id="editStufen">
+        <summary>Stufen &amp; Kriterien ändern</summary>
+        <div class="inner">
+          <div style="display:flex;gap:8px">
+            <input type="text" id="skStufe" placeholder="Name der neuen Stufe">
+            <button class="act neutral mini" id="btnStufeAdd">Hinzufügen</button>
+          </div>
+          <div id="stufenListe" style="margin-top:12px"></div>
+          <p class="hint">Eine Stufe gilt als erreicht, wenn alle ihre Kriterien abgehakt sind.</p>
+        </div>
+      </details>
+      <div class="card">
+        <div style="overflow-x:auto">
+          <table class="ttab" id="tblKomp"><thead></thead><tbody></tbody></table>
+        </div>
+        <p class="hint">Zeile antippen, um ein Kind zu bewerten.</p>
+      </div>
+      <div class="actions" style="margin-bottom:12px">
+        <button class="act primary" id="btnKompErfassen" style="width:100%">Bewerten</button>
+      </div>
+      <div style="text-align:center">
+        <button class="act quiet" id="btnKompDel">Raster löschen</button>
+      </div>
+    </div>
+
+    <!-- Ebene 3: Bewerten -->
+    <div id="kmpErfassen" style="display:none">
+      <div class="topbar" id="tbKompErf"></div>
+      <div class="card">
+        <label class="lbl" for="kmpKind">Kind</label>
+        <div class="kindwahl">
+          <button class="pfeil" id="btnKmpKindZurueck" aria-label="vorheriges Kind">‹</button>
+          <select id="kmpKind"></select>
+          <button class="pfeil" id="btnKmpKindVor" aria-label="nächstes Kind">›</button>
+        </div>
+        <div class="mini" id="kmpProgress" style="margin-top:10px"></div>
+      </div>
+      <div id="stufenKacheln"></div>
+      <div class="actions" style="margin-bottom:12px">
+        <button class="act primary" id="btnKompWeiter">Weiter</button>
+        <button class="act neutral" id="btnKompFertig">Fertig</button>
+      </div>
+    </div>
+
+  </div>
+
   </div>
 
   <!-- ============ TEAMS (nur im Sport) ============ -->
@@ -1781,7 +1863,8 @@ body.vertmodus .stundenkarte{cursor:pointer}
   </div>
   <div class="card faqgruppe">
     <h3>Tests und Teams</h3>
-      <details class="faqfrage"><summary>Wie funktionieren Tests?</summary><p class="hint">Oben im Stunden-Tab auf „Tests“. Du legst eigene Kriterien fest und vergibst 1 bis 6. Bewertet wird kriterienweise – so tippst du an einer Station die ganze Klasse durch. Der Test-Schnitt bleibt vom Mitarbeits-Schnitt getrennt.</p></details>
+      <details class="faqfrage"><summary>Wie funktionieren Tests?</summary><p class="hint">Oben im Stunden-Tab auf „Leistung“, dort auf „Tests“. Du legst eigene Kriterien fest und vergibst 1 bis 6. Bewertet wird kriterienweise – so tippst du an einer Station die ganze Klasse durch. Der Test-Schnitt bleibt vom Mitarbeits-Schnitt getrennt.</p></details>
+      <details class="faqfrage"><summary>Was sind Kompetenzen?</summary><p class="hint">Auch unter „Leistung“, daneben als „Kompetenzen“. Gedacht für Fähigkeiten, die nicht an einem Termin geprüft, sondern über Wochen einzeln erreicht werden – etwa Schwimmabzeichen. Du legst Stufen mit je eigenen Kriterien an; ein Kriterium hakst du ab, sobald ein Kind es kann. Loewi zeigt dann, welche Stufe durchgehend erreicht ist.</p></details>
       <details class="faqfrage"><summary>Was steckt im Tools-Tab?</summary><p class="hint">Im Sport erscheint neben Plan, Stunden und Tests ein vierter Reiter: Mannschaften auslosen (auf Wunsch nach Stärke ausgeglichen und Geschlecht gemischt – unter „Kinder einstufen“ trägst du das ein, befreite Kinder stehen dort von allein), dazu Stationstimer, Stoppuhr und Stationenplaner für die Halle.</p></details>
   </div>
   <div class="card faqgruppe">
@@ -2290,7 +2373,7 @@ const STD_RASTER = [
   {nr:3, von:"09:55", bis:"10:40"}, {nr:4, von:"10:45", bis:"11:30"},
   {nr:5, von:"11:50", bis:"12:35"}, {nr:6, von:"12:40", bis:"13:25"}
 ];
-let db = {version:2, klassen:[], stunden:[], tests:[], faecher:[], reihen:[], einheiten:[],
+let db = {version:2, klassen:[], stunden:[], tests:[], kompetenzraster:[], faecher:[], reihen:[], einheiten:[],
           plan:{raster:STD_RASTER.slice(), slots:[]},
           frei:[], termine:[], todos:[], notizen:[],
           ui:{klasseId:null, fachId:null, stundeId:null, view:"stunde",
@@ -2608,6 +2691,7 @@ function uebernehmen(raw){
         db.reihen = db.reihen || [];
         db.einheiten = db.einheiten || [];
         db.tests = db.tests || [];
+        db.kompetenzraster = db.kompetenzraster || [];
         db.plan = db.plan || {};
         db.frei = db.frei || [];
         db.termine = db.termine || [];
@@ -2703,6 +2787,14 @@ function migriere(){
   db.tests.forEach(t => {
     (t.kriterien || []).forEach(kr => { if(!kr.typ) kr.typ = "skala"; });
     if(!t.notizen) t.notizen = {};
+  });
+  /* "Tests" wurde zu "Leistung" (Tests + Kompetenzen zusammen). */
+  if(db.ui.bereich === "tests") db.ui.bereich = "leistung";
+  db.ui.leistView = db.ui.leistView || "tests";
+  db.kompetenzraster.forEach(r => {
+    if(!Array.isArray(r.stufen)) r.stufen = [];
+    if(!r.erreicht || typeof r.erreicht !== "object") r.erreicht = {};
+    r.stufen.forEach(s => { if(!Array.isArray(s.kriterien)) s.kriterien = []; });
   });
   db.version = 2;
 }
@@ -2953,7 +3045,12 @@ function zurueckSchritt(){
   if(v === "faq" || v === "daten"){ profilZurueck(); return true; }
   if(v === "stunde"){
     if(db.ui.bereich === "stunden" && db.ui.stdView !== "liste"){ stdGo("liste"); return true; }
-    if(db.ui.bereich === "tests" && db.ui.tstView !== "liste"){ tstGo("liste"); return true; }
+    if(db.ui.bereich === "leistung" && db.ui.leistView !== "kompetenzen" && db.ui.tstView !== "liste"){
+      tstGo("liste"); return true;
+    }
+    if(db.ui.bereich === "leistung" && db.ui.leistView === "kompetenzen" && db.ui.rstView !== "liste"){
+      kompGo("liste"); return true;
+    }
     if(db.ui.bereich === "plan" && db.ui.planEdit){
       db.ui.planEdit = false; save(); renderPlanTab(); return true;
     }
@@ -3263,6 +3360,7 @@ function klasseDialog(k){
       () => {
         db.stunden = db.stunden.filter(st => st.klasseId !== k.id);
         db.tests = db.tests.filter(t => t.klasseId !== k.id);
+        db.kompetenzraster = db.kompetenzraster.filter(r => r.klasseId !== k.id);
         db.klassen = db.klassen.filter(x => x.id !== k.id);
         if(db.plan && Array.isArray(db.plan.slots))
           db.plan.slots = db.plan.slots.filter(s => s.klasseId !== k.id);
@@ -3450,20 +3548,20 @@ function renderStunde(){
   const sport = istSport();
   $("#segTeams").style.display = sport ? "" : "none";
   let bereich = db.ui.bereich;
-  if(["plan", "stunden", "tests", "teams"].indexOf(bereich) === -1) bereich = "plan";
+  if(["plan", "stunden", "leistung", "teams"].indexOf(bereich) === -1) bereich = "plan";
   if(bereich === "teams" && !sport){ bereich = "stunden"; db.ui.bereich = "stunden"; }
   document.querySelectorAll("#stdSeg button").forEach(b => {
     b.classList.toggle("on", b.dataset.b === bereich);
   });
   segPille();
-  $("#bereichPlan").style.display    = bereich === "plan" ? "" : "none";
-  $("#bereichStunden").style.display = bereich === "stunden" ? "" : "none";
-  $("#bereichTests").style.display   = bereich === "tests" ? "" : "none";
-  $("#bereichTeams").style.display   = bereich === "teams" ? "" : "none";
+  $("#bereichPlan").style.display     = bereich === "plan" ? "" : "none";
+  $("#bereichStunden").style.display  = bereich === "stunden" ? "" : "none";
+  $("#bereichLeistung").style.display = bereich === "leistung" ? "" : "none";
+  $("#bereichTeams").style.display    = bereich === "teams" ? "" : "none";
   renderKopf();
   if(bereich === "plan"){ renderPlanTab(); return; }
   if(bereich === "teams"){ renderTeams(); return; }
-  if(bereich === "tests"){ renderTests(); return; }
+  if(bereich === "leistung"){ renderLeistung(); return; }
   const k = klasse(db.ui.klasseId);
   let v = db.ui.stdView || "liste";
   const s = stunde(db.ui.stundeId);
@@ -6503,6 +6601,438 @@ $("#tstKind").addEventListener("change", ev => {
 $("#btnTestWeiter").addEventListener("click", () => testKindWechsel(1));
 $("#btnTestFertig").addEventListener("click", () => tstGo("ansicht"));
 
+/* ---------- Leistung: Umschalter Tests / Kompetenzen ----------
+   "Tests" (Skala/Text, ein Zeitpunkt) und "Kompetenzen" (Stufen aus einzeln
+   abgehakten Kriterien, über Wochen verteilt) sind unterschiedliche Werkzeuge,
+   sitzen aber unter derselben Überschrift, weil beide am Ende dasselbe wollen:
+   festhalten, was ein Kind kann. */
+function leistPille(){
+  const leiste = $("#leistSeg"), pille = $("#leistPille");
+  if(!leiste || !pille) return;
+  const aktiv = leiste.querySelector("button.on");
+  if(!aktiv || !aktiv.offsetWidth) return;
+  pille.style.width = aktiv.offsetWidth + "px";
+  pille.style.transform = "translateX(" + (aktiv.offsetLeft - 4) + "px)";
+}
+window.addEventListener("resize", leistPille);
+document.querySelectorAll("#leistSeg button").forEach(b => {
+  b.addEventListener("click", () => {
+    db.ui.leistView = b.dataset.l; save(); renderLeistung();
+  });
+});
+function renderLeistung(){
+  let lv = db.ui.leistView || "tests";
+  if(["tests", "kompetenzen"].indexOf(lv) === -1) lv = "tests";
+  document.querySelectorAll("#leistSeg button").forEach(b => {
+    b.classList.toggle("on", b.dataset.l === lv);
+  });
+  leistPille();
+  $("#bereichTests").style.display       = lv === "tests" ? "" : "none";
+  $("#bereichKompetenzen").style.display = lv === "kompetenzen" ? "" : "none";
+  if(lv === "tests") renderTests();
+  else renderKompetenzen();
+}
+
+/* ---------- Kompetenzen (Kompetenzraster) ----------
+   Ein Raster hat Stufen, jede Stufe hat frei gewählte Kriterien. Ein Kriterium
+   ist erreicht oder nicht – mit Datum, an dem es abgehakt wurde. Eine Stufe
+   gilt als erreicht, wenn all ihre Kriterien erreicht sind; die höchste
+   durchgehend erreichte Stufe ist das Ergebnis, das eine Lehrkraft eigentlich
+   braucht. Anders als beim Test gibt es kein einzelnes Datum fürs Ganze –
+   Kinder erreichen einzelne Kriterien über Wochen verteilt. */
+function kompraster(id){ return db.kompetenzraster.find(r => r.id === id) || null; }
+function komprasterVon(kid, fid){
+  const f = (fid === undefined) ? (db.ui.fachId || null) : (fid || null);
+  return db.kompetenzraster.filter(r => r.klasseId === kid && (r.fachId || null) === f);
+}
+function alleKriterien(r){
+  const out = [];
+  (r.stufen || []).forEach(s => (s.kriterien || []).forEach(kr => out.push(kr)));
+  return out;
+}
+function kriteriumErreicht(r, nr, kr){
+  return !!(r.erreicht[nr] && r.erreicht[nr][kr.id]);
+}
+function stufeVollstaendig(stufe, r, nr){
+  return stufe.kriterien.length > 0 && stufe.kriterien.every(kr => kriteriumErreicht(r, nr, kr));
+}
+/* Die höchste Stufe, bis zu der (einschließlich) alles erreicht ist. */
+function rasterKindStufe(r, nr){
+  let hoechste = 0;
+  (r.stufen || []).forEach((stufe, i) => { if(stufeVollstaendig(stufe, r, nr)) hoechste = i + 1; });
+  return hoechste;
+}
+function kompRasterFortschritt(r, k){
+  const alle = alleKriterien(r);
+  if(!k || !alle.length) return {gesetzt:0, gesamt:0};
+  let gesetzt = 0;
+  for(let i = 1; i <= k.count; i++){
+    alle.forEach(kr => { if(kriteriumErreicht(r, i, kr)) gesetzt++; });
+  }
+  return {gesetzt: gesetzt, gesamt: k.count * alle.length};
+}
+
+function kompGo(view, id){
+  zurueckWache();
+  db.ui.rstView = view;
+  if(id !== undefined) db.ui.komprasterId = id;
+  save(); renderStunde(); window.scrollTo(0,0);
+}
+
+function renderKompetenzen(){
+  const k = klasse(db.ui.klasseId);
+  let v = db.ui.rstView || "liste";
+  const r = kompraster(db.ui.komprasterId);
+  if((v === "ansicht" || v === "erfassen") && (!r || !k)){ v = "liste"; db.ui.rstView = "liste"; }
+  $("#kmpListe").style.display    = v === "liste" ? "" : "none";
+  $("#kmpAnsicht").style.display  = v === "ansicht" ? "" : "none";
+  $("#kmpErfassen").style.display = v === "erfassen" ? "" : "none";
+  if(v === "liste") renderKompListe(k);
+  if(v === "ansicht") renderKompAnsicht(r, k);
+  if(v === "erfassen") renderKompErfassen(r, k);
+}
+
+/* --- Ebene 1: Liste --- */
+function renderKompListe(k){
+  const box = $("#kompListe"); box.innerHTML = "";
+  const nb = $("#newKomp");
+  if(!k){
+    nb.style.display = "none";
+    box.innerHTML = '<p class="hint">Erst unten über <b>Auswahl</b> eine Klasse wählen.</p>';
+    return;
+  }
+  nb.style.display = "";
+  const list = komprasterVon(k.id);
+  if(!list.length){
+    box.innerHTML = '<p class="hint">Noch kein Raster angelegt. Oben auf „+ Neues Raster“ tippen – ' +
+      'Stufen und Kriterien legst du danach selbst fest.</p>';
+    return;
+  }
+  list.slice().reverse().forEach(r => {
+    const fo = kompRasterFortschritt(r, k);
+    const anzStufen = (r.stufen || []).length;
+    const row = document.createElement("div");
+    row.className = "item";
+    row.innerHTML = '<div class="grow"><b>' + esc(r.titel || "Ohne Titel") + "</b>" +
+      '<div class="sub">' + anzStufen + (anzStufen === 1 ? " Stufe" : " Stufen") +
+      " · " + fo.gesetzt + "/" + fo.gesamt + " abgehakt</div></div><div class=\"chev\">›</div>";
+    row.addEventListener("click", () => kompGo("ansicht", r.id));
+    box.appendChild(row);
+  });
+}
+$("#btnKompAnlegen").addEventListener("click", () => {
+  const k = klasse(db.ui.klasseId);
+  if(!k){ toast("Erst eine Klasse wählen"); return; }
+  const titel = $("#nkTitel").value.trim();
+  if(!titel){ toast("Titel fehlt"); return; }
+  const r = {id:uid(), klasseId:k.id, fachId: db.ui.fachId || null,
+             titel: titel, stufen:[], erreicht:{}, t:Date.now()};
+  db.kompetenzraster.push(r);
+  $("#nkTitel").value = "";
+  $("#newKomp").open = false;
+  save(); kompGo("ansicht", r.id);
+  toast("Raster „" + titel + "“ angelegt");
+});
+$("#nkTitel").addEventListener("keydown", ev => {
+  if(ev.key === "Enter"){ ev.preventDefault(); $("#btnKompAnlegen").click(); }
+});
+
+/* --- Ebene 2: Ansehen + Stufen/Kriterien pflegen --- */
+function renderKompAnsicht(r, k){
+  unterkopf($("#tbKomp"), {
+    zurueck: () => kompGo("liste"), zurueckText: "Kompetenzen",
+    titel: r.titel || "Raster",
+    sub: k ? "Klasse " + k.name : "",
+    aktion: stiftBtn("Raster bearbeiten", () => kompDialog(r))
+  });
+  const alle = alleKriterien(r);
+  const fo = kompRasterFortschritt(r, k);
+  const tiles = $("#kompTiles"); tiles.innerHTML = "";
+  [["abgehakt", fo.gesetzt + "/" + fo.gesamt],
+   ["Kriterien", alle.length],
+   ["Stufen", (r.stufen || []).length]].forEach(x => {
+    const d = document.createElement("div"); d.className = "tile";
+    d.innerHTML = "<b>" + x[1] + "</b><span>" + x[0] + "</span>";
+    tiles.appendChild(d);
+  });
+
+  renderStufenListe(r);
+
+  const tab = $("#tblKomp");
+  const kopf = tab.querySelector("thead"), leib = tab.querySelector("tbody");
+  kopf.innerHTML = ""; leib.innerHTML = "";
+  if(!k) return;
+  let hr = '<tr><th class="links">Nr.</th>';
+  (r.stufen || []).forEach(s => { hr += "<th>" + esc(s.titel) + "</th>"; });
+  hr += "<th>Stufe</th></tr>";
+  kopf.innerHTML = hr;
+  for(let i = 1; i <= k.count; i++){
+    let zeile = '<td class="links">' + i +
+      (k.labels[i] ? ' <span class="mini">' + esc(k.labels[i]) + "</span>" : "") + "</td>";
+    (r.stufen || []).forEach(s => {
+      const ok = stufeVollstaendig(s, r, i);
+      const anz = s.kriterien.filter(kr => kriteriumErreicht(r, i, kr)).length;
+      zeile += "<td>" + (ok ? "✓" : (s.kriterien.length ? anz + "/" + s.kriterien.length : "–")) + "</td>";
+    });
+    const stufeNr = rasterKindStufe(r, i);
+    zeile += '<td class="stark">' + (stufeNr ? stufeNr : "–") + "</td>";
+    const tr = document.createElement("tr");
+    tr.innerHTML = zeile;
+    tr.addEventListener("click", () => { db.ui.komprasterNr = i; kompGo("erfassen"); });
+    tr.style.cursor = "pointer";
+    leib.appendChild(tr);
+  }
+}
+function kompDialog(r){
+  openModal({
+    titel: "Raster bearbeiten",
+    text: "Stufen und Kriterien änderst du weiter unten in der Raster-Ansicht.",
+    felder: [{key:"titel", label:"Titel", wert:r.titel}],
+    onOk: w => {
+      const ti = (w.titel || "").trim();
+      if(!ti){ toast("Titel fehlt"); return false; }
+      r.titel = ti;
+      save(); renderStunde(); toast("Gespeichert");
+    }
+  });
+}
+$("#btnKompErfassen").addEventListener("click", () => kompGo("erfassen"));
+$("#btnKompDel").addEventListener("click", () => {
+  const r = kompraster(db.ui.komprasterId);
+  if(!r){ toast("Kein Raster gewählt"); return; }
+  const k = klasse(r.klasseId);
+  const fo = kompRasterFortschritt(r, k);
+  frageLoeschen("Raster „" + (r.titel || "ohne Titel") + "“ löschen?",
+    fo.gesetzt ? "Die " + fo.gesetzt + " Eintragungen darin gehen verloren."
+               : "Das Raster ist noch leer.",
+    () => {
+      db.kompetenzraster = db.kompetenzraster.filter(x => x.id !== r.id);
+      db.ui.komprasterId = null;
+      save(); kompGo("liste"); toastUndo("Raster gelöscht");
+    });
+});
+
+/* Kriterien-Chips ohne die Skala/Text-Markierung der Tests – hier ist
+   jedes Kriterium gleich: entweder erreicht oder nicht. */
+function stufeKritChips(hostEl, liste, entfernen){
+  hostEl.innerHTML = "";
+  if(!liste.length){
+    const p = document.createElement("div");
+    p.className = "dupempty";
+    p.textContent = "Noch kein Kriterium.";
+    hostEl.appendChild(p);
+    return;
+  }
+  liste.forEach((kr, i) => {
+    const chip = document.createElement("span");
+    chip.className = "kritchip";
+    chip.textContent = kr.name;
+    const weg = document.createElement("button");
+    weg.className = "weg"; weg.type = "button";
+    weg.setAttribute("aria-label", "„" + kr.name + "“ entfernen");
+    weg.textContent = "✕";
+    weg.addEventListener("click", () => entfernen(i));
+    chip.appendChild(weg);
+    hostEl.appendChild(chip);
+  });
+}
+function renderStufenListe(r){
+  const box = $("#stufenListe"); box.innerHTML = "";
+  if(!r.stufen.length){
+    const p = document.createElement("p");
+    p.className = "hint"; p.textContent = "Noch keine Stufe angelegt.";
+    box.appendChild(p);
+    return;
+  }
+  r.stufen.forEach((stufe, si) => {
+    if(si > 0){
+      const sep = document.createElement("div");
+      sep.className = "sep";
+      box.appendChild(sep);
+    }
+    const kopf = document.createElement("div");
+    kopf.className = "rowline";
+    kopf.style.cssText = "padding-top:" + (si === 0 ? "0" : "11px") + ";border-bottom:0";
+    kopf.innerHTML = '<h3 style="font-size:14px">' + esc(stufe.titel) + "</h3>";
+    const weg = document.createElement("button");
+    weg.className = "iconbtn"; weg.type = "button";
+    weg.setAttribute("aria-label", "Stufe „" + stufe.titel + "“ entfernen");
+    weg.textContent = "✕";
+    weg.addEventListener("click", () => {
+      merkeStand();
+      r.stufen.splice(si, 1);
+      save(); renderStunde();
+      toastUndo("Stufe „" + stufe.titel + "“ entfernt");
+    });
+    kopf.appendChild(weg);
+    box.appendChild(kopf);
+
+    const zeile = document.createElement("div");
+    zeile.style.cssText = "display:flex;gap:8px";
+    const inp = document.createElement("input");
+    inp.type = "text"; inp.placeholder = "weiteres Kriterium";
+    const add = document.createElement("button");
+    add.className = "act neutral mini"; add.type = "button"; add.textContent = "Hinzufügen";
+    const hinzufuegen = () => {
+      const name = inp.value.trim();
+      if(!name){ toast("Erst einen Namen eintippen"); return; }
+      if(stufe.kriterien.length >= 12){ toast("Zwölf Kriterien sind genug"); return; }
+      stufe.kriterien.push({id:uid(), name:name.slice(0,60)});
+      save(); renderStunde();
+    };
+    add.addEventListener("click", hinzufuegen);
+    inp.addEventListener("keydown", ev => { if(ev.key === "Enter"){ ev.preventDefault(); hinzufuegen(); } });
+    zeile.appendChild(inp); zeile.appendChild(add);
+    box.appendChild(zeile);
+
+    const chiprow = document.createElement("div");
+    chiprow.className = "chiprow"; chiprow.style.marginTop = "10px";
+    box.appendChild(chiprow);
+    stufeKritChips(chiprow, stufe.kriterien, i => {
+      const kr = stufe.kriterien[i];
+      merkeStand();
+      stufe.kriterien.splice(i, 1);
+      Object.keys(r.erreicht).forEach(nr => { if(r.erreicht[nr]) delete r.erreicht[nr][kr.id]; });
+      save(); renderStunde();
+      toastUndo("„" + kr.name + "“ entfernt");
+    });
+  });
+}
+$("#btnStufeAdd").addEventListener("click", () => {
+  const r = kompraster(db.ui.komprasterId); if(!r) return;
+  const name = $("#skStufe").value.trim();
+  if(!name){ toast("Erst einen Namen eintippen"); return; }
+  r.stufen.push({id:uid(), titel:name.slice(0,60), kriterien:[]});
+  $("#skStufe").value = "";
+  save(); renderStunde();
+  toast("Stufe „" + name + "“ angelegt");
+});
+$("#skStufe").addEventListener("keydown", ev => {
+  if(ev.key === "Enter"){ ev.preventDefault(); $("#btnStufeAdd").click(); }
+});
+
+/* --- Ebene 3: Bewerten – ein Kind, alle Stufen --- */
+function renderKompErfassen(r, k){
+  unterkopf($("#tbKompErf"), {
+    zurueck: () => kompGo("ansicht"), zurueckText: "Raster",
+    titel: "Bewerten", sub: r.titel || "Raster"
+  });
+  const kacheln = $("#stufenKacheln");
+  kacheln.innerHTML = "";
+  if(!k){ $("#kmpProgress").textContent = ""; return; }
+  let nr = parseInt(db.ui.komprasterNr, 10) || 1;
+  if(nr < 1) nr = 1;
+  if(nr > k.count) nr = k.count;
+  db.ui.komprasterNr = nr;
+
+  const sel = $("#kmpKind");
+  sel.innerHTML = "";
+  for(let i = 1; i <= k.count; i++){
+    const o = document.createElement("option");
+    o.value = i;
+    const stufeNr = rasterKindStufe(r, i);
+    o.textContent = "Nr. " + i + (k.labels[i] ? " · " + k.labels[i] : "") +
+      (stufeNr ? "  · Stufe " + stufeNr : "");
+    if(i === nr) o.selected = true;
+    sel.appendChild(o);
+  }
+  $("#btnKmpKindZurueck").disabled = nr <= 1;
+  $("#btnKmpKindVor").disabled = nr >= k.count;
+  $("#btnKompWeiter").disabled = nr >= k.count;
+
+  kompProgressText(r, k, nr);
+
+  if(!r.stufen.length){
+    kacheln.innerHTML = '<p class="hint">Noch keine Stufe angelegt – das geht in der Raster-' +
+      'Ansicht unter „Stufen &amp; Kriterien ändern“.</p>';
+    return;
+  }
+  r.stufen.forEach(stufe => kacheln.appendChild(stufenKachel(r, k, nr, stufe)));
+}
+function kompProgressText(r, k, nr){
+  const alle = alleKriterien(r);
+  const gesetzt = alle.filter(kr => kriteriumErreicht(r, nr, kr)).length;
+  const stufeNr = rasterKindStufe(r, nr);
+  $("#kmpProgress").innerHTML = "Kind <b>" + nr + " von " + k.count + "</b> · " +
+    "hier <b>" + gesetzt + "/" + alle.length + "</b> abgehakt" +
+    (stufeNr ? " · Stufe <b>" + stufeNr + "</b> erreicht" : "");
+}
+function kompKopfAuffrischen(r, k, nr){
+  const sel = $("#kmpKind");
+  Array.prototype.forEach.call(sel.options, (o, idx) => {
+    const i = idx + 1;
+    const stufeNr = rasterKindStufe(r, i);
+    o.textContent = "Nr. " + i + (k.labels[i] ? " · " + k.labels[i] : "") +
+      (stufeNr ? "  · Stufe " + stufeNr : "");
+  });
+  kompProgressText(r, k, nr);
+}
+/* Eine Stufe als Kachel: Kopf mit Stufenname + Status, darunter jedes
+   Kriterium als antippbare Häkchen-Zeile – dieselbe Bauart wie eine
+   To-do-Zeile, weil ein Kriterium hier genau das ist: erledigt oder nicht. */
+function stufenKachel(r, k, nr, stufe){
+  const karte = document.createElement("div");
+  karte.className = "card kritkachel";
+  const kopf = document.createElement("div");
+  kopf.className = "kk-kopf";
+  const fertig = stufeVollstaendig(stufe, r, nr);
+  kopf.innerHTML = '<div class="kk-name">' + esc(stufe.titel) + "</div>" +
+    '<div class="kk-typ">' + (fertig ? "erreicht" : "offen") + "</div>";
+  karte.appendChild(kopf);
+  if(!stufe.kriterien.length){
+    const p = document.createElement("p");
+    p.className = "hint"; p.textContent = "Noch kein Kriterium in dieser Stufe.";
+    karte.appendChild(p);
+    return karte;
+  }
+  if(!r.erreicht[nr]) r.erreicht[nr] = {};
+  stufe.kriterien.forEach(kr => {
+    const zeile = document.createElement("div");
+    zeile.className = "todozeile";
+    const datum = r.erreicht[nr][kr.id];
+    const haken = document.createElement("button");
+    haken.className = "haken" + (datum ? " an" : "");
+    haken.type = "button";
+    haken.textContent = datum ? "✓" : "";
+    haken.setAttribute("aria-label", (datum ? "„" + kr.name + "“ nicht mehr erreicht"
+                                             : "„" + kr.name + "“ erreicht"));
+    haken.addEventListener("click", () => {
+      if(r.erreicht[nr][kr.id]) delete r.erreicht[nr][kr.id];
+      else r.erreicht[nr][kr.id] = heute();
+      save();
+      karte.replaceWith(stufenKachel(r, k, nr, stufe));
+      kompKopfAuffrischen(r, k, nr);
+    });
+    zeile.appendChild(haken);
+    const txt = document.createElement("div");
+    txt.className = "ttext";
+    txt.style.cursor = "default";
+    txt.innerHTML = "<b style=\"font-weight:600\">" + esc(kr.name) + "</b>" +
+      (datum ? '<span class="mini">erreicht am ' + deDate(datum) + "</span>" : "");
+    zeile.appendChild(txt);
+    karte.appendChild(zeile);
+  });
+  return karte;
+}
+function kompKindWechsel(schritt){
+  const r = kompraster(db.ui.komprasterId), k = klasse(db.ui.klasseId);
+  if(!r || !k) return;
+  let nr = (parseInt(db.ui.komprasterNr, 10) || 1) + schritt;
+  if(nr < 1 || nr > k.count) return;
+  db.ui.komprasterNr = nr;
+  save(); renderKompErfassen(r, k); window.scrollTo(0,0);
+}
+$("#btnKmpKindZurueck").addEventListener("click", () => kompKindWechsel(-1));
+$("#btnKmpKindVor").addEventListener("click", () => kompKindWechsel(1));
+$("#kmpKind").addEventListener("change", ev => {
+  const r = kompraster(db.ui.komprasterId), k = klasse(db.ui.klasseId);
+  if(!r || !k) return;
+  db.ui.komprasterNr = parseInt(ev.target.value, 10) || 1;
+  save(); renderKompErfassen(r, k); window.scrollTo(0,0);
+});
+$("#btnKompWeiter").addEventListener("click", () => kompKindWechsel(1));
+$("#btnKompFertig").addEventListener("click", () => kompGo("ansicht"));
+
 /* ---------- Übersicht ---------- */
 /* Wie viele der jüngsten dokumentierten Stunden in Folge k oder v haben – hilfreich
    als früher Hinweis, etwa für ein Elterngespräch. Bricht an der ersten Stunde ohne
@@ -7611,6 +8141,7 @@ function fachDialog(f){
         db.faecher = db.faecher.filter(x => x.id !== f.id);
         db.stunden.forEach(s => { if(s.fachId === f.id) s.fachId = null; });
         db.tests.forEach(t => { if(t.fachId === f.id) t.fachId = null; });
+        db.kompetenzraster.forEach(r => { if(r.fachId === f.id) r.fachId = null; });
         if(db.plan && Array.isArray(db.plan.slots))
           db.plan.slots.forEach(s => { if(s.fachId === f.id) s.fachId = null; });
         pruefeAuswahl();
@@ -7643,6 +8174,7 @@ $("#btnFachAdd").addEventListener("click", () => {
   if(erstes){
     db.stunden.forEach(s => { if(!s.fachId) s.fachId = f.id; });
     db.tests.forEach(t => { if(!t.fachId) t.fachId = f.id; });
+    db.kompetenzraster.forEach(r => { if(!r.fachId) r.fachId = f.id; });
   }
   if(!db.ui.fachId) db.ui.fachId = f.id;
   closeFachSheet();
@@ -8983,7 +9515,7 @@ function renderStoreInfo(){
   if(info){
     info.textContent = storageOk
       ? (db.klassen.length + " Klassen · " + db.stunden.length + " Stunden · " +
-         db.tests.length + " Tests · " +
+         db.tests.length + " Tests · " + db.kompetenzraster.length + " Raster · " +
          Math.round(size/1024*10)/10 + " KB " +
          (idbBereit ? "in der Datenbank dieses Browsers" : "im Speicher dieses Browsers"))
       : "Achtung: Dieser Browser speichert nichts (privater Modus?). Bitte sofort sichern.";
@@ -9317,10 +9849,10 @@ const TOUR_KATEGORIEN = [
         text:"Unter „Stunden“ siehst du alle bisher erfassten Stunden als Liste – praktisch zum Nachschlagen, und um eine Eintragung nachträglich zu ändern oder zu löschen. Wichtig: Angezeigte Stunden richten sich nach der oben gewählten Klasse und dem gewählten Fach!",
         ziel:'#stdSeg button[data-b="stunden"]',
         vor: () => { closeStdSheet(); db.ui.bereich = "stunden"; goView("stunde"); } },
-      { titel:"Tests erstellen",
-        text:"Unter „Tests“ legst du einen Beobachtungsbogen mit eigenen Kriterien an – als Skala von 1 bis 6 oder als freier Text, etwa die Höhe beim Hochsprung. Der Testschnitt bleibt getrennt vom Mitarbeitsschnitt.",
-        ziel:'#stdSeg button[data-b="tests"]',
-        vor: () => { db.ui.bereich = "tests"; goView("stunde"); } }
+      { titel:"Leistung: Tests und Kompetenzen",
+        text:"Unter „Leistung“ steckt beides: Tests legen einen Beobachtungsbogen mit eigenen Kriterien an – als Skala von 1 bis 6 oder als freier Text, etwa die Höhe beim Hochsprung. Kompetenzen sind für Fähigkeiten gedacht, die über Wochen einzeln abgehakt werden, etwa Schwimmabzeichen – Loewi zeigt dann, welche Stufe ein Kind erreicht hat.",
+        ziel:'#stdSeg button[data-b="leistung"]',
+        vor: () => { db.ui.bereich = "leistung"; goView("stunde"); } }
     ]
   },
   {
