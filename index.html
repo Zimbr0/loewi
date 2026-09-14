@@ -1262,7 +1262,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
     <!-- Ebene 2: Test ansehen -->
     <div id="tstAnsicht" style="display:none">
       <div class="topbar" id="tbTest"></div>
-      <div class="card">
+      <div id="tstTabelleWrap">
         <div style="overflow-x:auto">
           <table class="ttab" id="tblTest"><thead></thead><tbody></tbody><tfoot></tfoot></table>
         </div>
@@ -1293,7 +1293,6 @@ body.vertmodus .stundenkarte{cursor:pointer}
 
     <!-- Ebene 3: Bewerten -->
     <div id="tstErfassen" style="display:none">
-      <div class="topbar" id="tbTestErf"></div>
       <div class="card">
         <label class="lbl" for="tstKind">Kind</label>
         <div class="kindwahl">
@@ -1325,7 +1324,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
     <!-- Ebene 2: Raster ansehen -->
     <div id="kmpAnsicht" style="display:none">
       <div class="topbar" id="tbKomp"></div>
-      <div class="card">
+      <div id="kmpTabelleWrap">
         <div style="overflow-x:auto">
           <table class="ttab" id="tblKomp"><thead></thead><tbody></tbody><tfoot></tfoot></table>
         </div>
@@ -1350,8 +1349,6 @@ body.vertmodus .stundenkarte{cursor:pointer}
 
     <!-- Ebene 3: Bewerten -->
     <div id="kmpErfassen" style="display:none">
-      <div class="topbar" id="tbKompErf"></div>
-
       <div class="segrow klein" id="kmpErfSeg">
         <span class="pille" id="kmpErfPille"></span>
         <button data-m="kind" class="on">Nach Kind</button>
@@ -3444,7 +3441,11 @@ function topbar(el, opt){
 /* Überschrift eines Bereichs – überall gleich aufgebaut.
    verbunden:true lässt die Karte direkt in das nächste .card (mit der
    Klasse kette-oben) übergehen, ohne Lücke dazwischen. */
-function seitenkopf(el, titel, unter, aktion, verbunden){
+/* "inhalt" ist optional: ein Element (z. B. die Tabelle mitsamt Hinweis),
+   das direkt in dieselbe Karte kommt statt in eine eigene, per kette-oben
+   nur optisch angehängte Karte – wie bei der Klassenliste (#sumKopf), wo
+   Kopf und Tabelle eine einzige Karte sind. */
+function seitenkopf(el, titel, unter, aktion, verbunden, inhalt){
   el.innerHTML = "";
   el.classList.remove("topbar");
   const karte = document.createElement("div");
@@ -3455,6 +3456,12 @@ function seitenkopf(el, titel, unter, aktion, verbunden){
     (unter ? '<div class="mini">' + esc(unter) + "</div>" : "") + "</div>";
   if(aktion) kopf.appendChild(aktion);
   karte.appendChild(kopf);
+  if(inhalt){
+    const sinhalt = document.createElement("div");
+    sinhalt.className = "sinhalt";
+    sinhalt.appendChild(inhalt);
+    karte.appendChild(sinhalt);
+  }
   el.appendChild(karte);
 }
 
@@ -3476,7 +3483,7 @@ function unterkopf(el, opt){
   }
   const halter = document.createElement("div");
   el.appendChild(halter);
-  seitenkopf(halter, opt.titel || "", opt.sub || "", opt.aktion, opt.verbunden);
+  seitenkopf(halter, opt.titel || "", opt.sub || "", opt.aktion, opt.verbunden, opt.inhalt);
 }
 
 /* kleiner Stift-Knopf für die Kopfzeile */
@@ -6283,7 +6290,8 @@ function renderTestAnsicht(t, k){
     sub: deDate(t.datum) + (k ? " · Klasse " + k.name : ""),
     aktion: kopfKnoepfe(
       plusBtn("Kriterien bearbeiten", () => tstGo("kriterien")),
-      stiftBtn("Test bearbeiten", () => testDialog(t)))
+      stiftBtn("Test bearbeiten", () => testDialog(t))),
+    inhalt: $("#tstTabelleWrap")
   });
   const tab = $("#tblTest");
   const kopf = tab.querySelector("thead"), leib = tab.querySelector("tbody"),
@@ -6526,10 +6534,6 @@ function kritZeile(kr, i, liste, opt){
    So läuft die Beobachtung in der Halle: Man schaut sich ein Kind an und geht
    dessen Kriterien durch, nicht umgekehrt. */
 function renderTestErfassen(t, k){
-  unterkopf($("#tbTestErf"), {
-    zurueck: () => tstGo("ansicht"), zurueckText: "Test",
-    titel: "Bewerten", sub: (t.titel || "Test") + " · " + deDate(t.datum)
-  });
   const kacheln = $("#kritKacheln");
   kacheln.innerHTML = "";
   if(!k){ $("#tstProgress").textContent = ""; return; }
@@ -6840,7 +6844,8 @@ function renderKompAnsicht(r, k){
     sub: k ? "Klasse " + k.name : "",
     aktion: kopfKnoepfe(
       plusBtn("Stufen bearbeiten", () => kompGo("kriterien")),
-      stiftBtn("Raster bearbeiten", () => kompDialog(r)))
+      stiftBtn("Raster bearbeiten", () => kompDialog(r))),
+    inhalt: $("#kmpTabelleWrap")
   });
   const tab = $("#tblKomp");
   const kopf = tab.querySelector("thead"), leib = tab.querySelector("tbody"),
@@ -7085,10 +7090,6 @@ document.querySelectorAll("#kmpErfSeg button").forEach(b => {
   });
 });
 function renderKompErfassen(r, k){
-  unterkopf($("#tbKompErf"), {
-    zurueck: () => kompGo("ansicht"), zurueckText: "Raster",
-    titel: "Bewerten", sub: r.titel || "Raster"
-  });
   const modus = db.ui.kompErfModus || "kind";
   document.querySelectorAll("#kmpErfSeg button").forEach(b => {
     b.classList.toggle("on", b.dataset.m === modus);
