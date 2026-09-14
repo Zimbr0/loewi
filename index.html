@@ -211,6 +211,9 @@ textarea{resize:vertical;min-height:52px}
   transition:transform .06s ease, background .12s ease, color .12s ease}
 .btn:active{transform:scale(.94)}
 .btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.on.plus{background:var(--good);border-color:var(--good)}
+.btn.on.minus{background:var(--bad);border-color:var(--bad)}
+.btn.on.o{background:var(--warn);border-color:var(--warn)}
 .btn.on.k{background:var(--bad);border-color:var(--bad)}
 .btn.on.v{background:var(--warn);border-color:var(--warn)}
 .btn.small{flex:0 0 44px;font-size:15px}
@@ -4115,7 +4118,8 @@ function kidRow(k, s, i){
   seg.className = "seg";
   MITARBEIT.forEach(m => {
     const b = document.createElement("button");
-    b.className = "btn" + (e.m === m ? " on" : "") + (e.k ? " dim" : "");
+    const markKlasse = m === "+" ? "plus" : (m === "-" ? "minus" : "o");
+    b.className = "btn " + markKlasse + (e.m === m ? " on" : "") + (e.k ? " dim" : "");
     b.textContent = m === "-" ? "–" : m;
     b.setAttribute("aria-label", "Mitarbeit " + m);
     b.addEventListener("click", () => {
@@ -8854,11 +8858,14 @@ function klassePaket(k){
   const stunden = alleStundenVon(k.id).map(s => Object.assign({}, s, {fachName: fachName(s.fachId)}));
   const tests = db.tests.filter(t => t.klasseId === k.id)
     .map(t => Object.assign({}, t, {fachName: fachName(t.fachId)}));
+  const kompetenzraster = db.kompetenzraster.filter(r => r.klasseId === k.id)
+    .map(r => Object.assign({}, r, {fachName: fachName(r.fachId)}));
   return {
     typ: KLASSE_TYP, version: 1, erstellt: heute(),
     klasse: {idQuelle:k.id, name:k.name, count:k.count, labels:k.labels || {}, befreit:k.befreit || {}},
     stunden: stunden,
     tests: tests,
+    kompetenzraster: kompetenzraster,
     beobachtungen: beobListe().filter(b => b.klasseId === k.id),
     gesundheit: gesundheitListe().filter(g => g.klasseId === k.id),
     vorfaelle: vorfaelleListe().filter(v => (v.beteiligte || []).some(b => b.klasseId === k.id))
@@ -8911,9 +8918,12 @@ function klasseEinlesenWahl(paket){
   if(!vorhanden){ klasseEinlesen(paket, null, "ersetzen"); return; }
   openModal({
     titel: "Klasse „" + titel + "“ gibt es schon",
-    text: "„Ersetzen“ überschreibt alle Stunden, Tests, Beobachtungen, Gesundheitshinweise " +
-          "und Vorfälle dieser Klasse mit dem Inhalt der Datei. „Aktualisieren“ ergänzt nur, " +
-          "was noch fehlt – Vorhandenes bleibt unverändert.",
+    text: "„Ersetzen“ überschreibt alle Stunden, Tests, Kompetenzraster, Beobachtungen, " +
+          "Gesundheitshinweise und Vorfälle dieser Klasse mit dem Inhalt der Datei. " +
+          "„Aktualisieren“ ergänzt nur, was noch fehlt – Vorhandenes bleibt unverändert. Bei " +
+          "Kompetenzraster gilt das bis auf die einzelne Eintragung: Hat eine andere Lehrkraft " +
+          "in derselben Stunde andere Kriterien bei denselben Kindern abgehakt, kommen die dazu, " +
+          "ohne bereits Vorhandenes zu überschreiben.",
     felder:[{key:"modus", label:"Vorgehen", typ:"select", wert:"aktualisieren",
       optionen:[
         {value:"aktualisieren", label:"Klasseneinträge aktualisieren"},
@@ -8922,6 +8932,50 @@ function klasseEinlesenWahl(paket){
     okText:"Einlesen",
     onOk: w => { klasseEinlesen(paket, vorhanden, w.modus || "aktualisieren"); }
   });
+}
+
+/* Führt ein importiertes Kompetenzraster mit einem gleichnamigen lokalen
+   zusammen (auch für ein frisch angelegtes Ziel-Raster genutzt – dann läuft
+   einfach alles als "neu" durch). Stufen und Kriterien werden über den Namen
+   abgeglichen, weil Ids je Gerät eigenständig sind. Bei "erreicht" gewinnt
+   nie der Import: ein schon lokal gesetztes Datum bleibt stehen, nur echte
+   Lücken werden aus der Datei aufgefüllt – genau der Fall, wenn zwei
+   Lehrkräfte in derselben Stunde bei denselben Kindern unterschiedliche
+   Kriterien abgehakt haben. */
+function kompRasterMerge(lokal, importiert){
+  let neu = 0, ergaenzt = 0;
+  const idMap = {};
+  (importiert.stufen || []).forEach(impStufe => {
+    let lokStufe = lokal.stufen.find(s =>
+      (s.titel || "").trim().toLowerCase() === (impStufe.titel || "").trim().toLowerCase());
+    if(!lokStufe){
+      lokStufe = {id:uid(), titel:(impStufe.titel || "").slice(0, KRIT_MAX), kriterien:[]};
+      lokal.stufen.push(lokStufe);
+    }
+    (impStufe.kriterien || []).forEach(impKr => {
+      let lokKr = lokStufe.kriterien.find(kr =>
+        (kr.name || "").trim().toLowerCase() === (impKr.name || "").trim().toLowerCase());
+      if(!lokKr){
+        lokKr = {id:uid(), name:(impKr.name || "").slice(0, KRIT_MAX)};
+        lokStufe.kriterien.push(lokKr);
+        neu++;
+      }
+      idMap[impKr.id] = lokKr.id;
+    });
+  });
+  Object.keys(importiert.erreicht || {}).forEach(nr => {
+    const impWerte = importiert.erreicht[nr] || {};
+    Object.keys(impWerte).forEach(impKrId => {
+      const lokKrId = idMap[impKrId];
+      if(!lokKrId) return;
+      if(!lokal.erreicht[nr]) lokal.erreicht[nr] = {};
+      if(!lokal.erreicht[nr][lokKrId]){
+        lokal.erreicht[nr][lokKrId] = impWerte[impKrId];
+        ergaenzt++;
+      }
+    });
+  });
+  return {neu:neu, ergaenzt:ergaenzt};
 }
 
 function klasseEinlesen(paket, vorhanden, modus){
@@ -8940,6 +8994,7 @@ function klasseEinlesen(paket, vorhanden, modus){
     k.befreit = Object.assign({}, p.klasse.befreit || {});
     db.stunden = db.stunden.filter(s => s.klasseId !== k.id);
     db.tests = db.tests.filter(t => t.klasseId !== k.id);
+    db.kompetenzraster = db.kompetenzraster.filter(r => r.klasseId !== k.id);
     db.beobachtungen = beobListe().filter(b => b.klasseId !== k.id);
     db.gesundheit = gesundheitListe().filter(g => g.klasseId !== k.id);
     db.vorfaelle = vorfaelleListe().filter(v => !(v.beteiligte || []).some(b => b.klasseId === k.id));
@@ -8949,7 +9004,7 @@ function klasseEinlesen(paket, vorhanden, modus){
     Object.keys(p.klasse.befreit || {}).forEach(nr => { if(!k.befreit[nr]) k.befreit[nr] = p.klasse.befreit[nr]; });
   }
 
-  const zaehler = {stunden:0, tests:0, beobachtungen:0, gesundheit:0, vorfaelle:0};
+  const zaehler = {stunden:0, tests:0, kompetenzraster:0, beobachtungen:0, gesundheit:0, vorfaelle:0};
 
   (p.stunden || []).forEach(quelle => {
     const fachObj = quelle.fachName ? fachFindOrCreate(quelle.fachName) : null;
@@ -8986,6 +9041,24 @@ function klasseEinlesen(paket, vorhanden, modus){
       titel:quelle.titel || "", kriterien:quelle.kriterien || [], noten:quelle.noten || {},
       notizen:quelle.notizen || {}, t:quelle.t || Date.now()});
     zaehler.tests++;
+  });
+
+  (p.kompetenzraster || []).forEach(quelle => {
+    const fachObj = quelle.fachName ? fachFindOrCreate(quelle.fachName) : null;
+    const fid = fachObj ? fachObj.id : null;
+    const titel = quelle.titel || "";
+    let ziel = null;
+    if(modus === "aktualisieren"){
+      ziel = db.kompetenzraster.find(r => r.klasseId === k.id && (r.fachId || null) === fid &&
+        (r.titel || "").trim().toLowerCase() === titel.trim().toLowerCase());
+    }
+    if(!ziel){
+      ziel = {id:uid(), klasseId:k.id, fachId:fid, titel:titel.slice(0, KRIT_MAX),
+              stufen:[], erreicht:{}, t:quelle.t || Date.now()};
+      db.kompetenzraster.push(ziel);
+    }
+    const ergebnis = kompRasterMerge(ziel, quelle);
+    if(ergebnis.neu || ergebnis.ergaenzt) zaehler.kompetenzraster += ergebnis.ergaenzt || 1;
   });
 
   (p.beobachtungen || []).forEach(quelle => {
@@ -9035,6 +9108,9 @@ function klasseEinlesenZusammenfassung(modus, k, zaehler){
   const teile = [];
   if(zaehler.stunden) teile.push(zaehler.stunden + (zaehler.stunden === 1 ? " Stunde" : " Stunden"));
   if(zaehler.tests) teile.push(zaehler.tests + (zaehler.tests === 1 ? " Test" : " Tests"));
+  if(zaehler.kompetenzraster)
+    teile.push(zaehler.kompetenzraster + (zaehler.kompetenzraster === 1
+      ? " Kompetenz-Eintragung" : " Kompetenz-Eintragungen"));
   if(zaehler.beobachtungen)
     teile.push(zaehler.beobachtungen + " Beobachtung" + (zaehler.beobachtungen === 1 ? "" : "en"));
   if(zaehler.gesundheit)
