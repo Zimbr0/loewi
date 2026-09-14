@@ -8921,9 +8921,9 @@ function klasseEinlesenWahl(paket){
     text: "„Ersetzen“ überschreibt alle Stunden, Tests, Kompetenzraster, Beobachtungen, " +
           "Gesundheitshinweise und Vorfälle dieser Klasse mit dem Inhalt der Datei. " +
           "„Aktualisieren“ ergänzt nur, was noch fehlt – Vorhandenes bleibt unverändert. Bei " +
-          "Kompetenzraster gilt das bis auf die einzelne Eintragung: Hat eine andere Lehrkraft " +
-          "in derselben Stunde andere Kriterien bei denselben Kindern abgehakt, kommen die dazu, " +
-          "ohne bereits Vorhandenes zu überschreiben.",
+          "Tests und Kompetenzraster gilt das bis auf die einzelne Note bzw. Eintragung: Hat " +
+          "eine andere Lehrkraft in derselben Stunde andere Kinder oder Kriterien erfasst, " +
+          "kommt das dazu, ohne bereits Vorhandenes zu überschreiben.",
     felder:[{key:"modus", label:"Vorgehen", typ:"select", wert:"aktualisieren",
       optionen:[
         {value:"aktualisieren", label:"Klasseneinträge aktualisieren"},
@@ -8932,6 +8932,56 @@ function klasseEinlesenWahl(paket){
     okText:"Einlesen",
     onOk: w => { klasseEinlesen(paket, vorhanden, w.modus || "aktualisieren"); }
   });
+}
+
+/* Führt einen importierten Test mit einem gleichnamigen lokalen zusammen
+   (auch für einen frisch angelegten Ziel-Test genutzt – dann läuft einfach
+   alles als "neu" durch). Kriterien werden über den Namen abgeglichen, weil
+   Ids je Gerät eigenständig sind. Bei den Noten gewinnt nie der Import: eine
+   schon lokal vergebene Note bleibt stehen, nur echte Lücken werden aus der
+   Datei aufgefüllt – der Fall, wenn zwei Lehrkräfte in derselben Stunde
+   unterschiedliche Kinder an denselben Kriterien getestet haben. Notizen
+   werden ergänzt statt überschrieben, falls beide Seiten etwas eingetragen
+   haben. */
+function testMerge(lokal, importiert){
+  let neu = 0, ergaenzt = 0;
+  const idMap = {};
+  (importiert.kriterien || []).forEach(impKr => {
+    let lokKr = lokal.kriterien.find(kr =>
+      (kr.name || "").trim().toLowerCase() === (impKr.name || "").trim().toLowerCase());
+    if(!lokKr){
+      if(lokal.kriterien.length >= 12) return;
+      lokKr = {id:uid(), name:(impKr.name || "").slice(0, KRIT_MAX), typ:impKr.typ || "skala"};
+      lokal.kriterien.push(lokKr);
+      neu++;
+    }
+    idMap[impKr.id] = lokKr.id;
+  });
+  Object.keys(importiert.noten || {}).forEach(nr => {
+    const impWerte = importiert.noten[nr] || {};
+    Object.keys(impWerte).forEach(impKrId => {
+      const lokKrId = idMap[impKrId];
+      if(!lokKrId) return;
+      if(!lokal.noten[nr]) lokal.noten[nr] = {};
+      if(lokal.noten[nr][lokKrId] === undefined){
+        lokal.noten[nr][lokKrId] = impWerte[impKrId];
+        ergaenzt++;
+      }
+    });
+  });
+  Object.keys(importiert.notizen || {}).forEach(nr => {
+    const impText = String(importiert.notizen[nr] || "").trim();
+    if(!impText) return;
+    const lokText = String(lokal.notizen[nr] || "").trim();
+    if(!lokText){
+      lokal.notizen[nr] = impText;
+      ergaenzt++;
+    }else if(lokText !== impText && lokText.indexOf(impText) === -1){
+      lokal.notizen[nr] = lokText + " / " + impText;
+      ergaenzt++;
+    }
+  });
+  return {neu:neu, ergaenzt:ergaenzt};
 }
 
 /* Führt ein importiertes Kompetenzraster mit einem gleichnamigen lokalen
@@ -9028,19 +9078,22 @@ function klasseEinlesen(paket, vorhanden, modus){
   (p.tests || []).forEach(quelle => {
     const fachObj = quelle.fachName ? fachFindOrCreate(quelle.fachName) : null;
     const fid = fachObj ? fachObj.id : null;
+    let ziel = null;
     if(modus === "aktualisieren"){
       const key = (quelle.datum || "") + "|" + (quelle.fachName || "") + "|" + (quelle.titel || "");
-      const gibtsSchon = db.tests.some(t => {
+      ziel = db.tests.find(t => {
         if(t.klasseId !== k.id) return false;
         const tf = fach(t.fachId);
         return (t.datum || "") + "|" + (tf ? tf.name : "") + "|" + (t.titel || "") === key;
       });
-      if(gibtsSchon) return;
     }
-    db.tests.push({id:uid(), klasseId:k.id, fachId:fid, datum:quelle.datum || heute(),
-      titel:quelle.titel || "", kriterien:quelle.kriterien || [], noten:quelle.noten || {},
-      notizen:quelle.notizen || {}, t:quelle.t || Date.now()});
-    zaehler.tests++;
+    if(!ziel){
+      ziel = {id:uid(), klasseId:k.id, fachId:fid, datum:quelle.datum || heute(),
+              titel:quelle.titel || "", kriterien:[], noten:{}, notizen:{}, t:quelle.t || Date.now()};
+      db.tests.push(ziel);
+    }
+    const ergebnis = testMerge(ziel, quelle);
+    if(ergebnis.neu || ergebnis.ergaenzt) zaehler.tests += ergebnis.ergaenzt || 1;
   });
 
   (p.kompetenzraster || []).forEach(quelle => {
@@ -9107,7 +9160,8 @@ function klasseEinlesen(paket, vorhanden, modus){
 function klasseEinlesenZusammenfassung(modus, k, zaehler){
   const teile = [];
   if(zaehler.stunden) teile.push(zaehler.stunden + (zaehler.stunden === 1 ? " Stunde" : " Stunden"));
-  if(zaehler.tests) teile.push(zaehler.tests + (zaehler.tests === 1 ? " Test" : " Tests"));
+  if(zaehler.tests)
+    teile.push(zaehler.tests + (zaehler.tests === 1 ? " Test-Eintragung" : " Test-Eintragungen"));
   if(zaehler.kompetenzraster)
     teile.push(zaehler.kompetenzraster + (zaehler.kompetenzraster === 1
       ? " Kompetenz-Eintragung" : " Kompetenz-Eintragungen"));
