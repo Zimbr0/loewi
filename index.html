@@ -1385,6 +1385,9 @@ body.vertmodus .stundenkarte{cursor:pointer}
           <div class="mini" id="kmpKritProgress" style="margin-top:10px"></div>
         </div>
         <div class="card">
+          <div class="actions" style="margin-bottom:10px">
+            <button class="act neutral mini" id="btnKompAlleErreicht" style="width:100%">Alle haben es erreicht!</button>
+          </div>
           <div id="kmpKlassenListe"></div>
         </div>
         <div class="actions" style="margin-bottom:12px">
@@ -7190,6 +7193,28 @@ $("#kmpKritWahl").addEventListener("change", ev => {
 });
 $("#btnKompKritWeiter").addEventListener("click", () => kmpKritWechsel(1));
 $("#btnKompKritFertig").addEventListener("click", () => kompGo("ansicht"));
+/* Für den Fall, dass wirklich die ganze Klasse eine Fähigkeit schon kann –
+   bestehende Daten (wer es schon früher erreicht hat) bleiben unangetastet,
+   nur die offenen Kinder bekommen das heutige Datum. */
+$("#btnKompAlleErreicht").addEventListener("click", () => {
+  const r = kompraster(db.ui.komprasterId), k = klasse(db.ui.klasseId);
+  if(!r || !k) return;
+  const paare = alleKriterienMitStufe(r);
+  const paar = paare.find(p => p.kr.id === db.ui.komprasterKritId);
+  if(!paar) return;
+  const kr = paar.kr;
+  let offen = 0;
+  for(let i = 1; i <= k.count; i++){ if(!kriteriumErreicht(r, i, kr)) offen++; }
+  if(!offen){ toast("Schon alle erreicht"); return; }
+  merkeStand();
+  const heuteIso = heute();
+  for(let i = 1; i <= k.count; i++){
+    if(!r.erreicht[i]) r.erreicht[i] = {};
+    if(!r.erreicht[i][kr.id]) r.erreicht[i][kr.id] = heuteIso;
+  }
+  save(); renderKompErfKriterium(r, k);
+  toastUndo(offen + (offen === 1 ? " Kind" : " Kinder") + " ergänzt");
+});
 
 /* --- Nach Kind: ein Kind, alle Stufen (bisheriger Weg) --- */
 function renderKompErfKind(r, k){
