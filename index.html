@@ -1351,19 +1351,49 @@ body.vertmodus .stundenkarte{cursor:pointer}
     <!-- Ebene 3: Bewerten -->
     <div id="kmpErfassen" style="display:none">
       <div class="topbar" id="tbKompErf"></div>
-      <div class="card">
-        <label class="lbl" for="kmpKind">Kind</label>
-        <div class="kindwahl">
-          <button class="pfeil" id="btnKmpKindZurueck" aria-label="vorheriges Kind">‹</button>
-          <select id="kmpKind"></select>
-          <button class="pfeil" id="btnKmpKindVor" aria-label="nächstes Kind">›</button>
-        </div>
-        <div class="mini" id="kmpProgress" style="margin-top:10px"></div>
+
+      <div class="segrow klein" id="kmpErfSeg">
+        <span class="pille" id="kmpErfPille"></span>
+        <button data-m="kind" class="on">Nach Kind</button>
+        <button data-m="kriterium">Nach Kriterium</button>
       </div>
-      <div id="stufenKacheln"></div>
-      <div class="actions" style="margin-bottom:12px">
-        <button class="act primary" id="btnKompWeiter">Weiter</button>
-        <button class="act neutral" id="btnKompFertig">Fertig</button>
+
+      <!-- Ein Kind, alle Kriterien -->
+      <div id="kmpErfKind">
+        <div class="card">
+          <label class="lbl" for="kmpKind">Kind</label>
+          <div class="kindwahl">
+            <button class="pfeil" id="btnKmpKindZurueck" aria-label="vorheriges Kind">‹</button>
+            <select id="kmpKind"></select>
+            <button class="pfeil" id="btnKmpKindVor" aria-label="nächstes Kind">›</button>
+          </div>
+          <div class="mini" id="kmpProgress" style="margin-top:10px"></div>
+        </div>
+        <div id="stufenKacheln"></div>
+        <div class="actions" style="margin-bottom:12px">
+          <button class="act primary" id="btnKompWeiter">Weiter</button>
+          <button class="act neutral" id="btnKompFertig">Fertig</button>
+        </div>
+      </div>
+
+      <!-- Ein Kriterium, alle Kinder -->
+      <div id="kmpErfKriterium" style="display:none">
+        <div class="card">
+          <label class="lbl" for="kmpKritWahl">Kriterium</label>
+          <div class="kindwahl">
+            <button class="pfeil" id="btnKmpKritZurueck" aria-label="voriges Kriterium">‹</button>
+            <select id="kmpKritWahl"></select>
+            <button class="pfeil" id="btnKmpKritVor" aria-label="nächstes Kriterium">›</button>
+          </div>
+          <div class="mini" id="kmpKritProgress" style="margin-top:10px"></div>
+        </div>
+        <div class="card">
+          <div id="kmpKlassenListe"></div>
+        </div>
+        <div class="actions" style="margin-bottom:12px">
+          <button class="act primary" id="btnKompKritWeiter">Weiter</button>
+          <button class="act neutral" id="btnKompKritFertig">Fertig</button>
+        </div>
       </div>
     </div>
 
@@ -7031,11 +7061,137 @@ function renderKompKritListe(r){
 }
 
 /* --- Ebene 3: Bewerten – ein Kind, alle Stufen --- */
+/* Zwei Wege, dieselben Werte einzutragen: ein Kind mit allen Kriterien
+   durchgehen (eigene Beobachtung), oder ein Kriterium mit der ganzen Klasse
+   (wenn im Unterricht gerade EINE Fähigkeit geübt und bei allen angeschaut
+   wird – der häufigere Fall in der Praxis). */
+function alleKriterienMitStufe(r){
+  const out = [];
+  (r.stufen || []).forEach(s => (s.kriterien || []).forEach(kr => out.push({kr:kr, stufe:s})));
+  return out;
+}
+function kmpErfPille(){
+  const leiste = $("#kmpErfSeg"), pille = $("#kmpErfPille");
+  if(!leiste || !pille) return;
+  const aktiv = leiste.querySelector("button.on");
+  if(!aktiv || !aktiv.offsetWidth) return;
+  pille.style.width = aktiv.offsetWidth + "px";
+  pille.style.transform = "translateX(" + (aktiv.offsetLeft - 4) + "px)";
+}
+window.addEventListener("resize", kmpErfPille);
+document.querySelectorAll("#kmpErfSeg button").forEach(b => {
+  b.addEventListener("click", () => {
+    db.ui.kompErfModus = b.dataset.m; save(); renderStunde();
+  });
+});
 function renderKompErfassen(r, k){
   unterkopf($("#tbKompErf"), {
     zurueck: () => kompGo("ansicht"), zurueckText: "Raster",
     titel: "Bewerten", sub: r.titel || "Raster"
   });
+  const modus = db.ui.kompErfModus || "kind";
+  document.querySelectorAll("#kmpErfSeg button").forEach(b => {
+    b.classList.toggle("on", b.dataset.m === modus);
+  });
+  kmpErfPille();
+  $("#kmpErfKind").style.display      = modus === "kind" ? "" : "none";
+  $("#kmpErfKriterium").style.display = modus === "kriterium" ? "" : "none";
+  if(modus === "kind") renderKompErfKind(r, k);
+  else renderKompErfKriterium(r, k);
+}
+
+/* --- Nach Kriterium: ein Kriterium, die ganze Klasse als Häkchenliste --- */
+function renderKompErfKriterium(r, k){
+  const paare = alleKriterienMitStufe(r);
+  const sel = $("#kmpKritWahl");
+  if(!paare.length){
+    sel.innerHTML = "";
+    $("#kmpKritProgress").textContent = "";
+    $("#kmpKlassenListe").innerHTML = '<p class="hint" style="margin:0">Noch kein Kriterium angelegt.</p>';
+    $("#btnKmpKritZurueck").disabled = true;
+    $("#btnKmpKritVor").disabled = true;
+    $("#btnKompKritWeiter").disabled = true;
+    return;
+  }
+  let idx = paare.findIndex(p => p.kr.id === db.ui.komprasterKritId);
+  if(idx === -1) idx = 0;
+  db.ui.komprasterKritId = paare[idx].kr.id;
+
+  sel.innerHTML = "";
+  paare.forEach((p, i) => {
+    const o = document.createElement("option");
+    o.value = p.kr.id;
+    const kurz = p.kr.name.length > 50 ? p.kr.name.slice(0, 50) + "…" : p.kr.name;
+    o.textContent = p.stufe.titel + ": " + kurz;
+    if(i === idx) o.selected = true;
+    sel.appendChild(o);
+  });
+  $("#btnKmpKritZurueck").disabled = idx <= 0;
+  $("#btnKmpKritVor").disabled = idx >= paare.length - 1;
+  $("#btnKompKritWeiter").disabled = idx >= paare.length - 1;
+
+  const kr = paare[idx].kr;
+  const box = $("#kmpKlassenListe"); box.innerHTML = "";
+  if(!k){ $("#kmpKritProgress").textContent = ""; return; }
+  for(let i = 1; i <= k.count; i++) box.appendChild(klassenZeile(r, k, i, kr));
+  kmpKritProgressText(r, k, kr);
+}
+function kmpKritProgressText(r, k, kr){
+  let gesetzt = 0;
+  for(let i = 1; i <= k.count; i++){ if(kriteriumErreicht(r, i, kr)) gesetzt++; }
+  $("#kmpKritProgress").innerHTML = "<b>" + gesetzt + "/" + k.count + "</b> haben es erreicht";
+}
+/* Eine Kind-Zeile für den Klassen-Check bei EINEM Kriterium – dieselbe
+   Häkchen-Bauart wie stufenKachel, nur über die Kinder statt die Kriterien. */
+function klassenZeile(r, k, nr, kr){
+  const z = document.createElement("div");
+  z.className = "todozeile";
+  if(!r.erreicht[nr]) r.erreicht[nr] = {};
+  const datum = r.erreicht[nr][kr.id];
+  const name = "Nr. " + nr + (k.labels[nr] ? " · " + k.labels[nr] : "");
+  const haken = document.createElement("button");
+  haken.className = "haken" + (datum ? " an" : "");
+  haken.type = "button";
+  haken.textContent = datum ? "✓" : "";
+  haken.setAttribute("aria-label", datum ? name + " nicht mehr erreicht" : name + " erreicht");
+  haken.addEventListener("click", () => {
+    if(r.erreicht[nr][kr.id]) delete r.erreicht[nr][kr.id];
+    else r.erreicht[nr][kr.id] = heute();
+    save();
+    z.replaceWith(klassenZeile(r, k, nr, kr));
+    kmpKritProgressText(r, k, kr);
+  });
+  z.appendChild(haken);
+  const txt = document.createElement("div");
+  txt.className = "ttext";
+  txt.style.cursor = "default";
+  txt.innerHTML = "<b style=\"font-weight:600\">" + esc(name) + "</b>" +
+    (datum ? '<span class="mini">erreicht am ' + deDate(datum) + "</span>" : "");
+  z.appendChild(txt);
+  return z;
+}
+function kmpKritWechsel(schritt){
+  const r = kompraster(db.ui.komprasterId), k = klasse(db.ui.klasseId);
+  if(!r || !k) return;
+  const paare = alleKriterienMitStufe(r);
+  let idx = paare.findIndex(p => p.kr.id === db.ui.komprasterKritId);
+  if(idx === -1) idx = 0;
+  idx += schritt;
+  if(idx < 0 || idx >= paare.length) return;
+  db.ui.komprasterKritId = paare[idx].kr.id;
+  save(); renderKompErfKriterium(r, k); window.scrollTo(0,0);
+}
+$("#btnKmpKritZurueck").addEventListener("click", () => kmpKritWechsel(-1));
+$("#btnKmpKritVor").addEventListener("click", () => kmpKritWechsel(1));
+$("#kmpKritWahl").addEventListener("change", ev => {
+  db.ui.komprasterKritId = ev.target.value;
+  save(); renderStunde();
+});
+$("#btnKompKritWeiter").addEventListener("click", () => kmpKritWechsel(1));
+$("#btnKompKritFertig").addEventListener("click", () => kompGo("ansicht"));
+
+/* --- Nach Kind: ein Kind, alle Stufen (bisheriger Weg) --- */
+function renderKompErfKind(r, k){
   const kacheln = $("#stufenKacheln");
   kacheln.innerHTML = "";
   if(!k){ $("#kmpProgress").textContent = ""; return; }
