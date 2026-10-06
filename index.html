@@ -780,6 +780,15 @@ body.vertmodus .stundenkarte{cursor:pointer}
 .minibtn.on.s3{background:var(--bad);border-color:var(--bad)}
 .einstufung.krank .wer,.einstufung.krank .minigrp:not(.kurz){opacity:.4}
 .minibtn.on.krank{background:var(--bad);border-color:var(--bad)}
+.fehlraster{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;margin-top:10px}
+.fehlkind{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;
+  padding:8px 4px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;
+  gap:1px;min-height:48px}
+.fehlkind b{font-size:16px}
+.fehlkind small{font-size:11px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fehlkind.on{background:var(--bad);border-color:var(--bad);color:#fff}
+.fehlkind.on small{color:#fff}
+.fehlkind:disabled{opacity:.5;cursor:default}
 .minibtn:disabled{cursor:default}
 
 .steckbrief{display:flex;align-items:center;gap:14px}
@@ -1805,7 +1814,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
   </div>
   <div class="card faqgruppe">
     <h3>Stunden dokumentieren</h3>
-      <details class="faqfrage"><summary>Wie dokumentiere ich eine Stunde?</summary><p class="hint">Im Plan auf die Stunde tippen. Gibt es sie noch nicht, führt dich der Assistent in drei Schritten: 1. Was war (stattgefunden, ausgefallen, Vertretung), 2. Angaben wie Thema und Hausaufgabe, 3. Mitarbeit je Kind.</p></details>
+      <details class="faqfrage"><summary>Wie dokumentiere ich eine Stunde?</summary><p class="hint">Im Plan auf die Stunde tippen. Gibt es sie noch nicht, führt dich der Assistent in vier Schritten: 1. Was war (stattgefunden, ausgefallen, Vertretung), 2. Wer fehlt (wird gleich als krank eingetragen), 3. Angaben wie Thema und Hausaufgabe, 4. Mitarbeit je Kind.</p></details>
       <details class="faqfrage"><summary>Ich habe mich vertippt – wie ändere ich das?</summary><p class="hint">In der Stundenübersicht hat jede der drei Karten – Status, Angaben, Mitarbeit – einen eigenen Stift. Du änderst also genau das, was falsch ist.</p></details>
       <details class="faqfrage"><summary>Eine Stunde ist ausgefallen.</summary><p class="hint">Im ersten Schritt „Ausgefallen“ wählen und den Grund eintragen. Die Stunde steht dann rot in der Liste, hat keine Eintragungen und zählt in keiner Auswertung mit.</p></details>
       <details class="faqfrage"><summary>Kann ich etwas rückgängig machen?</summary><p class="hint">Nach jedem Löschen erscheint unten sieben Sekunden lang „Rückgängig“.</p></details>
@@ -1976,6 +1985,18 @@ body.vertmodus .stundenkarte{cursor:pointer}
           <b>Vertretung</b><span>Fremde Klasse oder fremdes Fach</span></button>
       </div>
       <div class="actions" style="margin-top:12px" id="neu1Actions"></div>
+    </div>
+
+    <div class="card" id="neuF" style="display:none">
+      <h3 style="font-size:16px;margin-bottom:2px">Wer fehlt heute?</h3>
+      <div class="mini" id="neuFSub">Tippe die Kinder an, die nicht da sind – sie werden als krank eingetragen.</div>
+      <div class="fehlraster" id="neuFListe"></div>
+      <div class="actions" style="margin-top:8px" id="neuFVorher">
+        <button class="act quiet" id="btnFehltWieVorher"></button>
+      </div>
+      <div class="actions" style="margin-top:12px" id="neuFActions">
+        <button class="act primary" id="btnNeuFehltWeiter">Weiter zu den Angaben</button>
+      </div>
     </div>
 
     <div class="card" id="neu2" style="display:none">
@@ -3640,18 +3661,30 @@ $("#btnNeuZurueck").addEventListener("click", () => {
   const nu = db.ui.neu; if(!nu) return;
   const zeigeAuswahl = !!nu.brauchtAuswahl && !nu.auswahlFertig;
   if(zeigeAuswahl){ closeStdSheet(); return; }
-  if(nu.art){ nu.art = ""; save(); renderNeu(); return; }
+  if(neuStufe(nu) === "angaben" && neuHatFehlt(nu)){ nu.fehltFertig = false; save(); renderNeu(); return; }
+  if(nu.art){ nu.art = ""; nu.fehltFertig = false; save(); renderNeu(); return; }
   if(nu.brauchtAuswahl){ nu.auswahlFertig = false; save(); renderNeu(); return; }
   closeStdSheet();
 });
+/* Wer fehlt, wird gleich zu Beginn der Stunde abgefragt – vor dem Inhalt. Bei einer
+   Vertretung entfällt der Schritt: Dort steht die Klasse erst im nächsten Schritt fest. */
+function neuHatFehlt(nu){ return nu.art === "gehalten"; }
+function neuStufe(nu){
+  if(nu.brauchtAuswahl && !nu.auswahlFertig) return "auswahl";
+  if(!nu.art) return "art";
+  if(neuHatFehlt(nu) && !nu.fehltFertig) return "fehlt";
+  return "angaben";
+}
 function renderNeu(){
   const nu = db.ui.neu || (db.ui.neu = {art:"", datum:heute()});
-  const zeigeAuswahl = !!nu.brauchtAuswahl && !nu.auswahlFertig;
+  const stufe = neuStufe(nu);
+  const zeigeAuswahl = stufe === "auswahl";
 
   const namenBasis = nu.art === "ausgefallen" ? ["Was war?", "Grund"]
-                                              : ["Was war?", "Angaben", "Mitarbeit"];
+                   : (neuHatFehlt(nu) ? ["Was war?", "Wer fehlt?", "Angaben", "Mitarbeit"]
+                                      : ["Was war?", "Angaben", "Mitarbeit"]);
   const namen = nu.brauchtAuswahl ? ["Welche Stunde?"].concat(namenBasis) : namenBasis;
-  const schrittBasis = nu.art ? 2 : 1;
+  const schrittBasis = !nu.art ? 1 : (stufe === "fehlt" ? 2 : (neuHatFehlt(nu) ? 3 : 2));
   const schritt = nu.brauchtAuswahl ? (zeigeAuswahl ? 1 : schrittBasis + 1) : schrittBasis;
   const leiste = $("#neuSchritte"); leiste.innerHTML = "";
   namen.forEach((t, i) => {
@@ -3664,12 +3697,14 @@ function renderNeu(){
     (zeigeAuswahl || (!nu.brauchtAuswahl && !nu.art)) ? "Abbrechen" : "Zurück";
   /* Abbrechen zieht immer in die Aktionsleiste des gerade sichtbaren Schritts,
      neben dessen Weiter-Knopf (falls vorhanden). */
-  const abbrechenZiel = zeigeAuswahl ? "#neu0Actions" : (!nu.art ? "#neu1Actions" : "#neu2Actions");
+  const abbrechenZiel = {auswahl:"#neu0Actions", art:"#neu1Actions", fehlt:"#neuFActions",
+                         angaben:"#neu2Actions"}[stufe];
   $(abbrechenZiel).appendChild($("#btnNeuZurueck"));
 
   $("#neu0").style.display = zeigeAuswahl ? "" : "none";
-  $("#neu1").style.display = (!zeigeAuswahl && !nu.art) ? "" : "none";
-  $("#neu2").style.display = (!zeigeAuswahl && nu.art) ? "" : "none";
+  $("#neu1").style.display = stufe === "art" ? "" : "none";
+  $("#neuF").style.display = stufe === "fehlt" ? "" : "none";
+  $("#neu2").style.display = stufe === "angaben" ? "" : "none";
   if(zeigeAuswahl){
     $("#neu0Datum").textContent = WOCHENTAG[isoZuDatum(nu.datum).getDay()] + ", " + deDate(nu.datum);
     const box = $("#neu0Liste"); box.innerHTML = "";
@@ -3690,6 +3725,7 @@ function renderNeu(){
     b.classList.toggle("on", b.dataset.a === nu.art);
   });
   if(!nu.art) return;
+  if(stufe === "fehlt"){ renderNeuFehlt(nu); return; }
 
   const aus = nu.art === "ausgefallen", vert = nu.art === "vertretung";
   $("#neu2Titel").textContent = aus ? "Warum ist sie ausgefallen?"
@@ -3711,6 +3747,65 @@ function renderNeu(){
   }
   renderNeuPicker();
 }
+/* Schritt „Wer fehlt?“: Kinder antippen, die heute nicht da sind. Wer befreit ist,
+   steht schon fest und lässt sich hier nicht ändern. */
+function neuFehltVorher(nu){
+  const k = klasse(nu.klasseId);
+  if(!k) return null;
+  const raus = {}; let fach0 = null;
+  db.stunden.filter(x => x.klasseId === k.id && x.datum === nu.datum && !x.aus).forEach(x => {
+    for(let i = 1; i <= k.count; i++){
+      if(x.eintraege[i] && x.eintraege[i].k){ raus[i] = true; if(!fach0) fach0 = fach(x.fachId); }
+    }
+  });
+  const nrn = Object.keys(raus).map(Number);
+  return nrn.length ? {nrn:nrn, fach: fach0 ? fach0.name : "einer anderen Stunde"} : null;
+}
+function renderNeuFehlt(nu){
+  const k = klasse(nu.klasseId);
+  if(!nu.fehlt) nu.fehlt = {};
+  const box = $("#neuFListe"); box.innerHTML = "";
+  if(!k || !k.count){
+    box.innerHTML = '<p class="hint">Diese Klasse hat noch keine Kinder.</p>';
+  }else{
+    for(let i = 1; i <= k.count; i++){
+      const befreit = istBefreit(k, i, nu.datum);
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "fehlkind" + ((nu.fehlt[i] || befreit) ? " on" : "");
+      b.disabled = befreit;
+      b.innerHTML = "<b>" + i + "</b>" +
+        (befreit ? "<small>befreit</small>" : (k.labels[i] ? "<small>" + esc(k.labels[i]) + "</small>" : ""));
+      b.setAttribute("aria-pressed", (nu.fehlt[i] || befreit) ? "true" : "false");
+      b.addEventListener("click", () => {
+        if(nu.fehlt[i]) delete nu.fehlt[i]; else nu.fehlt[i] = true;
+        save(); renderNeuFehlt(nu);
+      });
+      box.appendChild(b);
+    }
+  }
+  const anz = Object.keys(nu.fehlt).length;
+  $("#btnNeuFehltWeiter").textContent = anz
+    ? anz + (anz === 1 ? " Kind fehlt" : " Kinder fehlen") + " – weiter zu den Angaben"
+    : "Alle da – weiter zu den Angaben";
+  const vor = neuFehltVorher(nu);
+  const offen = vor ? vor.nrn.filter(n => !nu.fehlt[n] && !istBefreit(k, n, nu.datum)) : [];
+  $("#neuFVorher").style.display = offen.length ? "" : "none";
+  if(offen.length){
+    $("#btnFehltWieVorher").textContent = "Wie vorher heute übernehmen (" +
+      offen.map(n => "Nr. " + n).join(", ") + ")";
+    $("#btnFehltWieVorher").onclick = () => {
+      offen.forEach(n => { nu.fehlt[n] = true; });
+      save(); renderNeuFehlt(nu);
+    };
+  }
+}
+$("#btnNeuFehltWeiter").addEventListener("click", () => {
+  const nu = db.ui.neu; if(!nu) return;
+  nu.fehltFertig = true;
+  save(); renderNeu();
+});
+
 /* Schritt 1 zeigt den Tagesplan; nur was noch nicht erfasst ist, lässt sich
    antippen. Bearbeiten von Vorhandenem läuft ausschließlich über Stunden. */
 function neuStundenplanKarte(slot, datum){
@@ -3775,6 +3870,11 @@ $("#btnNeuWeiter").addEventListener("click", () => {
   s.ha = aus ? "" : $("#nsHa").value.trim();
   s.notiz = $("#nsNotiz").value.trim();
   if(nu.art === "vertretung") s.vertretung = true;
+  if(neuHatFehlt(nu) && nu.fehlt){
+    Object.keys(nu.fehlt).forEach(n => {
+      if(Number(n) >= 1 && Number(n) <= k.count) s.eintraege[n] = {m:null, k:true, v:false, n:""};
+    });
+  }
   setAuswahl(k.id, nu.fachId || null);
   db.ui.neu = null;
   stdSheetOffen = false;
@@ -10269,7 +10369,7 @@ const TOUR_KATEGORIEN = [
         ziel:"#fab",
         vor: () => { db.ui.bereich = "plan"; goView("stunde"); } },
       { titel:"So läuft das Dokumentieren",
-        text:"Wenn du über das + gestartet hast, wählst du zunächst die Stunde aus. Danach ist es bei beiden Wegen gleich: Was war? (gehalten, entfallen, vertreten), Angaben zum Inhalt der Stunde, und zuletzt die Mitarbeit der Kinder.",
+        text:"Wenn du über das + gestartet hast, wählst du zunächst die Stunde aus. Danach ist es bei beiden Wegen gleich: Was war? (gehalten, entfallen, vertreten), Wer fehlt? (bei gehaltenen Stunden), Angaben zum Inhalt der Stunde, und zuletzt die Mitarbeit der Kinder.",
         ziel:"#stdSheet",
         vor: () => { closeStdSheet(); neuStarten({datum:heute()}, true); } },
       { titel:"Vertretungsstunden eintragen",
