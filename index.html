@@ -1886,8 +1886,15 @@ body.vertmodus .stundenkarte{cursor:pointer}
       <div class="actions" style="margin-top:8px">
         <button class="act neutral" id="btnAutoUmschalten">Ausschalten</button>
       </div>
+      <div class="mini" id="ordnerStatus" style="margin-top:12px">–</div>
+      <div class="actions" style="margin-top:8px">
+        <button class="act" id="btnOrdnerWaehlen">Sicherungsordner wählen</button>
+        <button class="act quiet" id="btnOrdnerWeg" hidden>Ordner entfernen</button>
+      </div>
       <p class="hint">Die App sichert von selbst in den Ordner <b>Download/Loewi</b> (eine Datei je
         Wochentag, ohne Kennwort). Der Ordner bleibt auch erhalten, wenn die App gelöscht wird.
+        Zusätzlich kannst du einen eigenen Ordner wählen, z. B. in <b>OneDrive</b> (die OneDrive-App
+        muss installiert und angemeldet sein). Dorthin wird dann jede Sicherung ebenfalls geschrieben.
         Zurückholen: „Sicherung einlesen“.</p>
     </div>
     <p class="hint" id="exportHint">Die Excel-Datei enthält <b>Klassenliste</b> (Raster mit
@@ -9581,10 +9588,22 @@ function appPlugin(n){
   try{ return (window.Capacitor.Plugins && window.Capacitor.Plugins[n]) || null; }
   catch(e){ return null; }
 }
+/* Zusätzlicher Sicherungsordner (z. B. OneDrive), pro Gerät gemerkt – die Berechtigung
+   dafür gilt nur auf diesem Gerät, deshalb gehört die Wahl nicht in die Sicherungsdatei. */
+const ORDNER_KEY = "loewi.sicherungsOrdner";
+function sicherungsOrdner(){
+  try{
+    const o = JSON.parse(localStorage.getItem(ORDNER_KEY) || "null");
+    return o && o.uri ? o : null;
+  }catch(e){ return null; }
+}
 function appSpeichern(bytes, name, mime, ueberschreiben){
   const p = appPlugin("LoewiDatei");
   if(!p) return Promise.reject(new Error("Plugin fehlt"));
-  return p.speichern({name: name, mime: mime, base64: b64(bytes), ueberschreiben: !!ueberschreiben});
+  const o = sicherungsOrdner();
+  const arg = {name: name, mime: mime, base64: b64(bytes), ueberschreiben: !!ueberschreiben};
+  if(o) arg.ordner = o.uri;
+  return p.speichern(arg);
 }
 function appTeilen(bytes, name){
   const fs = appPlugin("Filesystem"), sh = appPlugin("Share");
@@ -9601,7 +9620,13 @@ function appDialogRest(box, bytes, name, mime, erledigt){
   sp.textContent = "Speichern";
   sp.addEventListener("click", () => {
     appSpeichern(bytes, name, mime, false)
-      .then(r => { erledigt(); closeModal(); toast("Gespeichert: " + ((r && r.pfad) || name)); })
+      .then(r => {
+        erledigt(); closeModal();
+        const o = sicherungsOrdner();
+        if(o && r && r.ordnerOk === false) toast("Nur in Download/Loewi – Ordner „" + o.name + "“ nicht erreichbar");
+        else if(o && r && r.ordnerOk) toast("Gespeichert: Download/Loewi und „" + o.name + "“");
+        else toast("Gespeichert: " + ((r && r.pfad) || name));
+      })
       .catch(() => toast("Speichern hat nicht geklappt – nimm „Teilen“"));
   });
   const te = document.createElement("button");
@@ -9625,8 +9650,9 @@ function appDialogRest(box, bytes, name, mime, erledigt){
   box.appendChild(zu);
   const hint = document.createElement("p");
   hint.className = "hint";
-  hint.textContent = "„Speichern“ legt die Datei im Ordner Download/Loewi ab. Mit „Teilen“ " +
-    "schickst du sie z. B. in deine Cloud oder per Mail.";
+  hint.textContent = "„Speichern“ legt die Datei im Ordner Download/Loewi ab" +
+    (sicherungsOrdner() ? " und in deinem Sicherungsordner." : ".") +
+    " Mit „Teilen“ schickst du sie z. B. in deine Cloud oder per Mail.";
   box.appendChild(hint);
 }
 
@@ -10112,19 +10138,31 @@ function autoSicherungPlanen(){
   clearTimeout(autoTimer);
   autoTimer = setTimeout(() => autoSicherungJetzt(false), 30000);
 }
+/* Schneller Prüfwert (djb2) über den ganzen Text – erkennt jede Änderung, auch gleich lange. */
+function textPruefwert(t){
+  let h = 5381;
+  for(let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0;
+  return h + ":" + t.length;
+}
 async function autoSicherungJetzt(sofort){
   if(!autoAn() || tourOffen || autoLaeuft || !db.klassen.length) return;
   const l = autoLetzte();
   const abstand = sofort ? 120000 : 3600000;
-  if(l && l.t && Date.now() - l.t < abstand && l.stand === letzterStand.length) return;
+  const text = JSON.stringify(db);
+  const pruef = textPruefwert(text);
+  /* Unverändert seit der letzten Sicherung: nichts zu tun. Sonst höchstens alle 2 Min. bzw. 1 Std. */
+  if(l && l.t && l.pruef === pruef && l.ordnerOk !== false) return;
+  if(l && l.t && Date.now() - l.t < abstand) return;
   autoLaeuft = true;
   try{
     const tag = ["So","Mo","Di","Mi","Do","Fr","Sa"][new Date().getDay()];
-    const text = JSON.stringify(db);
     const r = await appSpeichern(new TextEncoder().encode(text), "Loewi_Auto_" + tag + ".json",
                                  "application/json", true);
-    try{ localStorage.setItem(AUTO_KEY, JSON.stringify({t: Date.now(), stand: letzterStand.length,
-                                                       pfad: (r && r.pfad) || ""})); }catch(e){}
+    const o = sicherungsOrdner();
+    const ordnerOk = !o ? null : !!(r && r.ordnerOk);
+    try{ localStorage.setItem(AUTO_KEY, JSON.stringify({t: Date.now(), pruef: pruef,
+                                                       pfad: (r && r.pfad) || "", ordnerOk: ordnerOk,
+                                                       ordnerFehler: (r && r.ordnerFehler) || ""})); }catch(e){}
   }catch(e){ /* still: die nächste Änderung versucht es erneut */ }
   autoLaeuft = false;
   renderAutoStatus();
@@ -10144,7 +10182,41 @@ function renderAutoStatus(){
   }
   $("#autoStatus").textContent = txt;
   $("#btnAutoUmschalten").textContent = an ? "Ausschalten" : "Einschalten";
+  const o = sicherungsOrdner();
+  const os = $("#ordnerStatus");
+  if(o){
+    let t = "Zusätzlicher Sicherungsordner: " + o.name;
+    let fehler = false;
+    if(an && l && l.ordnerOk === false){ t += " – zuletzt NICHT erreichbar, bitte neu wählen"; fehler = true; }
+    else if(an && l && l.ordnerOk){ t += " – zuletzt erfolgreich"; }
+    os.textContent = t;
+    os.style.color = fehler ? "var(--warn)" : "var(--muted)";
+    os.style.fontWeight = fehler ? "700" : "400";
+  }else{
+    os.textContent = "Zusätzlicher Sicherungsordner: keiner (nur Download/Loewi)";
+    os.style.color = "var(--muted)"; os.style.fontWeight = "400";
+  }
+  $("#btnOrdnerWeg").hidden = !o;
 }
+$("#btnOrdnerWaehlen").addEventListener("click", () => {
+  const p = appPlugin("LoewiDatei");
+  if(!p){ toast("Geht nur in der App"); return; }
+  p.ordnerWaehlen().then(o => {
+    try{ localStorage.setItem(ORDNER_KEY, JSON.stringify({uri: o.uri, name: o.name || "Ordner"})); }catch(e){}
+    try{ localStorage.removeItem(AUTO_KEY); }catch(e){}
+    renderAutoStatus();
+    toast("Ordner gewählt: " + (o.name || "Ordner"));
+    autoSicherungJetzt(true);
+  }).catch(err => {
+    const m = String((err && (err.message || err)) || "");
+    if(!/abgebrochen|cancel/i.test(m)) toast("Ordner konnte nicht gewählt werden");
+  });
+});
+$("#btnOrdnerWeg").addEventListener("click", () => {
+  try{ localStorage.removeItem(ORDNER_KEY); }catch(e){}
+  renderAutoStatus();
+  toast("Sicherungsordner entfernt");
+});
 $("#btnAutoUmschalten").addEventListener("click", () => {
   db.ui.autoAus = autoAn();
   save(); renderAutoStatus();
