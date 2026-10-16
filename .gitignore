@@ -11,3 +11,4 @@ android/captures/
 keystore.properties
 LOEWI-SCHLUESSEL.txt
 *.base64.txt
+*.apk
