@@ -1,0 +1,13 @@
+node_modules/
+www/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/captures/
+*.keystore
+*.jks
+keystore.properties
+LOEWI-SCHLUESSEL.txt
+*.base64.txt

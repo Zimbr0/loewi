@@ -1880,6 +1880,16 @@ body.vertmodus .stundenkarte{cursor:pointer}
       <button class="act primary" id="btnExcel">Excel-Datei erstellen</button>
       <button class="act" id="btnBackup">Sicherung (.json)</button>
     </div>
+    <div id="autoBox" hidden>
+      <div class="sep"></div>
+      <div class="mini" id="autoStatus">–</div>
+      <div class="actions" style="margin-top:8px">
+        <button class="act neutral" id="btnAutoUmschalten">Ausschalten</button>
+      </div>
+      <p class="hint">Die App sichert von selbst in den Ordner <b>Download/Loewi</b> (eine Datei je
+        Wochentag, ohne Kennwort). Der Ordner bleibt auch erhalten, wenn die App gelöscht wird.
+        Zurückholen: „Sicherung einlesen“.</p>
+    </div>
     <p class="hint" id="exportHint">Die Excel-Datei enthält <b>Klassenliste</b> (Raster mit
       Notenvorschlag und Test-Schnitt), <b>Einzelliste</b> (jede Eintragung mit Notiz),
       <b>Stundendoku</b> und – sobald vorhanden – <b>Tests</b> und <b>Planung</b>.
@@ -2627,6 +2637,10 @@ const PDF = (function(){
   return {doc: doc, bauen: bauen, breite: breite, umbrechen: umbrechen};
 })();
 
+/* Läuft die Seite als Android-App (Capacitor)? Steht ganz oben, weil früh gebraucht. */
+var istApp = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === "function" &&
+                window.Capacitor.isNativePlatform());
+
 /* ---------- Speicher ----------
    Die Daten liegen in der IndexedDB dieses Browsers: viel mehr Platz als im
    localStorage, sie überleben das automatische Aufräumen besser und das
@@ -2860,7 +2874,7 @@ function schreibStand(text){
   if(text !== letzterStand) return Promise.resolve();   /* schon überholt */
   if(idbBereit){
     return idbSchreiben(text).then(ok => {
-      if(ok){ standMelden(true); return; }
+      if(ok){ standMelden(true); autoSicherungPlanen(); return; }
       standMelden(lokalSchreiben(text));
     });
   }
@@ -9559,6 +9573,63 @@ $("#btnAllePdf").addEventListener("click", () => {
    einen echten Link tippt. Automatisch angestoßene Downloads werden auf Handys
    und bei lokal geöffneten Dateien oft still verworfen. Deshalb: Datei bauen,
    Dialog zeigen, den Weg der Person überlassen. */
+/* ---------- Android-App ----------
+   In der APK (Capacitor) gibt es keine Browser-Downloads. Dateien gehen stattdessen
+   über ein kleines eigenes Plugin in den Ordner „Download/Loewi“ (bleibt auch nach
+   dem Löschen der App erhalten) oder über das Teilen-Menü des Systems. */
+function appPlugin(n){
+  try{ return (window.Capacitor.Plugins && window.Capacitor.Plugins[n]) || null; }
+  catch(e){ return null; }
+}
+function appSpeichern(bytes, name, mime, ueberschreiben){
+  const p = appPlugin("LoewiDatei");
+  if(!p) return Promise.reject(new Error("Plugin fehlt"));
+  return p.speichern({name: name, mime: mime, base64: b64(bytes), ueberschreiben: !!ueberschreiben});
+}
+function appTeilen(bytes, name){
+  const fs = appPlugin("Filesystem"), sh = appPlugin("Share");
+  if(!fs || !sh) return Promise.reject(new Error("Plugin fehlt"));
+  return fs.writeFile({path: name, data: b64(bytes), directory: "CACHE"})
+    .then(r => sh.share({title: name, files: [r.uri]}));
+}
+function appDialogRest(box, bytes, name, mime, erledigt){
+  const acts = document.createElement("div");
+  acts.className = "actions";
+  acts.style.marginTop = "14px";
+  const sp = document.createElement("button");
+  sp.className = "act primary";
+  sp.textContent = "Speichern";
+  sp.addEventListener("click", () => {
+    appSpeichern(bytes, name, mime, false)
+      .then(r => { erledigt(); closeModal(); toast("Gespeichert: " + ((r && r.pfad) || name)); })
+      .catch(() => toast("Speichern hat nicht geklappt – nimm „Teilen“"));
+  });
+  const te = document.createElement("button");
+  te.className = "act neutral";
+  te.textContent = "Teilen";
+  te.addEventListener("click", () => {
+    appTeilen(bytes, name)
+      .then(() => { erledigt(); closeModal(); })
+      .catch(err => {
+        const m = String((err && (err.message || err)) || "");
+        if(!/cancel|abbr/i.test(m)) toast("Teilen hat nicht geklappt");
+      });
+  });
+  acts.appendChild(sp); acts.appendChild(te);
+  box.appendChild(acts);
+  const zu = document.createElement("button");
+  zu.className = "act neutral";
+  zu.style.marginTop = "8px";
+  zu.textContent = "Schließen";
+  zu.addEventListener("click", closeModal);
+  box.appendChild(zu);
+  const hint = document.createElement("p");
+  hint.className = "hint";
+  hint.textContent = "„Speichern“ legt die Datei im Ordner Download/Loewi ab. Mit „Teilen“ " +
+    "schickst du sie z. B. in deine Cloud oder per Mail.";
+  box.appendChild(hint);
+}
+
 let letzteUrl = null;
 
 function kbText(len){
@@ -9594,6 +9665,8 @@ function dateiDialog(bytes, name, mime, opt){
     fertig = true;
     if(opt.alsSicherung) markBackup();
   };
+
+  if(istApp){ appDialogRest(box, bytes, name, mime, erledigt); $("#ovl").hidden = false; return; }
 
   const acts = document.createElement("div");
   acts.className = "actions";
@@ -10023,6 +10096,61 @@ $("#btnVorfallNeu").addEventListener("click", () => {
   vorfallDialog(null, k.id, db.ui.kindNr);
 });
 
+/* ---------- Automatische Sicherung (nur in der App) ----------
+   Schreibt den Stand in Download/Loewi – eine Datei je Wochentag, die nächste Woche
+   überschrieben wird. So bleiben die letzten sieben Tage erhalten, und die Dateien
+   überleben ein Löschen der App. Eine leere App (frisch installiert, noch keine
+   Klasse) schreibt nie, damit sie keine gute Sicherung überdeckt. */
+var AUTO_KEY = "loewi.autoSicherung";
+var autoTimer = null, autoLaeuft = false;
+function autoAn(){ return istApp && !(db.ui && db.ui.autoAus); }
+function autoLetzte(){
+  try{ return JSON.parse(localStorage.getItem(AUTO_KEY) || "null"); }catch(e){ return null; }
+}
+function autoSicherungPlanen(){
+  if(!autoAn() || tourOffen || !db.klassen.length) return;
+  clearTimeout(autoTimer);
+  autoTimer = setTimeout(() => autoSicherungJetzt(false), 30000);
+}
+async function autoSicherungJetzt(sofort){
+  if(!autoAn() || tourOffen || autoLaeuft || !db.klassen.length) return;
+  const l = autoLetzte();
+  const abstand = sofort ? 120000 : 3600000;
+  if(l && l.t && Date.now() - l.t < abstand && l.stand === letzterStand.length) return;
+  autoLaeuft = true;
+  try{
+    const tag = ["So","Mo","Di","Mi","Do","Fr","Sa"][new Date().getDay()];
+    const text = JSON.stringify(db);
+    const r = await appSpeichern(new TextEncoder().encode(text), "Loewi_Auto_" + tag + ".json",
+                                 "application/json", true);
+    try{ localStorage.setItem(AUTO_KEY, JSON.stringify({t: Date.now(), stand: letzterStand.length,
+                                                       pfad: (r && r.pfad) || ""})); }catch(e){}
+  }catch(e){ /* still: die nächste Änderung versucht es erneut */ }
+  autoLaeuft = false;
+  renderAutoStatus();
+}
+function renderAutoStatus(){
+  const box = $("#autoBox");
+  if(!box) return;
+  box.hidden = !istApp;
+  if(!istApp) return;
+  const an = autoAn();
+  const l = autoLetzte();
+  let txt = an ? "Automatische Sicherung: an" : "Automatische Sicherung: aus";
+  if(an && l && l.t){
+    const d = new Date(l.t);
+    txt += " · zuletzt " + d.toLocaleDateString("de-DE") + ", " +
+           d.toLocaleTimeString("de-DE", {hour:"2-digit", minute:"2-digit"}) + " Uhr";
+  }
+  $("#autoStatus").textContent = txt;
+  $("#btnAutoUmschalten").textContent = an ? "Ausschalten" : "Einschalten";
+}
+$("#btnAutoUmschalten").addEventListener("click", () => {
+  db.ui.autoAus = autoAn();
+  save(); renderAutoStatus();
+  if(autoAn()) autoSicherungJetzt(true);
+});
+
 /* ---------- Backup-Wächter ---------- */
 function markBackup(){
   db.ui.lastBackup = Date.now();
@@ -10038,6 +10166,7 @@ function backupFaellig(){
   return t === null || t >= 7;
 }
 function renderStoreInfo(){
+  renderAutoStatus();
   let size = letzterStand.length;
   if(!size){
     try{ size = JSON.stringify(db).length; }catch(e){}
@@ -10843,7 +10972,7 @@ if(window.matchMedia){
 }
 themaAnwenden();
 
-if("serviceWorker" in navigator && location.protocol.indexOf("http") === 0){
+if(!istApp && "serviceWorker" in navigator && location.protocol.indexOf("http") === 0){
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js").catch(()=>{});
   });
@@ -10853,6 +10982,7 @@ document.addEventListener("visibilitychange", () => {
     disarmDelete(); closeDrop(); closeFab();
     versteckSeit = Date.now();
     try{ save(); }catch(e){}
+    try{ autoSicherungJetzt(true); }catch(e){}
   }else if(pinAktiv() && versteckSeit && Date.now() - versteckSeit > 120000){
     /* erst nach zwei Minuten wieder sperren – kurzes Wegtippen soll nicht nerven */
     sperren();

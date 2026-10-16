@@ -1,0 +1,88 @@
+name: APK bauen
+
+on:
+  push:
+    paths:
+      - "index.html"
+      - "manifest.webmanifest"
+      - "*.png"
+      - "package.json"
+      - "package-lock.json"
+      - "capacitor.config.json"
+      - "scripts/**"
+      - "android/**"
+      - ".github/workflows/apk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Signierschlüssel bereitstellen
+        env:
+          KEYSTORE_B64: ${{ secrets.LOEWI_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/loewi.keystore"
+            echo "LOEWI_KEYSTORE_FILE=$RUNNER_TEMP/loewi.keystore" >> "$GITHUB_ENV"
+            echo "SIGNIERT=eigener-schluessel" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Kein Signierschlüssel hinterlegt (Secrets LOEWI_KEYSTORE_BASE64 / LOEWI_KEYSTORE_PASSWORD). Diese APK ist nur zum Ausprobieren – sie lässt sich nicht als Update über eine spätere APK installieren."
+            echo "SIGNIERT=nur-test" >> "$GITHUB_ENV"
+          fi
+
+      - name: Web-Dateien übernehmen und synchronisieren
+        run: npm run sync
+
+      - name: APK bauen
+        working-directory: android
+        env:
+          LOEWI_KEYSTORE_PASSWORD: ${{ secrets.LOEWI_KEYSTORE_PASSWORD }}
+          LOEWI_VERSION_CODE: ${{ github.run_number }}
+          LOEWI_VERSION_NAME: 1.0.${{ github.run_number }}
+        run: ./gradlew assembleRelease --console=plain
+
+      - name: APK benennen
+        run: |
+          mkdir -p ausgabe
+          cp android/app/build/outputs/apk/release/app-release.apk "ausgabe/Loewi.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Loewi-APK-${{ env.SIGNIERT }}
+          path: ausgabe/Loewi.apk
+          retention-days: 90
+
+      # Auf main zusätzlich als Release anbieten – dann reicht der Download-Link auf dem Handy.
+      - name: Release "aktuell" aktualisieren
+        if: github.ref == 'refs/heads/main' && env.SIGNIERT == 'eigener-schluessel'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete aktuell --cleanup-tag --yes || true
+          gh release create aktuell ausgabe/Loewi.apk \
+            --title "Loewi (aktuell)" \
+            --notes "Automatisch gebaut aus ${GITHUB_SHA::7}. Installieren: Loewi.apk herunterladen und öffnen." \
+            --latest=false

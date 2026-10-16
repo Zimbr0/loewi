@@ -42,6 +42,18 @@ Im `localStorage` des Browsers, mit dem Loewi geöffnet wurde — sonst nirgends
 
 Die Adresse im Browser öffnen und „Zum Startbildschirm hinzufügen“ wählen (iPhone: Teilen-Menü, Android: Menü ⋮). Loewi verhält sich dann wie eine App und läuft ohne Netz weiter. Der Speicher bleibt derselbe wie im Browser-Tab.
 
+## Als Android-App (APK)
+
+Loewi gibt es zusätzlich als eigenständige App: dieselbe `index.html`, verpackt mit [Capacitor](https://capacitorjs.com). Sie braucht weder Browser noch Netz und hängt nicht mehr an einer Adresse oder am Browser-Speicher.
+
+**APK herunterladen:** GitHub → *Actions* → neuester Lauf von „APK bauen“ → unten bei *Artifacts* → `Loewi-APK-…` (ZIP entpacken, `Loewi.apk` auf dem Handy öffnen; „Installation aus unbekannten Quellen“ einmal erlauben). Auf `main` liegt sie zusätzlich unter *Releases → Loewi (aktuell)*.
+
+**Sicherung in der App:** „Sicherung (.json)“ bietet *Speichern* (Ordner `Download/Loewi`) und *Teilen* (Cloud, Mail …). Dazu sichert die App von selbst, eine Datei je Wochentag (`Loewi_Auto_Mo.json` …) in denselben Ordner – der bleibt auch erhalten, wenn die App gelöscht wird. Zurückholen: *Daten → Sicherung einlesen*.
+
+**Einmalig einrichten – Signierschlüssel:** Eine APK lässt sich nur dann als Update über die alte installieren, wenn sie immer mit demselben Schlüssel signiert ist. Dafür zwei Secrets anlegen (*Settings → Secrets and variables → Actions*): `LOEWI_KEYSTORE_BASE64` (die Keystore-Datei, Base64) und `LOEWI_KEYSTORE_PASSWORD`. Ohne Secrets baut der Workflow eine Test-APK mit Wegwerf-Schlüssel (`Loewi-APK-nur-test`). Den Schlüssel selbst **nie** ins Repository legen und zusätzlich an einem sicheren Ort aufheben.
+
+**Selbst bauen:** Node 22, JDK 21, Android SDK; dann `npm ci && npm run apk` (APK unter `android/app/build/outputs/apk/release/`). Lokal signieren: `android/keystore.properties` mit `storeFile`, `storePassword`, `keyAlias` anlegen (ist per `.gitignore` ausgeschlossen). Mindestens Android 10.
+
 ## Ausprobieren
 
 Unter [`demo/`](demo/) liegt eine ausgedachte Sicherungsdatei mit vier Klassen, acht Fächern, Unterrichtsreihen, gut hundert Stunden und mehreren Tests. Herunterladen, in Loewi unter *Daten → Sicherung einlesen* auswählen — und alles ist gefüllt. **Achtung:** Das ersetzt die vorhandenen Daten, also vorher selbst sichern.
@@ -50,7 +62,7 @@ Alle Namen darin sind erfunden.
 
 ## Technisches
 
-Eine Datei, kein Bauwerkzeug, keine Abhängigkeiten. `index.html` enthält Aufbau, Gestaltung und Programm; dazu kommen nur der Offline-Speicher (`sw.js`), das Manifest und die Symbole. Der Excel-Schreiber (ZIP + OOXML) und der PDF-Schreiber (PDF 1.4 mit WinAnsi-Kodierung, damit Umlaute stimmen) sind von Hand geschrieben, damit nichts nachgeladen werden muss.
+Die Web-Fassung: eine Datei, kein Bauwerkzeug, keine Abhängigkeiten. `index.html` enthält Aufbau, Gestaltung und Programm; dazu kommen nur der Offline-Speicher (`sw.js`), das Manifest und die Symbole. Der Excel-Schreiber (ZIP + OOXML) und der PDF-Schreiber (PDF 1.4 mit WinAnsi-Kodierung, damit Umlaute stimmen) sind von Hand geschrieben, damit nichts nachgeladen werden muss.
 
 Zum Ändern genügt ein Texteditor. Zum Prüfen liegen Playwright-Läufe außerhalb dieses Repositorys.
 

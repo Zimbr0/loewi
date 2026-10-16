@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Loewi</string>
+    <string name="title_activity_main">Loewi</string>
+    <string name="package_name">de.zimbr0.loewi</string>
+    <string name="custom_url_scheme">de.zimbr0.loewi</string>
+</resources>
