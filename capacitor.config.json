@@ -1,0 +1,8 @@
+{
+  "appId": "de.zimbr0.loewi",
+  "appName": "Loewi",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#F2EDE4"
+  }
+}
