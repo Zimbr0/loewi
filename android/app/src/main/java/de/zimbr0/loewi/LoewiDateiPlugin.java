@@ -5,7 +5,10 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
+import android.content.pm.PackageInfo;
 import android.net.Uri;
+import android.os.Build;
+import android.provider.Settings;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
@@ -20,7 +23,14 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import androidx.core.content.FileProvider;
+
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.io.OutputStream;
 
 /**
@@ -34,6 +44,75 @@ import java.io.OutputStream;
 public class LoewiDateiPlugin extends Plugin {
 
     private static final String ORDNER = "Loewi";
+
+    /** Installierte Fassung (versionCode = laufende Build-Nummer aus dem Workflow). */
+    @PluginMethod
+    public void version(PluginCall call) {
+        try {
+            PackageInfo pi = getContext().getPackageManager()
+                    .getPackageInfo(getContext().getPackageName(), 0);
+            JSObject res = new JSObject();
+            long code = Build.VERSION.SDK_INT >= 28 ? pi.getLongVersionCode() : pi.versionCode;
+            res.put("code", code);
+            res.put("name", pi.versionName);
+            call.resolve(res);
+        } catch (Exception e) {
+            call.reject("Version unbekannt: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Lädt die neue APK in den App-Cache und startet den Android-Installer.
+     * Fehlt die Erlaubnis "Apps aus dieser Quelle installieren", öffnet sich dafür die
+     * Systemeinstellung, und der Aufruf meldet "erlaubnis" (danach erneut tippen).
+     */
+    @PluginMethod
+    public void apkInstallieren(final PluginCall call) {
+        final String adresse = call.getString("url");
+        if (adresse == null || !adresse.startsWith("https://")) {
+            call.reject("Adresse fehlt");
+            return;
+        }
+        if (Build.VERSION.SDK_INT >= 26
+                && !getContext().getPackageManager().canRequestPackageInstalls()) {
+            Intent e = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                    Uri.parse("package:" + getContext().getPackageName()));
+            e.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(e);
+            call.reject("erlaubnis");
+            return;
+        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    File ordner = new File(getContext().getCacheDir(), "update");
+                    if (!ordner.exists() && !ordner.mkdirs()) throw new IOException("Ordner");
+                    File ziel = new File(ordner, "Loewi.apk");
+                    HttpURLConnection c = (HttpURLConnection) new URL(adresse).openConnection();
+                    c.setConnectTimeout(15000);
+                    c.setReadTimeout(30000);
+                    c.setInstanceFollowRedirects(true);
+                    if (c.getResponseCode() != 200) throw new IOException("HTTP " + c.getResponseCode());
+                    try (InputStream in = c.getInputStream();
+                         FileOutputStream out = new FileOutputStream(ziel)) {
+                        byte[] puffer = new byte[16384];
+                        int n;
+                        while ((n = in.read(puffer)) > 0) out.write(puffer, 0, n);
+                    }
+                    Uri uri = FileProvider.getUriForFile(getContext(),
+                            getContext().getPackageName() + ".fileprovider", ziel);
+                    Intent i = new Intent(Intent.ACTION_VIEW);
+                    i.setDataAndType(uri, "application/vnd.android.package-archive");
+                    i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    getContext().startActivity(i);
+                    call.resolve();
+                } catch (Exception e) {
+                    call.reject("Download fehlgeschlagen: " + e.getMessage());
+                }
+            }
+        }).start();
+    }
 
     /** Öffnet den Android-Ordnerdialog und merkt sich die Berechtigung dauerhaft. */
     @PluginMethod
