@@ -4,7 +4,7 @@
    umgekehrt zuerst aus dem Zwischenspeicher genommen, weil sie sich nie ändern.
    Die Unterrichtsdaten liegen NICHT hier, sondern im localStorage des Browsers. */
 
-const CACHE = "loewi-v3";
+const CACHE = "loewi-v4";
 const DATEIEN = [
   "./",
   "./index.html",
