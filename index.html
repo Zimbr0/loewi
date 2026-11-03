@@ -369,6 +369,19 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
   border-radius:9px;color:var(--muted);cursor:pointer;display:flex;align-items:center;
   justify-content:center;padding:0}
 .tnote.has{color:var(--accent-dk);border-color:var(--accent)}
+/* ---- Sterne ---- */
+.stgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px;margin-top:12px}
+.stk{position:relative;border:0;border-radius:14px;background:var(--soft);padding:10px 4px 8px;
+  text-align:center;cursor:pointer;color:var(--ink);overflow:hidden;
+  transition:transform .12s ease;-webkit-tap-highlight-color:transparent}
+.stk:active{transform:scale(.94)}
+.stk .nr{display:block;font-size:20px;font-weight:750;line-height:1.1}
+.stk .nm{display:block;font-size:10.5px;color:var(--muted);min-height:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stk .zahl{display:block;font-size:15px;font-weight:700;color:var(--warn-dk);margin-top:2px}
+.stk .bar{position:absolute;left:0;bottom:0;height:4px;background:var(--warn);border-radius:0 2px 0 0}
+.stk.voll{background:var(--warn-soft);box-shadow:inset 0 0 0 2px var(--warn)}
+.stk.voll .zahl::after{content:" \2605 Wunsch!";font-size:10.5px}
+.stminus .stk{box-shadow:inset 0 0 0 2px var(--bad)}
 .segrow.klein button{padding:7px 6px;font-size:13px}
 .kritkachel{padding:14px 15px 15px}
 .kritkachel .kk-kopf{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
@@ -1581,6 +1594,34 @@ body.vertmodus .stundenkarte{cursor:pointer}
 <!-- ============ ÜBERSICHT ============ -->
 <section class="view" id="v-uebersicht">
 
+  <div class="segrow" id="sumSeg">
+    <span class="pille" id="sumPille"></span>
+    <button data-t="liste" class="on">Übersicht</button>
+    <button data-t="sterne">&#9733; Sterne</button>
+  </div>
+
+  <div id="sumSterne" style="display:none">
+    <div class="card">
+      <div class="rowline" style="padding-top:0;border-bottom:0">
+        <div>
+          <h3 style="font-size:15px" id="stTitel">Sterne</h3>
+          <div class="mini" id="stSub"></div>
+        </div>
+        <button class="act neutral mini" id="stZielBtn">Ziel: 15</button>
+      </div>
+      <div class="actions" style="margin-top:10px;gap:8px">
+        <button class="act neutral" id="stModus" style="flex:1">Tippen: + Stern</button>
+        <button class="act neutral" id="stUndo" style="flex:1">Zurück</button>
+      </div>
+      <div class="stgrid" id="stGrid"></div>
+      <p class="hint">Tippen gibt einen Stern. Erreicht ein Kind das Ziel, leuchtet es &ndash; ein Tipp darauf löst die Wunschstunde ein und setzt die Sterne auf 0.</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:15px;margin-bottom:6px">Eingelöste Wunschstunden</h3>
+      <div id="stEin"></div>
+    </div>
+  </div>
+
   <div id="sumListe">
     <div class="card seitenkopf" id="sumKopf">
       <div class="skopf">
@@ -2754,6 +2795,7 @@ function uebernehmen(raw){
         db.todos = db.todos || [];
         db.notizen = db.notizen || [];
   db.beobachtungen = db.beobachtungen || [];
+        db.sterne = (db.sterne && typeof db.sterne === "object" && !Array.isArray(db.sterne)) ? db.sterne : {};
         db.ui = db.ui || {};
         db.ui.plan = db.ui.plan || {ebene:"reihen"};
         db.ui.stdView = db.ui.stdView || "liste";
@@ -3420,6 +3462,7 @@ function klasseDialog(k){
         db.tests = db.tests.filter(t => t.klasseId !== k.id);
         db.kompetenzraster = db.kompetenzraster.filter(r => r.klasseId !== k.id);
         db.klassen = db.klassen.filter(x => x.id !== k.id);
+        if(db.sterne) Object.keys(db.sterne).forEach(key => { if(key === k.id || key.indexOf(k.id + "|") === 0) delete db.sterne[key]; });
         if(db.plan && Array.isArray(db.plan.slots))
           db.plan.slots = db.plan.slots.filter(s => s.klasseId !== k.id);
         db.einheiten.forEach(e => { if(e.stat) delete e.stat[k.id]; });
@@ -7495,6 +7538,138 @@ function statsFor(kid, fid){
   return {rows:out, list:list};
 }
 
+/* ---------- Sterne ----------
+   Belohnung fürs schnelle Ankommen im Sitzkreis: Sterne hängen an Klasse, Fach und
+   Nummer. Beim Ziel (je Klasse einstellbar) darf das Kind eine
+   Stunde frei wählen; beim Einlösen springt der Stand auf 0.
+   db.sterne[klasseId|fachId] = {ziel, stand:{nr:n}, log:[…für „Zurück“], ein:[…Einlösungen]} */
+function sterneVon(kid){
+  if(!db.sterne || typeof db.sterne !== "object") db.sterne = {};
+  const key = kid + "|" + (db.ui.fachId || "");
+  let d = db.sterne[key];
+  /* Frühere Fassung: nur je Klasse – gehört dem ersten Fach, das es öffnet. */
+  if(!d && db.sterne[kid]){ d = db.sterne[key] = db.sterne[kid]; delete db.sterne[kid]; }
+  if(!d){ d = db.sterne[key] = {ziel:15, stand:{}, log:[], ein:[]}; }
+  if(!d.stand) d.stand = {};
+  if(!Array.isArray(d.log)) d.log = [];
+  if(!Array.isArray(d.ein)) d.ein = [];
+  if(!(d.ziel >= 1)) d.ziel = 15;
+  return d;
+}
+function sterneStand(kid, nr){ return Number(sterneVon(kid).stand[nr]) || 0; }
+function sterneBuchen(k, nr, delta){
+  const d = sterneVon(k.id);
+  const alt = sterneStand(k.id, nr);
+  const neu = Math.max(0, alt + delta);
+  if(neu === alt) return;
+  d.stand[nr] = neu;
+  d.log.push({typ:"s", nr:nr, v:alt});
+  if(d.log.length > 100) d.log.shift();
+  save(); renderSterne();
+  if(delta > 0 && alt < d.ziel && neu >= d.ziel)
+    toast("Nr. " + nr + " hat " + d.ziel + " Sterne – Wunschstunde!");
+}
+function sterneEinloesen(k, nr){
+  const d = sterneVon(k.id);
+  const alt = sterneStand(k.id, nr);
+  openModal({
+    titel:"Wunschstunde einlösen?",
+    text:"Nr. " + nr + (k.labels[nr] ? " (" + k.labels[nr] + ")" : "") + " hat " + alt +
+         " Sterne. Beim Einlösen gehen sie auf 0 zurück.",
+    okText:"Einlösen",
+    onOk: () => {
+      d.ein.push({t:Date.now(), d:heute(), nr:nr, n:alt});
+      d.stand[nr] = 0;
+      d.log.push({typ:"e", nr:nr, v:alt});
+      if(d.log.length > 100) d.log.shift();
+      save(); renderSterne(); toast("Eingelöst – Sterne zurückgesetzt");
+    }
+  });
+}
+function sterneZurueck(){
+  const k = klasse(db.ui.klasseId); if(!k) return;
+  const d = sterneVon(k.id);
+  const l = d.log.pop();
+  if(!l){ toast("Nichts zum Zurücknehmen"); return; }
+  d.stand[l.nr] = l.v;
+  if(l.typ === "e") d.ein.pop();
+  save(); renderSterne();
+  toast("Nr. " + l.nr + ": zurück auf " + l.v);
+}
+function sterneZielDialog(){
+  const k = klasse(db.ui.klasseId); if(!k) return;
+  const d = sterneVon(k.id);
+  openModal({
+    titel:"Ziel für " + k.name + (fach(db.ui.fachId) ? " · " + fach(db.ui.fachId).name : ""),
+    text:"Bei wie vielen Sternen darf ein Kind eine Stunde frei wählen?",
+    felder:[{key:"z", label:"Sterne bis zur Wunschstunde", typ:"text", wert:String(d.ziel)}],
+    okText:"Übernehmen",
+    onOk: w => {
+      const z = parseInt(w.z, 10);
+      if(!(z >= 1 && z <= 200)){ toast("Bitte eine Zahl von 1 bis 200"); return false; }
+      d.ziel = z; save(); renderSterne();
+    }
+  });
+}
+function renderSterne(){
+  const k = klasse(db.ui.klasseId);
+  const grid = $("#stGrid"); if(!grid) return;
+  grid.innerHTML = ""; $("#stEin").innerHTML = "";
+  if(!k){ $("#stSub").textContent = "Keine Klasse gewählt"; return; }
+  const d = sterneVon(k.id);
+  const minus = !!db.ui.sterneMinus;
+  const fa = fach(db.ui.fachId);
+  $("#stTitel").textContent = "Sterne · " + k.name + (fa ? " · " + fa.name : "");
+  $("#stZielBtn").textContent = "Ziel: " + d.ziel;
+  $("#stModus").textContent = minus ? "Tippen: − Stern" : "Tippen: + Stern";
+  $("#stModus").classList.toggle("primary", minus);
+  grid.classList.toggle("stminus", minus);
+  let voll = 0, summe = 0;
+  for(let nr = 1; nr <= k.count; nr++){
+    const n = sterneStand(k.id, nr);
+    summe += n;
+    const ist = n >= d.ziel; if(ist) voll++;
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "stk" + (ist ? " voll" : "");
+    b.innerHTML = '<span class="nr">' + nr + '</span><span class="nm">' +
+      esc(k.labels[nr] || "") + '</span><span class="zahl">&#9733; ' + n + '</span>' +
+      '<span class="bar" style="width:' + Math.min(100, Math.round(n / d.ziel * 100)) + '%"></span>';
+    b.addEventListener("click", () => {
+      if(ist && !minus) sterneEinloesen(k, nr);
+      else sterneBuchen(k, nr, minus ? -1 : 1);
+    });
+    grid.appendChild(b);
+  }
+  $("#stSub").textContent = summe + " Sterne verteilt" +
+    (voll ? " · " + voll + " Kind" + (voll === 1 ? "" : "er") + " am Ziel" : "");
+  const box = $("#stEin");
+  if(!d.ein.length){ box.innerHTML = '<p class="hint">Noch keine Wunschstunde eingelöst.</p>'; return; }
+  d.ein.slice().reverse().forEach(e => {
+    const z = document.createElement("div");
+    z.className = "rowline";
+    z.innerHTML = "<span><b>Nr. " + e.nr + "</b>" +
+      (k.labels[e.nr] ? " · " + esc(k.labels[e.nr]) : "") + "</span><span class=\"mini\">" +
+      deDate(e.d) + " · " + e.n + " ★</span>";
+    box.appendChild(z);
+  });
+}
+function sumTabPille(){
+  const leiste = $("#sumSeg"), pille = $("#sumPille");
+  if(!leiste || !pille) return;
+  const aktiv = leiste.querySelector("button.on");
+  if(!aktiv || !aktiv.offsetWidth) return;
+  pille.style.width = aktiv.offsetWidth + "px";
+  pille.style.transform = "translateX(" + (aktiv.offsetLeft - 4) + "px)";
+}
+document.querySelectorAll("#sumSeg button").forEach(b => {
+  b.addEventListener("click", () => { db.ui.sumTab = b.dataset.t; save(); renderUebersicht(); });
+});
+window.addEventListener("resize", sumTabPille);
+$("#stZielBtn").addEventListener("click", sterneZielDialog);
+$("#stUndo").addEventListener("click", sterneZurueck);
+$("#stModus").addEventListener("click", () => { db.ui.sterneMinus = !db.ui.sterneMinus; save(); renderSterne(); });
+
 function sumGo(view, nr){
   zurueckWache();
   db.ui.sumView = view;
@@ -7508,7 +7683,13 @@ function renderUebersicht(){
      (!k || !db.ui.kindNr || db.ui.kindNr > k.count)){
     v = "liste"; db.ui.sumView = "liste";
   }
-  $("#sumListe").style.display     = v === "liste" ? "" : "none";
+  const tab = db.ui.sumTab === "sterne" ? "sterne" : "liste";
+  $("#sumSeg").style.display = v === "liste" ? "" : "none";
+  document.querySelectorAll("#sumSeg button").forEach(b => b.classList.toggle("on", b.dataset.t === tab));
+  sumTabPille();
+  $("#sumSterne").style.display    = (v === "liste" && tab === "sterne") ? "" : "none";
+  if(v === "liste" && tab === "sterne") renderSterne();
+  $("#sumListe").style.display     = (v === "liste" && tab === "liste") ? "" : "none";
   $("#sumKind").style.display      = v === "kind" ? "" : "none";
   $("#sumGesundheit").style.display = v === "gesundheit" ? "" : "none";
   $("#sumVorfall").style.display    = v === "vorfall" ? "" : "none";
@@ -8565,6 +8746,7 @@ function fachDialog(f){
         db.einheiten = db.einheiten.filter(e => rids.indexOf(e.reiheId) === -1);
         db.reihen = db.reihen.filter(r => r.fachId !== f.id);
         db.faecher = db.faecher.filter(x => x.id !== f.id);
+        if(db.sterne) Object.keys(db.sterne).forEach(key => { if(key.slice(-(f.id.length + 1)) === "|" + f.id) delete db.sterne[key]; });
         db.stunden.forEach(s => { if(s.fachId === f.id) s.fachId = null; });
         db.tests.forEach(t => { if(t.fachId === f.id) t.fachId = null; });
         db.kompetenzraster.forEach(r => { if(r.fachId === f.id) r.fachId = null; });
