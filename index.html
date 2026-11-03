@@ -3462,7 +3462,7 @@ function klasseDialog(k){
         db.tests = db.tests.filter(t => t.klasseId !== k.id);
         db.kompetenzraster = db.kompetenzraster.filter(r => r.klasseId !== k.id);
         db.klassen = db.klassen.filter(x => x.id !== k.id);
-        if(db.sterne) delete db.sterne[k.id];
+        if(db.sterne) Object.keys(db.sterne).forEach(key => { if(key === k.id || key.indexOf(k.id + "|") === 0) delete db.sterne[key]; });
         if(db.plan && Array.isArray(db.plan.slots))
           db.plan.slots = db.plan.slots.filter(s => s.klasseId !== k.id);
         db.einheiten.forEach(e => { if(e.stat) delete e.stat[k.id]; });
@@ -7539,14 +7539,17 @@ function statsFor(kid, fid){
 }
 
 /* ---------- Sterne ----------
-   Belohnung fürs schnelle Ankommen im Sitzkreis: Sterne hängen an Klasse und
-   Nummer (nicht am Fach). Beim Ziel (je Klasse einstellbar) darf das Kind eine
+   Belohnung fürs schnelle Ankommen im Sitzkreis: Sterne hängen an Klasse, Fach und
+   Nummer. Beim Ziel (je Klasse einstellbar) darf das Kind eine
    Stunde frei wählen; beim Einlösen springt der Stand auf 0.
-   db.sterne[klasseId] = {ziel, stand:{nr:n}, log:[…für „Zurück“], ein:[…Einlösungen]} */
+   db.sterne[klasseId|fachId] = {ziel, stand:{nr:n}, log:[…für „Zurück“], ein:[…Einlösungen]} */
 function sterneVon(kid){
   if(!db.sterne || typeof db.sterne !== "object") db.sterne = {};
-  let d = db.sterne[kid];
-  if(!d){ d = db.sterne[kid] = {ziel:15, stand:{}, log:[], ein:[]}; }
+  const key = kid + "|" + (db.ui.fachId || "");
+  let d = db.sterne[key];
+  /* Frühere Fassung: nur je Klasse – gehört dem ersten Fach, das es öffnet. */
+  if(!d && db.sterne[kid]){ d = db.sterne[key] = db.sterne[kid]; delete db.sterne[kid]; }
+  if(!d){ d = db.sterne[key] = {ziel:15, stand:{}, log:[], ein:[]}; }
   if(!d.stand) d.stand = {};
   if(!Array.isArray(d.log)) d.log = [];
   if(!Array.isArray(d.ein)) d.ein = [];
@@ -7597,7 +7600,7 @@ function sterneZielDialog(){
   const k = klasse(db.ui.klasseId); if(!k) return;
   const d = sterneVon(k.id);
   openModal({
-    titel:"Ziel für Klasse " + k.name,
+    titel:"Ziel für " + k.name + (fach(db.ui.fachId) ? " · " + fach(db.ui.fachId).name : ""),
     text:"Bei wie vielen Sternen darf ein Kind eine Stunde frei wählen?",
     felder:[{key:"z", label:"Sterne bis zur Wunschstunde", typ:"text", wert:String(d.ziel)}],
     okText:"Übernehmen",
@@ -7615,7 +7618,8 @@ function renderSterne(){
   if(!k){ $("#stSub").textContent = "Keine Klasse gewählt"; return; }
   const d = sterneVon(k.id);
   const minus = !!db.ui.sterneMinus;
-  $("#stTitel").textContent = "Sterne · Klasse " + k.name;
+  const fa = fach(db.ui.fachId);
+  $("#stTitel").textContent = "Sterne · " + k.name + (fa ? " · " + fa.name : "");
   $("#stZielBtn").textContent = "Ziel: " + d.ziel;
   $("#stModus").textContent = minus ? "Tippen: − Stern" : "Tippen: + Stern";
   $("#stModus").classList.toggle("primary", minus);
@@ -8742,6 +8746,7 @@ function fachDialog(f){
         db.einheiten = db.einheiten.filter(e => rids.indexOf(e.reiheId) === -1);
         db.reihen = db.reihen.filter(r => r.fachId !== f.id);
         db.faecher = db.faecher.filter(x => x.id !== f.id);
+        if(db.sterne) Object.keys(db.sterne).forEach(key => { if(key.slice(-(f.id.length + 1)) === "|" + f.id) delete db.sterne[key]; });
         db.stunden.forEach(s => { if(s.fachId === f.id) s.fachId = null; });
         db.tests.forEach(t => { if(t.fachId === f.id) t.fachId = null; });
         db.kompetenzraster.forEach(r => { if(r.fachId === f.id) r.fachId = null; });
