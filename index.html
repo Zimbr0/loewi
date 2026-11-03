@@ -369,6 +369,12 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
   border-radius:9px;color:var(--muted);cursor:pointer;display:flex;align-items:center;
   justify-content:center;padding:0}
 .tnote.has{color:var(--accent-dk);border-color:var(--accent)}
+.updbanner{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:90;
+  display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;
+  background:var(--card);color:var(--ink);box-shadow:var(--shadow);border:1px solid var(--warn);font-size:13.5px}
+.updbanner[hidden]{display:none}
+.updbanner span{flex:1;font-weight:650}
+.updbanner button{flex:none}
 /* ---- Sterne ---- */
 .stgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px;margin-top:12px}
 .stk{position:relative;border:0;border-radius:14px;background:var(--soft);padding:10px 4px 8px;
@@ -1082,6 +1088,12 @@ body.vertmodus .stundenkarte{cursor:pointer}
 <main>
 
 <!-- ============ STUNDEN ============ -->
+<div class="updbanner" id="updBanner" hidden>
+  <span id="updText"></span>
+  <button class="act primary mini" id="updGo">Herunterladen</button>
+  <button class="act neutral mini" id="updZu" aria-label="Später">&times;</button>
+</div>
+
 <section class="view on" id="v-stunde">
 
   <div class="segrow" id="stdSeg">
@@ -1943,6 +1955,14 @@ body.vertmodus .stundenkarte{cursor:pointer}
       <b>Stundendoku</b> und – sobald vorhanden – <b>Tests</b> und <b>Planung</b>.
       Nach dem Erstellen kannst du wählen: <b>Speichern</b> legt die Datei in deine Downloads,
       <b>Teilen</b> öffnet das Teilen-Menü (auf dem iPhone „In Dateien sichern“).</p>
+  </div>
+
+  <div class="card" id="updCard" hidden>
+    <h3 style="font-size:15px;margin-bottom:4px">App-Update</h3>
+    <div class="mini" id="updStatus">–</div>
+    <div class="actions" style="margin-top:8px">
+      <button class="act neutral" id="btnUpdPruefen">Nach Update suchen</button>
+    </div>
   </div>
 
   <div class="card">
@@ -11173,6 +11193,66 @@ setTimeout(() => {
   const ab = $("#modalBox").querySelector(".actions .act.neutral");
   if(ab) ab.textContent = "Später";
 }, 1200);
+/* ---------- App-Update (nur in der APK) ----------
+   Beim Start (mit Netz) wird nachgesehen, ob die Release „aktuell“ auf GitHub eine
+   höhere Build-Nummer trägt als die installierte. Dann erscheint oben ein Hinweis
+   mit „Herunterladen“; die App lädt die APK und startet den Android-Installer.
+   Die Daten bleiben, solange die APK mit demselben Schlüssel signiert ist. */
+const UPD_URL = "https://api.github.com/repos/Zimbr0/loewi/releases/tags/aktuell";
+const UPD_AUS = "loewi.updAus";
+let updNeu = null;     /* {build, url} der angebotenen Fassung */
+function updPruefen(still){
+  const p = appPlugin("LoewiDatei");
+  if(!istApp || !p || typeof p.version !== "function") return Promise.resolve();
+  const sag = t => { const e = $("#updStatus"); if(e) e.textContent = t; };
+  if(!still) sag("Suche …");
+  return Promise.all([p.version(), fetch(UPD_URL, {cache:"no-store"}).then(r => {
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  })]).then(res => {
+    const inst = Number(res[0].code) || 0;
+    const rel = res[1] || {};
+    const m = /Build\s+(\d+)/.exec(String(rel.body || ""));
+    const apk = (rel.assets || []).find(a => /\.apk$/i.test(a.name || ""));
+    if(!m || !apk){ sag("Keine Update-Angabe gefunden."); return; }
+    const neu = parseInt(m[1], 10);
+    if(neu > inst){
+      updNeu = {build:neu, url:apk.browser_download_url};
+      sag("Neue Version verfügbar (Build " + neu + ", installiert: " + inst + ").");
+      let aus = null; try{ aus = localStorage.getItem(UPD_AUS); }catch(e){}
+      if(!still || aus !== String(neu)){
+        $("#updText").textContent = "Neue Version von Loewi verfügbar";
+        $("#updBanner").hidden = false;
+      }
+    }else{
+      updNeu = null; $("#updBanner").hidden = true;
+      sag("Loewi ist aktuell (Build " + inst + ").");
+    }
+  }).catch(() => { if(!still) sag("Keine Verbindung – Suche nicht möglich."); });
+}
+function updHerunterladen(){
+  const p = appPlugin("LoewiDatei");
+  if(!updNeu || !p) return;
+  const go = $("#updGo");
+  go.disabled = true; go.textContent = "Lädt …";
+  p.apkInstallieren({url:updNeu.url}).then(() => {
+    toast("Installer geöffnet – dort „Aktualisieren“ wählen");
+  }).catch(e => {
+    if(String(e && (e.message || e)).indexOf("erlaubnis") >= 0)
+      toast("Bitte „Installation erlauben“ aktivieren, dann nochmal tippen");
+    else toast("Download fehlgeschlagen – später erneut versuchen");
+  }).then(() => { go.disabled = false; go.textContent = "Herunterladen"; });
+}
+if(istApp){
+  $("#updCard").hidden = false;
+  $("#btnUpdPruefen").addEventListener("click", () => updPruefen(false));
+  $("#updGo").addEventListener("click", updHerunterladen);
+  $("#updZu").addEventListener("click", () => {
+    $("#updBanner").hidden = true;
+    try{ if(updNeu) localStorage.setItem(UPD_AUS, String(updNeu.build)); }catch(e){}
+  });
+  setTimeout(() => updPruefen(true), 2500);
+}
 /* Ganz neue Installation, noch nie eine Klasse angelegt und den Rundgang noch
    nicht gesehen: von selbst starten. Sonst nur über das Profil-Menü. */
 setTimeout(() => {
