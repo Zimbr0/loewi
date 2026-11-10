@@ -2061,7 +2061,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
         <button class="act quiet" id="btnFehltWieVorher"></button>
       </div>
       <div class="actions" style="margin-top:12px" id="neuFActions">
-        <button class="act primary" id="btnNeuFehltWeiter">Weiter zu den Angaben</button>
+        <button class="act primary" id="btnNeuFehltWeiter">Weiter</button>
       </div>
     </div>
 
@@ -3903,14 +3903,7 @@ function renderNeuFehlt(nu){
       box.appendChild(b);
     }
   }
-  const ids = Object.keys(nu.fehlt);
-  const anzK = ids.filter(n => nu.fehlt[n] !== "v").length, anzV = ids.length - anzK;
-  const teile = [];
-  if(anzK) teile.push(anzK + (anzK === 1 ? " Kind krank" : " Kinder krank"));
-  if(anzV) teile.push(anzV + "× " + vergessenWort(nu.fachId) + " vergessen");
-  $("#btnNeuFehltWeiter").textContent = teile.length
-    ? teile.join(", ") + " – weiter zu den Angaben"
-    : "Alle da – weiter zu den Angaben";
+
   const vor = neuFehltVorher(nu);
   const offen = vor ? vor.nrn.filter(n => !nu.fehlt[n] && !istBefreit(k, n, nu.datum)) : [];
   $("#neuFVorher").style.display = offen.length ? "" : "none";
