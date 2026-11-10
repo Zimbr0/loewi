@@ -474,7 +474,17 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
   max-height:78vh;overflow:auto;transform:translateY(110%);
   transition:transform .24s cubic-bezier(.2,.8,.3,1);visibility:hidden}
 .fabsheet.open{transform:translateY(0);visibility:visible}
-.fabgriff{width:38px;height:4px;border-radius:999px;background:var(--line);margin:0 auto 12px}
+.fabgriff{position:relative;height:28px;margin:-10px 0 0}
+.fabgriff::after{content:"";position:absolute;left:50%;top:12px;width:38px;height:4px;
+  margin-left:-19px;border-radius:999px;background:var(--line)}
+.fabsheet.minbar .fabgriff{cursor:grab;touch-action:none}
+.fabsheet.dragging{transition:none}
+/* Minimiert: nur Griff und Schrittleiste bleiben über der Navigationsleiste stehen. */
+.fabsheet.mini{bottom:calc(62px + env(safe-area-inset-bottom));overflow:hidden;
+  transform:translateY(calc(100% - 78px));cursor:pointer;
+  box-shadow:0 -6px 18px rgba(0,0,0,.18)}
+.fabsheet.mini > *{pointer-events:none}
+.fabsheet.mini .fabgriff{pointer-events:auto}
 .fabtitel{font-size:10.5px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;
   color:var(--muted);margin:0 0 6px 2px}
 .fabzeile{display:flex;align-items:center;gap:13px;width:100%;border:0;background:0;
@@ -492,6 +502,7 @@ a.act{display:flex;align-items:center;justify-content:center;text-decoration:non
   .fabsheet{left:50%;transform:translate(-50%,110%);max-width:520px;
     border-radius:20px;bottom:24px}
   .fabsheet.open{transform:translate(-50%,0)}
+  .fabsheet.mini{transform:translate(-50%,calc(100% - 78px));bottom:calc(62px + env(safe-area-inset-bottom))}
 }
 
 /* --- Organisation --- */
@@ -807,6 +818,8 @@ body.vertmodus .stundenkarte{cursor:pointer}
 .fehlkind small{font-size:11px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fehlkind.on{background:var(--bad);border-color:var(--bad);color:#fff}
 .fehlkind.on small{color:#fff}
+.fehlkind.verg{background:var(--warn);border-color:var(--warn);color:#fff}
+.fehlkind.verg small{color:#fff}
 .fehlkind:disabled{opacity:.5;cursor:default}
 .minibtn:disabled{cursor:default}
 
@@ -2042,7 +2055,7 @@ body.vertmodus .stundenkarte{cursor:pointer}
 
     <div class="card" id="neuF" style="display:none">
       <h3 style="font-size:16px;margin-bottom:2px">Wer fehlt heute?</h3>
-      <div class="mini" id="neuFSub">Tippe die Kinder an, die nicht da sind – sie werden als krank eingetragen.</div>
+      <div class="mini" id="neuFSub">Einmal antippen: krank. Zweimal antippen: vergessen. Ein drittes Mal löscht wieder.</div>
       <div class="fehlraster" id="neuFListe"></div>
       <div class="actions" style="margin-top:8px" id="neuFVorher">
         <button class="act quiet" id="btnFehltWieVorher"></button>
@@ -3705,6 +3718,7 @@ function openStdSheet(){
   zurueckWache();
   stdSheetOffen = true;
   renderNeu();
+  $("#stdSheet").classList.remove("mini");
   $("#stdSheet").classList.add("open");
   $("#stdScrim").classList.add("open");
 }
@@ -3712,9 +3726,50 @@ function closeStdSheet(){
   if(!stdSheetOffen) return;
   stdSheetOffen = false;
   db.ui.neu = null; save();
-  $("#stdSheet").classList.remove("open");
+  $("#stdSheet").classList.remove("open", "mini");
   $("#stdScrim").classList.remove("open");
 }
+/* Der Einschub lässt sich am Griff nach unten schieben (minimieren) und wieder
+   hochziehen oder antippen. Minimiert bleibt er stehen, die App dahinter ist bedienbar. */
+function sheetMinimieren(sheet, scrim, istOffen){
+  sheet.classList.add("minbar");
+  const griff = sheet.querySelector(".fabgriff");
+  const setMini = m => {
+    sheet.classList.toggle("mini", m);
+    scrim.classList.toggle("open", !m && istOffen());
+  };
+  let y0 = null, dy = 0, bewegt = false;
+  griff.addEventListener("pointerdown", ev => {
+    y0 = ev.clientY; dy = 0; bewegt = false;
+    try{ griff.setPointerCapture(ev.pointerId); }catch(e){}
+  });
+  griff.addEventListener("pointermove", ev => {
+    if(y0 === null) return;
+    dy = ev.clientY - y0;
+    if(Math.abs(dy) > 6) bewegt = true;
+    const mini = sheet.classList.contains("mini");
+    if(bewegt && ((!mini && dy > 0) || (mini && dy < 0))){
+      sheet.classList.add("dragging");
+      sheet.style.translate = "0 " + (mini ? Math.max(dy, -300) : dy) + "px";
+    }
+  });
+  const ende = () => {
+    if(y0 === null) return;
+    const mini = sheet.classList.contains("mini");
+    sheet.classList.remove("dragging"); sheet.style.translate = "";
+    if(!bewegt) setMini(!mini);
+    else if(!mini && dy > 50) setMini(true);
+    else if(mini && dy < -30) setMini(false);
+    y0 = null;
+  };
+  griff.addEventListener("pointerup", ende);
+  griff.addEventListener("pointercancel", ende);
+  /* Minimiert reicht ein Tipp irgendwo auf die Leiste. */
+  sheet.addEventListener("click", ev => {
+    if(sheet.classList.contains("mini") && !griff.contains(ev.target)) setMini(false);
+  });
+}
+sheetMinimieren($("#stdSheet"), $("#stdScrim"), () => stdSheetOffen);
 $("#stdScrim").addEventListener("click", closeStdSheet);
 $("#btnNeuZurueck").addEventListener("click", () => {
   const nu = db.ui.neu; if(!nu) return;
@@ -3831,21 +3886,30 @@ function renderNeuFehlt(nu){
       const befreit = istBefreit(k, i, nu.datum);
       const b = document.createElement("button");
       b.type = "button";
-      b.className = "fehlkind" + ((nu.fehlt[i] || befreit) ? " on" : "");
+      const verg = nu.fehlt[i] === "v";
+      b.className = "fehlkind" + (verg ? " verg" : ((nu.fehlt[i] || befreit) ? " on" : ""));
       b.disabled = befreit;
-      b.innerHTML = "<b>" + i + "</b>" +
-        (befreit ? "<small>befreit</small>" : (k.labels[i] ? "<small>" + esc(k.labels[i]) + "</small>" : ""));
+      const sub = befreit ? "befreit" : (verg ? esc(vergessenWort(nu.fachId)) + " vergessen"
+        : (nu.fehlt[i] ? "krank" : (k.labels[i] ? esc(k.labels[i]) : "")));
+      b.innerHTML = "<b>" + i + "</b>" + (sub ? "<small>" + sub + "</small>" : "");
       b.setAttribute("aria-pressed", (nu.fehlt[i] || befreit) ? "true" : "false");
       b.addEventListener("click", () => {
-        if(nu.fehlt[i]) delete nu.fehlt[i]; else nu.fehlt[i] = true;
+        /* nichts → krank → vergessen → nichts */
+        if(!nu.fehlt[i]) nu.fehlt[i] = true;
+        else if(nu.fehlt[i] === true) nu.fehlt[i] = "v";
+        else delete nu.fehlt[i];
         save(); renderNeuFehlt(nu);
       });
       box.appendChild(b);
     }
   }
-  const anz = Object.keys(nu.fehlt).length;
-  $("#btnNeuFehltWeiter").textContent = anz
-    ? anz + (anz === 1 ? " Kind fehlt" : " Kinder fehlen") + " – weiter zu den Angaben"
+  const ids = Object.keys(nu.fehlt);
+  const anzK = ids.filter(n => nu.fehlt[n] !== "v").length, anzV = ids.length - anzK;
+  const teile = [];
+  if(anzK) teile.push(anzK + (anzK === 1 ? " Kind krank" : " Kinder krank"));
+  if(anzV) teile.push(anzV + "× " + vergessenWort(nu.fachId) + " vergessen");
+  $("#btnNeuFehltWeiter").textContent = teile.length
+    ? teile.join(", ") + " – weiter zu den Angaben"
     : "Alle da – weiter zu den Angaben";
   const vor = neuFehltVorher(nu);
   const offen = vor ? vor.nrn.filter(n => !nu.fehlt[n] && !istBefreit(k, n, nu.datum)) : [];
@@ -3931,13 +3995,16 @@ $("#btnNeuWeiter").addEventListener("click", () => {
   if(nu.art === "vertretung") s.vertretung = true;
   if(neuHatFehlt(nu) && nu.fehlt){
     Object.keys(nu.fehlt).forEach(n => {
-      if(Number(n) >= 1 && Number(n) <= k.count) s.eintraege[n] = {m:null, k:true, v:false, n:""};
+      if(Number(n) >= 1 && Number(n) <= k.count){
+        s.eintraege[n] = nu.fehlt[n] === "v" ? {m:null, k:false, v:true, n:""}
+                                              : {m:null, k:true, v:false, n:""};
+      }
     });
   }
   setAuswahl(k.id, nu.fachId || null);
   db.ui.neu = null;
   stdSheetOffen = false;
-  $("#stdSheet").classList.remove("open");
+  $("#stdSheet").classList.remove("open", "mini");
   $("#stdScrim").classList.remove("open");
   db.ui.bereich = "stunden";
   save();
